@@ -55,3 +55,6 @@ export const FEATURED = [11, 8, 4, 15, 9, 19].map((n) => {
 })
 
 export const HERO_PHOTO = src(8)
+// WebP variant of the hero used via CSS image-set() (the JPEG above stays the
+// universal fallback for the ~3% of browsers without WebP support).
+export const HERO_WEBP = '/gallery/club-08.webp'

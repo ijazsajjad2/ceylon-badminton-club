@@ -1165,6 +1165,10 @@ html { scroll-behavior: smooth; }
 .public-hero-bg {
   position: absolute; inset: 0; background-size: cover; background-position: center;
   transform: scale(1.05); filter: saturate(1.05);
+  /* JPEG first as the universal fallback; WebP via image-set where supported. */
+  background-image: var(--hero-jpg);
+  background-image: -webkit-image-set(var(--hero-webp) type("image/webp"), var(--hero-jpg) type("image/jpeg"));
+  background-image: image-set(var(--hero-webp) type("image/webp"), var(--hero-jpg) type("image/jpeg"));
 }
 .public-hero-bg::after {
   content: ''; position: absolute; inset: 0;
@@ -1536,3 +1540,38 @@ html { scroll-behavior: smooth; }
   display: block; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px;
 }
+
+/* ===================================================================
+   PUBLIC SITE — phase 3: club leaders, sticky-nav scroll offset
+   =================================================================== */
+
+/* Offset anchored sections so the sticky nav doesn't cover their headings */
+.public-section, .public-hero { scroll-margin-top: calc(var(--public-nav-h) + 12px); }
+
+/* Club leaders podium cards */
+.leaders-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.leader-card {
+  position: relative; overflow: hidden; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s, border-color 0.3s;
+}
+.leader-card:hover { transform: translateY(-6px); box-shadow: 0 18px 44px rgba(0,0,0,0.4); }
+.leader-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--maroon-bright) 70%, transparent);
+}
+.leader-rank-1 { border-color: rgba(242,201,76,0.4) !important; }
+.leader-rank-1::before { background: linear-gradient(90deg, #F2C94C, #D4A017); height: 4px; }
+.leader-medal { font-size: 30px; line-height: 1; margin-bottom: 2px; }
+.leader-name { font-size: 18px; font-weight: 800; color: #fff; }
+.leader-points { font-size: 30px; font-weight: 800; color: var(--gold-bright); line-height: 1; }
+.leader-points span { font-size: 13px; font-weight: 700; color: var(--text-faint); margin-left: 3px; }
+.leader-meta { font-size: 12.5px; color: var(--text-dim); font-weight: 600; }
+.leader-form { display: flex; gap: 5px; margin-top: 4px; }
+.form-dot {
+  width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center;
+  font-size: 11px; font-weight: 800; color: #fff;
+}
+.form-W { background: rgba(47,174,107,0.85); }
+.form-L { background: rgba(226,59,59,0.7); }
+@media (max-width: 760px) { .leaders-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; } }

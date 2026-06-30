@@ -12,7 +12,9 @@ import JoinModal from '../components/JoinModal.jsx'
 import { ShuttleLogo, ShuttleDeco } from '../components/Shuttle.jsx'
 import { TODAY_SESSION } from '../data/seed.js'
 import { fmtFullDate } from '../lib/format.js'
-import { HERO_PHOTO } from '../data/gallery.js'
+import { computeStats } from '../lib/stats.js'
+import { track } from '../lib/analytics.js'
+import { HERO_PHOTO, HERO_WEBP } from '../data/gallery.js'
 
 // The gallery pulls in react-photo-album (and, in turn, the lightbox), so it's
 // lazy-loaded — the landing page paints without waiting on it.
@@ -50,7 +52,20 @@ export default function PublicSite() {
   // Start time for the live countdown — the first half of e.g. "20:00–22:00".
   const nextStart = (nextSession.time || '20:00').split('–')[0].trim()
 
-  const openJoin = () => setJoinOpen(true)
+  // Top players by leaderboard points, for the public "Club Leaders" section.
+  const leaders = useMemo(
+    () => computeStats(matches).filter((r) => r.played > 0).slice(0, 3),
+    [matches]
+  )
+
+  const openJoin = () => {
+    track('Join opened')
+    setJoinOpen(true)
+  }
+  const handleLogin = () => {
+    track('Member login clicked')
+    openLogin()
+  }
 
   // Gentle pointer parallax for the hero: track the cursor's offset from centre
   // as -1..1 and expose it as CSS vars the decorations read. Skipped entirely
@@ -136,12 +151,15 @@ export default function PublicSite() {
             </a>
           ))}
         </nav>
-        <button className="btn btn-gold btn-sm public-login" onClick={openLogin}>🔑 Member Login</button>
+        <button className="btn btn-gold btn-sm public-login" onClick={handleLogin}>🔑 Member Login</button>
       </header>
 
       {/* ─────────── Hero ─────────── */}
       <section className="public-hero" id="top" ref={heroRef}>
-        <div className="public-hero-bg" style={{ backgroundImage: `url(${HERO_PHOTO})` }} />
+        <div
+          className="public-hero-bg"
+          style={{ '--hero-jpg': `url(${HERO_PHOTO})`, '--hero-webp': `url(${HERO_WEBP})` }}
+        />
         <div className="shuttle-parallax" style={{ top: 90, right: 60, '--depth': 1 }}>
           <ShuttleDeco size={150} className="shuttle-float" />
         </div>
@@ -165,7 +183,7 @@ export default function PublicSite() {
             <b> smash it together.</b>
           </motion.p>
           <motion.div className="public-hero-cta" variants={heroItem}>
-            <button className="btn btn-gold" onClick={openLogin}>🔑 Member Login</button>
+            <button className="btn btn-gold" onClick={handleLogin}>🔑 Member Login</button>
             <a className="btn btn-ghost" href="#play">How we play →</a>
           </motion.div>
           <motion.div className="public-hero-stats" variants={heroItem}>
@@ -296,6 +314,37 @@ export default function PublicSite() {
         </motion.div>
       </section>
 
+      {/* ─────────── Club leaders (top players from match data) ─────────── */}
+      {leaders.length > 0 && (
+        <section id="leaders" className="public-section">
+          <Reveal className="public-head center">
+            <span className="eyebrow">On the leaderboard</span>
+            <h2 className="display public-h2">Club <span className="accent">Leaders</span> 🏆</h2>
+            <p className="public-lead">Our top players by points — every win, partner and point is tracked across the season.</p>
+          </Reveal>
+          <div className="leaders-grid">
+            {leaders.map((p, i) => (
+              <Reveal key={p.id} delay={i * 0.08}>
+                <div className={`glass card-pad leader-card leader-rank-${i + 1}`}>
+                  <div className="leader-medal">{['🥇', '🥈', '🥉'][i] || `#${p.rank}`}</div>
+                  <Avatar player={p} size={64} ring />
+                  <div className="leader-name">{p.name}</div>
+                  <div className="leader-points mono">{p.points}<span> pts</span></div>
+                  <div className="leader-meta">{p.won}W · {p.lost}L · {p.winPct}% win</div>
+                  {p.form.length > 0 && (
+                    <div className="leader-form" aria-label="Recent form">
+                      {p.form.map((r, idx) => (
+                        <span key={idx} className={`form-dot form-${r}`} title={r === 'W' ? 'Win' : 'Loss'}>{r}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ─────────── Sessions / visit ─────────── */}
       <section id="visit" className="public-section">
         <div className="visit-grid">
@@ -315,7 +364,7 @@ export default function PublicSite() {
             </div>
             <div className="row wrap" style={{ gap: 10, marginTop: 18 }}>
               <button className="btn btn-wa" onClick={openJoin}>📲 Ask to join</button>
-              <button className="btn btn-ghost" onClick={openLogin}>Member login →</button>
+              <button className="btn btn-ghost" onClick={handleLogin}>Member login →</button>
             </div>
           </div>
 
@@ -346,7 +395,7 @@ export default function PublicSite() {
           </p>
           <div className="row wrap center" style={{ gap: 12, justifyContent: 'center' }}>
             <button className="btn btn-wa" onClick={openJoin}>📲 Say hello on WhatsApp</button>
-            <button className="btn btn-gold" onClick={openLogin}>🔑 Member Login</button>
+            <button className="btn btn-gold" onClick={handleLogin}>🔑 Member Login</button>
           </div>
         </Reveal>
       </section>
@@ -361,7 +410,7 @@ export default function PublicSite() {
           </span>
         </div>
         <span className="public-footer-mid">Smash It Together 🏸🇱🇰 · Riyadh, Saudi Arabia</span>
-        <button className="public-footer-link" onClick={openLogin}>Members portal →</button>
+        <button className="public-footer-link" onClick={handleLogin}>Members portal →</button>
       </footer>
 
       <BackToTop />

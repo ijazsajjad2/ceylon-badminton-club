@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/shuttle.svg" />
-    <link rel="apple-touch-icon" href="/shuttle.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0F1117" />
 
@@ -25,7 +26,7 @@
       content="A Sri Lankan badminton community in Riyadh — random doubles twice a week. New faces welcome. Smash it together. 🏸🇱🇰"
     />
     <meta property="og:url" content="https://ceylonbadminton.com/" />
-    <meta property="og:image" content="https://ceylonbadminton.com/gallery/club-11.jpg" />
+    <meta property="og:image" content="https://ceylonbadminton.com/og-cover.jpg" />
     <meta property="og:image:alt" content="Team Ceylon Badminton Club, Riyadh" />
     <meta property="og:locale" content="en_US" />
 
@@ -36,7 +37,7 @@
       name="twitter:description"
       content="A Sri Lankan badminton community in Riyadh — random doubles twice a week. Smash it together. 🏸🇱🇰"
     />
-    <meta name="twitter:image" content="https://ceylonbadminton.com/gallery/club-11.jpg" />
+    <meta name="twitter:image" content="https://ceylonbadminton.com/og-cover.jpg" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -44,8 +45,9 @@
       href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
       rel="stylesheet"
     />
-    <!-- Preload the hero photo (LCP) so it paints sooner -->
-    <link rel="preload" as="image" href="/gallery/club-08.jpg" fetchpriority="high" />
+    <!-- Preload the hero photo (LCP). type="image/webp" means only WebP-capable
+         browsers preload it, matching the CSS image-set() — no double download. -->
+    <link rel="preload" as="image" href="/gallery/club-08.webp" type="image/webp" fetchpriority="high" />
 
     <!-- Structured data for search engines -->
     <script type="application/ld+json">
@@ -56,7 +58,7 @@
         "description": "A Sri Lankan badminton community in Riyadh playing random doubles twice a week.",
         "url": "https://ceylonbadminton.com/",
         "logo": "https://ceylonbadminton.com/shuttle.svg",
-        "image": "https://ceylonbadminton.com/gallery/club-11.jpg",
+        "image": "https://ceylonbadminton.com/og-cover.jpg",
         "sport": "Badminton",
         "areaServed": "Riyadh, Saudi Arabia",
         "location": {
