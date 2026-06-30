@@ -37,9 +37,6 @@ export default function Dashboard({ navigate }) {
     setShowRecord(true)
   }
 
-  const todayMatches = useMemo(() => matches.filter((m) => m.date === TODAY), [matches])
-  const todayDoubles = todayMatches.filter((m) => m.type === 'doubles')
-  const todaySingles = todayMatches.filter((m) => m.type === 'singles')
   const liveMatches = matches.filter((m) => m.live)
 
   const stats = useMemo(() => computeStats(matches), [matches])
@@ -54,6 +51,7 @@ export default function Dashboard({ navigate }) {
     () => matches.filter((m) => !m.live && m.winner).slice(0, 6),
     [matches]
   )
+  const latest = recent.slice(0, 3)
 
   const tickerItems = useMemo(() => {
     const base = [...liveMatches, ...matches.filter((m) => !m.live).slice(0, 8)]
@@ -117,30 +115,21 @@ export default function Dashboard({ navigate }) {
 
       {/* Stats */}
       <div className="stat-grid" style={{ marginTop: 18 }}>
-        <StatCounter value={playersToday} label="Players Today" icon="🏸" />
-        <StatCounter value={todayMatches.length} label="Matches Today" icon="⚔️" />
+        <StatCounter value={playersToday} label="Going to Next" icon="🏸" />
+        <StatCounter value={matches.length} label="Matches Played" icon="⚔️" />
         <StatCounter value={players.length} label="Active Members" icon="👥" />
         <StatCounter value={sessionsThisMonth} label="Sessions This Month" icon="📅" />
       </div>
 
       <div className="dash-cols" style={{ marginTop: 22 }}>
         <div>
-          <h2 className="section-title">Today's <span className="accent">Doubles</span> 🏸</h2>
-          {todayDoubles.length ? (
+          <h2 className="section-title">Latest <span className="accent">Matches</span> 🏸</h2>
+          {latest.length ? (
             <div style={{ display: 'grid', gap: 14 }}>
-              {todayDoubles.map((m) => <MatchCard key={m.id} match={m} />)}
+              {latest.map((m) => <MatchCard key={m.id} match={m} />)}
             </div>
           ) : (
-            <div className="glass card-pad dim">No doubles recorded yet today. Generate pairs to get started!</div>
-          )}
-
-          {todaySingles.length > 0 && (
-            <>
-              <h2 className="section-title" style={{ fontSize: 20 }}>Today's Singles</h2>
-              <div style={{ display: 'grid', gap: 10 }}>
-                {todaySingles.map((m) => <MatchCard key={m.id} match={m} />)}
-              </div>
-            </>
+            <div className="glass card-pad dim">No matches yet — record one after the next session!</div>
           )}
 
           <h2 className="section-title" style={{ fontSize: 20 }}>Recent Activity</h2>

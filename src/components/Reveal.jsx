@@ -1,25 +1,13 @@
-import { motion, useReducedMotion } from 'framer-motion'
-
-// Lightweight scroll-reveal wrapper. Fades + lifts content into view once,
-// and becomes a no-op when the user prefers reduced motion.
-export default function Reveal({ children, delay = 0, y = 26, className, as = 'div' }) {
-  const reduce = useReducedMotion()
-  const MotionTag = motion[as] || motion.div
-
-  if (reduce) {
-    const Tag = as
-    return <Tag className={className}>{children}</Tag>
-  }
-
+// Fade + lift content in on mount via a pure-CSS animation. Unlike a
+// scroll/JS-observer reveal, this always completes — content can never get
+// stuck invisible. Respects reduced motion; `delay` (seconds) staggers groups.
+export default function Reveal({ children, delay = 0, className = '', as: Tag = 'div' }) {
   return (
-    <MotionTag
-      className={className}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
+    <Tag
+      className={`reveal-in ${className}`.trim()}
+      style={delay ? { animationDelay: `${delay}s` } : undefined}
     >
       {children}
-    </MotionTag>
+    </Tag>
   )
 }
