@@ -26,37 +26,34 @@ const shuffle = (arr) => {
 const ids = PLAYERS.map((p) => p.id)
 const duoKey = (a, b) => [a, b].sort().join('~')
 
-// ---- Sessions (Tuesday & Sunday evenings) anchored on 2026-06-14 (Sunday) ----
-export const VENUES = [
-  'Al Muruj Sports Complex',
-  'Riyadh Indoor Arena',
-  'Granada Sports Hall',
-]
+// ---- Sessions: Wednesday nights (8–10 PM) & Saturday mornings (8–10 AM)
+//      at Green Badminton Club, anchored on Wed 2026-06-17. ----
+export const VENUES = ['Green Badminton Club']
+
+// Time per session day.
+const TIME_BY_DAY = { Wed: '20:00–22:00', Sat: '08:00–10:00' }
 
 const SESSION_DEFS = [
-  { date: '2026-05-12', day: 'Tue', status: 'past' },
-  { date: '2026-05-17', day: 'Sun', status: 'past' },
-  { date: '2026-05-19', day: 'Tue', status: 'past' },
-  { date: '2026-05-24', day: 'Sun', status: 'past' },
-  { date: '2026-05-26', day: 'Tue', status: 'past' },
-  { date: '2026-05-31', day: 'Sun', status: 'past' },
-  { date: '2026-06-02', day: 'Tue', status: 'past' },
-  { date: '2026-06-07', day: 'Sun', status: 'past' },
-  { date: '2026-06-09', day: 'Tue', status: 'past' },
-  { date: '2026-06-14', day: 'Sun', status: 'today' },
-  { date: '2026-06-16', day: 'Tue', status: 'upcoming' },
-  { date: '2026-06-21', day: 'Sun', status: 'upcoming' },
-  { date: '2026-06-23', day: 'Tue', status: 'upcoming' },
-  { date: '2026-06-28', day: 'Sun', status: 'upcoming' },
-  { date: '2026-06-30', day: 'Tue', status: 'upcoming' },
+  { date: '2026-05-20', day: 'Wed', status: 'past' },
+  { date: '2026-05-23', day: 'Sat', status: 'past' },
+  { date: '2026-05-27', day: 'Wed', status: 'past' },
+  { date: '2026-05-30', day: 'Sat', status: 'past' },
+  { date: '2026-06-03', day: 'Wed', status: 'past' },
+  { date: '2026-06-06', day: 'Sat', status: 'past' },
+  { date: '2026-06-10', day: 'Wed', status: 'past' },
+  { date: '2026-06-13', day: 'Sat', status: 'past' },
+  { date: '2026-06-17', day: 'Wed', status: 'today' },
+  { date: '2026-06-20', day: 'Sat', status: 'upcoming' },
+  { date: '2026-06-24', day: 'Wed', status: 'upcoming' },
+  { date: '2026-06-27', day: 'Sat', status: 'upcoming' },
 ]
 
 export const SESSIONS = SESSION_DEFS.map((s, i) => ({
   id: 's' + (i + 1),
   date: s.date,
   day: s.day,
-  time: '16:00–20:00',
-  venue: i % 3 === 1 ? VENUES[1] : VENUES[0],
+  time: TIME_BY_DAY[s.day],
+  venue: VENUES[0],
   courts: 2,
   status: s.status,
   // every session a different random crowd shows up
@@ -149,7 +146,9 @@ function buildMatch(session, { live = false } = {}) {
   }
   const { winner, sets } = makeMatchScore()
   const court = 1 + rint(session.courts)
-  const hour = 16 + rint(4)
+  // Match times fall inside the session's own 2-hour window (Wed 20–22, Sat 08–10).
+  const startH = parseInt(session.time, 10)
+  const hour = startH + rint(2)
   const min = pick(['00', '15', '30', '45'])
   matchSeq++
   return {
@@ -193,8 +192,10 @@ export const MATCHES = built.sort((a, b) => {
   return a.time < b.time ? 1 : -1
 })
 
-export const TODAY = '2026-06-14'
+export const TODAY = '2026-06-17'
 export const TODAY_SESSION = SESSIONS.find((s) => s.status === 'today')
+// Start time of today's session (e.g. '20:00') — used by the countdowns.
+export const TODAY_SESSION_START = TODAY_SESSION.time.split('–')[0]
 
 // ---- Sample match-video highlights (Google Drive) ----
 // fileIds below are clearly-demo placeholders: they gracefully trigger the

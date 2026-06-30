@@ -11,7 +11,7 @@ import { HERO_PHOTO } from '../data/gallery.js'
 
 const FEATURES = [
   { icon: '🔀', title: 'Random doubles', text: 'No fixed partners, no permanent teams. Every session we shuffle fresh pairs, so you share a court with someone new each time.' },
-  { icon: '🗓', title: 'Twice every week', text: 'We hit the courts every Tuesday & Sunday evening, 4–8 PM, at Riyadh’s best indoor halls.' },
+  { icon: '🗓', title: 'Twice every week', text: 'We hit the courts every Wednesday night (8–10 PM) and Saturday morning (8–10 AM) at Green Badminton Club, Riyadh.' },
   { icon: '🤝', title: 'Everyone plays', text: 'Beginners to advanced, all welcome. A fair sit-out rotation means nobody is benched for long.' },
   { icon: '🏆', title: 'Friendly stakes', text: 'Every match is tracked on a personal leaderboard — bragging rights, MVPs and highlight reels included.' },
 ]
@@ -100,8 +100,8 @@ export default function PublicSite() {
               friendly, the rallies sharp, and the whole club close-knit.
             </p>
             <ul className="about-points">
-              <li><span className="ap-ico">🗓</span><span><b>Twice a week</b> — Tuesdays &amp; Sundays, 4–8 PM</span></li>
-              <li><span className="ap-ico">📍</span><span>Al Muruj Sports Complex &amp; partner halls across Riyadh</span></li>
+              <li><span className="ap-ico">🗓</span><span><b>Twice a week</b> — Wednesday nights (8–10 PM) &amp; Saturday mornings (8–10 AM)</span></li>
+              <li><span className="ap-ico">📍</span><span>Green Badminton Club, Riyadh</span></li>
               <li><span className="ap-ico">🇱🇰</span><span>A proudly Sri Lankan community, all skill levels welcome</span></li>
             </ul>
           </div>
@@ -164,14 +164,14 @@ export default function PublicSite() {
             <span className="eyebrow">When &amp; where</span>
             <h2 className="display about-headline">Come play with us</h2>
             <div className="row wrap" style={{ gap: 10, marginTop: 4 }}>
-              <span className="hero-pill">🗓 Tuesdays &amp; Sundays</span>
-              <span className="hero-pill">🕓 4:00 – 8:00 PM</span>
-              <span className="hero-pill">📍 {nextSession.venue}</span>
+              <span className="hero-pill">🌙 Wed 8–10 PM</span>
+              <span className="hero-pill">🌅 Sat 8–10 AM</span>
+              <span className="hero-pill">📍 {nextSession.venue}, Riyadh</span>
             </div>
             <div className="next-session">
               <span className="eyebrow">Next session</span>
               <div className="display next-date">{fmtFullDate(nextSession.date)}</div>
-              <div className="faint" style={{ fontSize: 13 }}>{nextSession.courts} courts · random doubles all evening</div>
+              <div className="faint" style={{ fontSize: 13 }}>{nextSession.time} · {nextSession.courts} courts · random doubles</div>
             </div>
             <div className="row wrap" style={{ gap: 10, marginTop: 18 }}>
               <button className="btn btn-wa" onClick={sayHello}>📲 Ask to join on WhatsApp</button>

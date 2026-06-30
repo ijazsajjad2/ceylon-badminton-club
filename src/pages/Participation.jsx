@@ -73,18 +73,18 @@ export default function Participation({ navigate }) {
   return (
     <div className="page-wrap">
       <h1 className="section-title" style={{ fontSize: 34, marginTop: 6 }}>Sessions <span className="accent">🎲</span></h1>
-      <p className="section-sub">We play <b style={{ color: 'var(--gold-bright)' }}>twice a week</b> — Tuesdays &amp; Sundays, 4–8 PM. Random doubles every session, nobody has a fixed partner. Mark who's coming, then generate fresh pairs.</p>
+      <p className="section-sub">We play <b style={{ color: 'var(--gold-bright)' }}>twice a week</b> — Wednesday nights (8–10 PM) &amp; Saturday mornings (8–10 AM) at Green Badminton Club. Random doubles every session, nobody has a fixed partner. Mark who's coming, then generate fresh pairs.</p>
 
       {/* Session hero card */}
       <div className="glass card-pad" style={{ position: 'relative', overflow: 'hidden' }}>
         <ShuttleDeco size={150} className="shuttle-float" style={{ top: -10, right: 10 }} />
         <div className="row spread wrap" style={{ position: 'relative' }}>
           <div>
-            <span className="eyebrow">Next Session · Tue &amp; Sun each week</span>
+            <span className="eyebrow">Next Session · Wed &amp; Sat each week</span>
             <div className="display" style={{ fontSize: 30, marginTop: 4 }}>{TODAY_SESSION.venue}</div>
             <div className="row wrap" style={{ marginTop: 10, gap: 10 }}>
               <span className="hero-pill">🗓 {fmtFullDate(TODAY_SESSION.date)}</span>
-              <span className="hero-pill">🕓 4:00 PM – 8:00 PM</span>
+              <span className="hero-pill">🕓 {TODAY_SESSION.time}</span>
               <span className="hero-pill">🏟 {TODAY_SESSION.courts} Courts</span>
             </div>
           </div>

@@ -15,8 +15,8 @@ const FILTERS = [
 ]
 
 function inWeek(date) {
-  // week of 2026-06-14 (Sun) → 06-08..06-14 + today's session window
-  return date >= '2026-06-08' && date <= '2026-06-14'
+  // week containing today's session, Wed 2026-06-17 (Mon–Sun 06-15..06-21)
+  return date >= '2026-06-15' && date <= '2026-06-21'
 }
 
 export default function Matches({ prefillMatch, clearPrefill }) {

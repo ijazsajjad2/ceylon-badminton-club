@@ -7,8 +7,8 @@ import useCountdown from '../hooks/useCountdown.js'
 import { VENUES } from '../data/seed.js'
 import { fmtFullDate, dayName, DAYS } from '../lib/format.js'
 
-function Countdown({ date }) {
-  const cd = useCountdown(date, '16:00')
+function Countdown({ date, time = '20:00' }) {
+  const cd = useCountdown(date, time)
   if (cd.done) return <span className="gold">In session 🔴</span>
   return (
     <span className="mono gold">
@@ -19,7 +19,7 @@ function Countdown({ date }) {
 
 function ScheduleModal({ onClose }) {
   const { dispatch, pushToast, sessions } = useApp()
-  const [form, setForm] = useState({ date: '2026-07-05', time: '16:00–20:00', venue: VENUES[0], courts: 2, notes: '' })
+  const [form, setForm] = useState({ date: '2026-07-05', time: '20:00–22:00', venue: VENUES[0], courts: 2, notes: '' })
   const save = () => {
     if (!form.date) { pushToast('Pick a date', 'error'); return }
     if (sessions.some((s) => s.date === form.date)) { pushToast('A session already exists on that date', 'error'); return }
@@ -101,7 +101,7 @@ export default function Schedule() {
       <div className="row spread wrap">
         <div>
           <h1 className="section-title" style={{ fontSize: 34, marginTop: 6 }}>Schedule 📅</h1>
-          <p className="section-sub">Sessions run Tuesday & Sunday evenings.</p>
+          <p className="section-sub">Wednesday nights (8–10 PM) &amp; Saturday mornings (8–10 AM) at Green Badminton Club.</p>
         </div>
         <button className="btn btn-gold" onClick={trySchedule}>＋ Schedule Session</button>
       </div>
@@ -110,7 +110,7 @@ export default function Schedule() {
       <div className="week-strip">
         {weekDays.map((d) => {
           const sess = sessionByDate[d]
-          const isToday = d === '2026-06-14'
+          const isToday = d === '2026-06-17'
           return (
             <div key={d} className={`week-day ${sess ? 'has-session' : ''} ${isToday ? 'today' : ''}`}>
               <div className="wd-day">{dayName(d)}</div>
@@ -128,7 +128,7 @@ export default function Schedule() {
           <div className="calendar">
             {DAYS.map((d) => <div key={d} className="cal-cell dow">{d[0]}</div>)}
             {calCells.map((d, i) => (
-              <div key={i} className={`cal-cell ${d && sessionByDate[d] ? 'session' : ''} ${d === '2026-06-14' ? 'today-cell' : ''}`}>
+              <div key={i} className={`cal-cell ${d && sessionByDate[d] ? 'session' : ''} ${d === '2026-06-17' ? 'today-cell' : ''}`}>
                 {d ? Number(d.slice(8)) : ''}
               </div>
             ))}
@@ -144,7 +144,7 @@ export default function Schedule() {
               <div key={s.id} className="glass card-pad hoverable">
                 <div className="row spread">
                   <span className="eyebrow">{s.status === 'today' ? '🔴 Today' : 'Upcoming'}</span>
-                  <Countdown date={s.date} />
+                  <Countdown date={s.date} time={s.time.split('–')[0]} />
                 </div>
                 <div className="display" style={{ fontSize: 22, marginTop: 6 }}>{fmtFullDate(s.date)}</div>
                 <div className="row wrap" style={{ gap: 8, marginTop: 8 }}>

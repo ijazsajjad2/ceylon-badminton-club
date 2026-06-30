@@ -7,7 +7,7 @@ import Avatar from '../components/Avatar.jsx'
 import RecordMatchModal from '../components/RecordMatchModal.jsx'
 import { ShuttleDeco } from '../components/Shuttle.jsx'
 import { computeStats, setsWon } from '../lib/stats.js'
-import { TODAY, TODAY_SESSION } from '../data/seed.js'
+import { TODAY, TODAY_SESSION, TODAY_SESSION_START } from '../data/seed.js'
 import { fmtFullDate } from '../lib/format.js'
 import useCountdown from '../hooks/useCountdown.js'
 
@@ -30,7 +30,7 @@ export default function Dashboard({ navigate }) {
   const { matches, players, sessions, playerById, goingIds, imPlaying, pushToast } = useApp()
   const { user, openLogin } = useAuth()
   const [showRecord, setShowRecord] = useState(false)
-  const cd = useCountdown(TODAY_SESSION.date, '16:00')
+  const cd = useCountdown(TODAY_SESSION.date, TODAY_SESSION_START)
 
   const tryRecord = () => {
     if (!user) { pushToast('Sign in as a member to record a score 🔒', 'info'); return openLogin() }
