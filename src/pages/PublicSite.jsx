@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useApp } from '../context/AppContext.jsx'
@@ -8,11 +8,15 @@ import CountUp from '../components/CountUp.jsx'
 import ScrollProgress from '../components/ScrollProgress.jsx'
 import BackToTop from '../components/BackToTop.jsx'
 import SessionCountdown from '../components/SessionCountdown.jsx'
-import AdvancedGallery from '../components/AdvancedGallery.jsx'
+import JoinModal from '../components/JoinModal.jsx'
 import { ShuttleLogo, ShuttleDeco } from '../components/Shuttle.jsx'
 import { TODAY_SESSION } from '../data/seed.js'
-import { fmtFullDate, whatsappShare } from '../lib/format.js'
+import { fmtFullDate } from '../lib/format.js'
 import { HERO_PHOTO } from '../data/gallery.js'
+
+// The gallery pulls in react-photo-album (and, in turn, the lightbox), so it's
+// lazy-loaded — the landing page paints without waiting on it.
+const AdvancedGallery = lazy(() => import('../components/AdvancedGallery.jsx'))
 
 const FEATURES = [
   { icon: '🔀', title: 'Random doubles', text: 'No fixed partners, no permanent teams. Every session we shuffle fresh pairs, so you share a court with someone new each time.' },
@@ -21,11 +25,21 @@ const FEATURES = [
   { icon: '🏆', title: 'Friendly stakes', text: 'Every match is tracked on a personal leaderboard — bragging rights, MVPs and highlight reels included.' },
 ]
 
+const NAV_SECTIONS = [
+  { id: 'about', label: 'About' },
+  { id: 'play', label: 'How we play' },
+  { id: 'gallery', label: 'Gallery' },
+  { id: 'members', label: 'Members' },
+  { id: 'visit', label: 'Sessions' },
+]
+
 export default function PublicSite() {
   const { openLogin } = useAuth()
   const { players, sessions, matches } = useApp()
   const reduce = useReducedMotion()
   const heroRef = useRef(null)
+  const [joinOpen, setJoinOpen] = useState(false)
+  const [activeId, setActiveId] = useState('')
 
   const memberCount = players.length
   const matchesPlayed = matches.length
@@ -36,8 +50,7 @@ export default function PublicSite() {
   // Start time for the live countdown — the first half of e.g. "20:00–22:00".
   const nextStart = (nextSession.time || '20:00').split('–')[0].trim()
 
-  const sayHello = () =>
-    whatsappShare("🏸 Hi! I'd love to join the Ceylon Badminton Club in Riyadh — when's the next session?")
+  const openJoin = () => setJoinOpen(true)
 
   // Gentle pointer parallax for the hero: track the cursor's offset from centre
   // as -1..1 and expose it as CSS vars the decorations read. Skipped entirely
@@ -70,6 +83,23 @@ export default function PublicSite() {
     }
   }, [reduce])
 
+  // Scroll-spy: highlight the nav link for whichever section is in view.
+  useEffect(() => {
+    const targets = NAV_SECTIONS.map((s) => document.getElementById(s.id)).filter(Boolean)
+    if (!targets.length || !('IntersectionObserver' in window)) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+        if (visible) setActiveId(visible.target.id)
+      },
+      { rootMargin: '-45% 0px -50% 0px', threshold: [0, 0.25, 0.5] }
+    )
+    targets.forEach((t) => io.observe(t))
+    return () => io.disconnect()
+  }, [])
+
   // Staggered hero entrance choreography.
   const heroStagger = {
     hidden: {},
@@ -95,11 +125,16 @@ export default function PublicSite() {
           </span>
         </a>
         <nav className="public-links" aria-label="Sections">
-          <a href="#about">About</a>
-          <a href="#play">How we play</a>
-          <a href="#gallery">Gallery</a>
-          <a href="#members">Members</a>
-          <a href="#visit">Sessions</a>
+          {NAV_SECTIONS.map((s) => (
+            <a
+              key={s.id}
+              href={`#${s.id}`}
+              className={activeId === s.id ? 'is-active' : undefined}
+              aria-current={activeId === s.id ? 'true' : undefined}
+            >
+              {s.label}
+            </a>
+          ))}
         </nav>
         <button className="btn btn-gold btn-sm public-login" onClick={openLogin}>🔑 Member Login</button>
       </header>
@@ -169,6 +204,28 @@ export default function PublicSite() {
               <li><span className="ap-ico">📍</span><span>Green Badminton Club, Riyadh</span></li>
               <li><span className="ap-ico">🇱🇰</span><span>A proudly Sri Lankan community, all skill levels welcome</span></li>
             </ul>
+            <div className="about-stats">
+              <div className="glass stat-card hoverable">
+                <span className="stat-icon">👥</span>
+                <div className="stat-num mono"><CountUp value={memberCount} /></div>
+                <div className="stat-label">Members</div>
+              </div>
+              <div className="glass stat-card hoverable">
+                <span className="stat-icon">⚔️</span>
+                <div className="stat-num mono"><CountUp value={matchesPlayed} suffix="+" /></div>
+                <div className="stat-label">Matches played</div>
+              </div>
+              <div className="glass stat-card hoverable">
+                <span className="stat-icon">📅</span>
+                <div className="stat-num mono"><CountUp value={2} /></div>
+                <div className="stat-label">Sessions / week</div>
+              </div>
+              <div className="glass stat-card hoverable">
+                <span className="stat-icon">🏸</span>
+                <div className="stat-num mono">2024</div>
+                <div className="stat-label">Established</div>
+              </div>
+            </div>
           </div>
         </Reveal>
       </section>
@@ -201,7 +258,9 @@ export default function PublicSite() {
           <p className="public-lead">Real moments from our sessions, tournaments and trophy nights — tap any photo to view full screen.</p>
         </Reveal>
         <Reveal>
-          <AdvancedGallery />
+          <Suspense fallback={<div className="gallery-loading">Loading photos…</div>}>
+            <AdvancedGallery />
+          </Suspense>
         </Reveal>
       </section>
 
@@ -255,7 +314,7 @@ export default function PublicSite() {
               <div className="faint" style={{ fontSize: 13 }}>{nextSession.time} · {nextSession.courts} courts · random doubles</div>
             </div>
             <div className="row wrap" style={{ gap: 10, marginTop: 18 }}>
-              <button className="btn btn-wa" onClick={sayHello}>📲 Ask to join on WhatsApp</button>
+              <button className="btn btn-wa" onClick={openJoin}>📲 Ask to join</button>
               <button className="btn btn-ghost" onClick={openLogin}>Member login →</button>
             </div>
           </div>
@@ -268,7 +327,7 @@ export default function PublicSite() {
               No commitment and no fees to come try a session.
             </p>
             <div className="row wrap" style={{ gap: 10, marginTop: 18 }}>
-              <button className="btn btn-wa" onClick={sayHello}>📲 Message us</button>
+              <button className="btn btn-wa" onClick={openJoin}>📲 Message us</button>
               <a className="btn btn-ghost" href="#members">Meet the members →</a>
             </div>
           </div>
@@ -286,7 +345,7 @@ export default function PublicSite() {
             this week. Already a member? Sign in to RSVP, record scores and check the leaderboard.
           </p>
           <div className="row wrap center" style={{ gap: 12, justifyContent: 'center' }}>
-            <button className="btn btn-wa" onClick={sayHello}>📲 Say hello on WhatsApp</button>
+            <button className="btn btn-wa" onClick={openJoin}>📲 Say hello on WhatsApp</button>
             <button className="btn btn-gold" onClick={openLogin}>🔑 Member Login</button>
           </div>
         </Reveal>
@@ -306,6 +365,7 @@ export default function PublicSite() {
       </footer>
 
       <BackToTop />
+      {joinOpen && <JoinModal onClose={() => setJoinOpen(false)} />}
     </div>
   )
 }

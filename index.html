@@ -3,15 +3,87 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/shuttle.svg" />
+    <link rel="apple-touch-icon" href="/shuttle.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0F1117" />
+
     <title>Ceylon Badminton Club · Riyadh Chapter</title>
+    <meta
+      name="description"
+      content="A Sri Lankan badminton community in Riyadh. We meet twice a week, shuffle fresh random doubles every session, and play for the love of the game. New faces welcome — smash it together."
+    />
+    <meta name="keywords" content="badminton, Riyadh, Sri Lankan, Ceylon, club, doubles, Saudi Arabia, sports" />
+    <link rel="canonical" href="https://ceylonbadminton.com/" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Open Graph / social sharing (WhatsApp, Facebook, LinkedIn) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ceylon Badminton Club" />
+    <meta property="og:title" content="Ceylon Badminton Club · Riyadh" />
+    <meta
+      property="og:description"
+      content="A Sri Lankan badminton community in Riyadh — random doubles twice a week. New faces welcome. Smash it together. 🏸🇱🇰"
+    />
+    <meta property="og:url" content="https://ceylonbadminton.com/" />
+    <meta property="og:image" content="https://ceylonbadminton.com/gallery/club-11.jpg" />
+    <meta property="og:image:alt" content="Team Ceylon Badminton Club, Riyadh" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ceylon Badminton Club · Riyadh" />
+    <meta
+      name="twitter:description"
+      content="A Sri Lankan badminton community in Riyadh — random doubles twice a week. Smash it together. 🏸🇱🇰"
+    />
+    <meta name="twitter:image" content="https://ceylonbadminton.com/gallery/club-11.jpg" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Preload the hero photo (LCP) so it paints sooner -->
+    <link rel="preload" as="image" href="/gallery/club-08.jpg" fetchpriority="high" />
+
+    <!-- Structured data for search engines -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SportsClub",
+        "name": "Ceylon Badminton Club",
+        "description": "A Sri Lankan badminton community in Riyadh playing random doubles twice a week.",
+        "url": "https://ceylonbadminton.com/",
+        "logo": "https://ceylonbadminton.com/shuttle.svg",
+        "image": "https://ceylonbadminton.com/gallery/club-11.jpg",
+        "sport": "Badminton",
+        "areaServed": "Riyadh, Saudi Arabia",
+        "location": {
+          "@type": "Place",
+          "name": "Green Badminton Club",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Riyadh",
+            "addressCountry": "SA"
+          }
+        },
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": "Wednesday",
+            "opens": "20:00",
+            "closes": "22:00"
+          },
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": "Saturday",
+            "opens": "08:00",
+            "closes": "10:00"
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

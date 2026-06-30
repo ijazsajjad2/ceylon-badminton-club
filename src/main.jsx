@@ -14,3 +14,11 @@ createRoot(document.getElementById('root')).render(
     </AuthProvider>
   </React.StrictMode>
 )
+
+// Register the service worker for offline support & faster repeat visits.
+// Production only, so local dev never serves stale cached assets.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
+}
