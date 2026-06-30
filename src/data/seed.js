@@ -27,26 +27,42 @@ const ids = PLAYERS.map((p) => p.id)
 const duoKey = (a, b) => [a, b].sort().join('~')
 
 // ---- Sessions: Wednesday nights (8–10 PM) & Saturday mornings (8–10 AM)
-//      at Green Badminton Club, anchored on Wed 2026-06-17. ----
+//      at Green Badminton Club. Dates roll automatically off the real "now",
+//      so the schedule always shows recent + upcoming Wed/Sat and nothing is
+//      ever shown as live / in-session. ----
 export const VENUES = ['Green Badminton Club']
 
-// Time per session day.
 const TIME_BY_DAY = { Wed: '20:00–22:00', Sat: '08:00–10:00' }
+const SLOT_DOW = { 3: 'Wed', 6: 'Sat' } // JS day-of-week: 3 = Wed, 6 = Sat
+const startHour = (day) => (day === 'Wed' ? 20 : 8)
+const isoLocal = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-const SESSION_DEFS = [
-  { date: '2026-05-20', day: 'Wed', status: 'past' },
-  { date: '2026-05-23', day: 'Sat', status: 'past' },
-  { date: '2026-05-27', day: 'Wed', status: 'past' },
-  { date: '2026-05-30', day: 'Sat', status: 'past' },
-  { date: '2026-06-03', day: 'Wed', status: 'past' },
-  { date: '2026-06-06', day: 'Sat', status: 'past' },
-  { date: '2026-06-10', day: 'Wed', status: 'past' },
-  { date: '2026-06-13', day: 'Sat', status: 'past' },
-  { date: '2026-06-17', day: 'Wed', status: 'today' },
-  { date: '2026-06-20', day: 'Sat', status: 'upcoming' },
-  { date: '2026-06-24', day: 'Wed', status: 'upcoming' },
-  { date: '2026-06-27', day: 'Sat', status: 'upcoming' },
-]
+// A session is "past" once its start time has passed; the rest are "upcoming".
+function buildSessions(now = new Date()) {
+  const upcoming = []
+  for (let add = 0; add < 35 && upcoming.length < 4; add++) {
+    const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + add)
+    const day = SLOT_DOW[d.getDay()]
+    if (!day) continue
+    const start = new Date(d); start.setHours(startHour(day), 0, 0, 0)
+    if (start > now) upcoming.push({ date: isoLocal(d), day })
+  }
+  const past = []
+  for (let sub = 0; sub < 80 && past.length < 8; sub++) {
+    const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - sub)
+    const day = SLOT_DOW[d.getDay()]
+    if (!day) continue
+    const start = new Date(d); start.setHours(startHour(day), 0, 0, 0)
+    if (start <= now) past.unshift({ date: isoLocal(d), day }) // oldest → newest
+  }
+  return [
+    ...past.map((s) => ({ ...s, status: 'past' })),
+    ...upcoming.map((s) => ({ ...s, status: 'upcoming' })),
+  ]
+}
+
+const SESSION_DEFS = buildSessions()
 
 export const SESSIONS = SESSION_DEFS.map((s, i) => ({
   id: 's' + (i + 1),
@@ -57,10 +73,7 @@ export const SESSIONS = SESSION_DEFS.map((s, i) => ({
   courts: 2,
   status: s.status,
   // every session a different random crowd shows up
-  attendees:
-    s.status === 'upcoming'
-      ? []
-      : shuffle(ids).slice(0, 8 + rint(5)),
+  attendees: s.status === 'upcoming' ? [] : shuffle(ids).slice(0, 8 + rint(5)),
   notes: '',
 }))
 
@@ -192,9 +205,12 @@ export const MATCHES = built.sort((a, b) => {
   return a.time < b.time ? 1 : -1
 })
 
-export const TODAY = '2026-06-17'
-export const TODAY_SESSION = SESSIONS.find((s) => s.status === 'today')
-// Start time of today's session (e.g. '20:00') — used by the countdowns.
+// "Featured" session = the next upcoming one (always in the future), so
+// countdowns count down and nothing reads as live.
+export const TODAY_SESSION =
+  SESSIONS.find((s) => s.status === 'upcoming') || SESSIONS[SESSIONS.length - 1]
+export const TODAY = TODAY_SESSION.date
+// Start time of the next session (e.g. '20:00') — used by the countdowns.
 export const TODAY_SESSION_START = TODAY_SESSION.time.split('–')[0]
 
 // ---- Sample match-video highlights (Google Drive) ----

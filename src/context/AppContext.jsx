@@ -34,8 +34,10 @@ function initState() {
 
   return {
     players,
-    matches: load('matches', MATCHES),
-    sessions: load('sessions', SESSIONS),
+    // Sessions & matches are always derived fresh from the seed so the schedule
+    // auto-rolls to the real upcoming Wed/Sat (never frozen in localStorage).
+    matches: MATCHES,
+    sessions: SESSIONS,
     going: load('going', Object.fromEntries(TODAY_SESSION.attendees.map((id) => [id, true]))),
     imPlaying: load('imPlaying', false),
     lastSessionPairs: load('lastSessionPairs', seedLastPairs()),
@@ -90,10 +92,8 @@ export function AppProvider({ children }) {
   const [toasts, setToasts] = useState([])
   const toastId = useRef(0)
 
-  // Persist slices
+  // Persist slices (matches & sessions intentionally NOT persisted — derived from seed)
   useEffect(() => save('players', state.players), [state.players])
-  useEffect(() => save('matches', state.matches), [state.matches])
-  useEffect(() => save('sessions', state.sessions), [state.sessions])
   useEffect(() => save('going', state.going), [state.going])
   useEffect(() => save('imPlaying', state.imPlaying), [state.imPlaying])
   useEffect(() => save('lastSessionPairs', state.lastSessionPairs), [state.lastSessionPairs])

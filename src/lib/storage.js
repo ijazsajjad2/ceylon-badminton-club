@@ -1,7 +1,7 @@
 // Bump this version to invalidate stale cached app data (e.g. after a schedule/
 // venue change) so every visitor picks up the new seed. Login session is stored
 // separately under 'cbc.session', so bumping this does not sign anyone out.
-const PREFIX = 'cbc.v2.'
+const PREFIX = 'cbc.v3.'
 
 export function load(key, fallback) {
   try {

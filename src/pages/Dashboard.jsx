@@ -46,7 +46,8 @@ export default function Dashboard({ navigate }) {
   const top5 = stats.slice(0, 5)
 
   const playersToday = goingIds.length + (imPlaying ? 1 : 0)
-  const sessionsThisMonth = sessions.filter((s) => s.date.startsWith('2026-06') && s.status !== 'upcoming').length
+  const monthPrefix = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}` })()
+  const sessionsThisMonth = sessions.filter((s) => s.date.startsWith(monthPrefix) && s.status !== 'upcoming').length
   const myStats = user?.playerId ? stats.find((s) => s.id === user.playerId) : null
 
   const recent = useMemo(
@@ -97,10 +98,10 @@ export default function Dashboard({ navigate }) {
             <span className="hero-pill">🕓 {TODAY_SESSION.time}</span>
             <span className="hero-pill">🔀 Random doubles every session</span>
           </div>
-          <div className="countdown-box" aria-label="Countdown to today's session">
+          <div className="countdown-box" aria-label="Countdown to the next session">
             {cd.done ? (
               <div className="cd-cell" style={{ minWidth: 200 }}>
-                <div className="cd-num" style={{ fontSize: 20 }}>SESSION LIVE 🔴</div>
+                <div className="cd-num" style={{ fontSize: 20 }}>STARTING SOON 🏸</div>
               </div>
             ) : (
               [['d', cd.d], ['h', cd.h], ['m', cd.m], ['s', cd.s]].map(([l, v]) => (

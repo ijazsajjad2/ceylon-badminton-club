@@ -5,11 +5,11 @@ import Avatar from '../components/Avatar.jsx'
 import Modal from '../components/Modal.jsx'
 import useCountdown from '../hooks/useCountdown.js'
 import { VENUES } from '../data/seed.js'
-import { fmtFullDate, dayName, DAYS } from '../lib/format.js'
+import { fmtFullDate, dayName, DAYS, MONTHS } from '../lib/format.js'
 
 function Countdown({ date, time = '20:00' }) {
   const cd = useCountdown(date, time)
-  if (cd.done) return <span className="gold">In session 🔴</span>
+  if (cd.done) return <span className="gold">Starting soon</span>
   return (
     <span className="mono gold">
       {cd.d > 0 && `${cd.d}d `}{String(cd.h).padStart(2, '0')}h {String(cd.m).padStart(2, '0')}m {String(cd.s).padStart(2, '0')}s
@@ -82,19 +82,26 @@ export default function Schedule() {
   const upcoming = sessions.filter((s) => s.status !== 'past').sort((a, b) => a.date.localeCompare(b.date))
   const past = sessions.filter((s) => s.status === 'past').sort((a, b) => b.date.localeCompare(a.date))
 
-  // Week strip: 14 days starting 2026-06-08
+  // Dynamic "now" so the strip + calendar always reflect the current week/month.
+  const now = new Date()
+  const pad2 = (n) => String(n).padStart(2, '0')
+  const isoOf = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+  const todayISO = isoOf(now)
+
+  // Week strip: 14 days starting 5 days before today
   const weekDays = Array.from({ length: 14 }, (_, i) => {
-    const d = new Date('2026-06-08T00:00:00')
-    d.setDate(d.getDate() + i)
-    return d.toISOString().slice(0, 10)
+    const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - 5 + i)
+    return isoOf(d)
   })
 
-  // June 2026 calendar
-  const first = new Date('2026-06-01T00:00:00')
-  const startPad = first.getDay() // 1 (Mon)
+  // Current-month calendar
+  const monthLabel = `${MONTHS[now.getMonth()]} ${now.getFullYear()}`
+  const monthFirst = new Date(now.getFullYear(), now.getMonth(), 1)
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const startPad = monthFirst.getDay()
   const calCells = []
   for (let i = 0; i < startPad; i++) calCells.push(null)
-  for (let d = 1; d <= 30; d++) calCells.push(`2026-06-${String(d).padStart(2, '0')}`)
+  for (let d = 1; d <= daysInMonth; d++) calCells.push(`${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(d)}`)
 
   return (
     <div className="page-wrap">
@@ -110,7 +117,7 @@ export default function Schedule() {
       <div className="week-strip">
         {weekDays.map((d) => {
           const sess = sessionByDate[d]
-          const isToday = d === '2026-06-17'
+          const isToday = d === todayISO
           return (
             <div key={d} className={`week-day ${sess ? 'has-session' : ''} ${isToday ? 'today' : ''}`}>
               <div className="wd-day">{dayName(d)}</div>
@@ -124,11 +131,11 @@ export default function Schedule() {
       <div className="two-col" style={{ marginTop: 18 }}>
         {/* Calendar */}
         <div className="glass card-pad">
-          <h3 className="display" style={{ fontSize: 22, margin: '0 0 12px' }}>June 2026</h3>
+          <h3 className="display" style={{ fontSize: 22, margin: '0 0 12px' }}>{monthLabel}</h3>
           <div className="calendar">
             {DAYS.map((d) => <div key={d} className="cal-cell dow">{d[0]}</div>)}
             {calCells.map((d, i) => (
-              <div key={i} className={`cal-cell ${d && sessionByDate[d] ? 'session' : ''} ${d === '2026-06-17' ? 'today-cell' : ''}`}>
+              <div key={i} className={`cal-cell ${d && sessionByDate[d] ? 'session' : ''} ${d === todayISO ? 'today-cell' : ''}`}>
                 {d ? Number(d.slice(8)) : ''}
               </div>
             ))}
