@@ -1374,3 +1374,127 @@ html { scroll-behavior: smooth; }
 /* Wrapped feature cards keep equal height inside the grid */
 .feature-grid > * { height: 100%; }
 .feature-card { height: 100%; }
+
+/* ===================================================================
+   PUBLIC SITE — motion & interaction layer
+   Scroll progress, hero polish, parallax, count-up, live countdown,
+   feature-card sheen, animated section underline, back-to-top.
+   All decorative auto-motion is neutralised by the global
+   prefers-reduced-motion reset higher up in this file.
+   =================================================================== */
+
+/* Scroll progress bar */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 300;
+  transform-origin: 0 50%; transform: scaleX(0);
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-bright) 50%, var(--maroon-bright) 100%);
+  box-shadow: 0 0 12px rgba(226,59,59,0.5);
+}
+
+/* Hero background — slow Ken-Burns drift for a sense of life */
+.public-hero-bg { animation: kenburns 26s ease-in-out infinite alternate; transform-origin: 60% 40%; }
+@keyframes kenburns {
+  from { transform: scale(1.05) translate(0, 0); }
+  to   { transform: scale(1.14) translate(-1.5%, -1.5%); }
+}
+
+/* Animated gradient shimmer across the gold hero title */
+.public-hero-title .l2 {
+  background-size: 220% auto;
+  animation: goldSweep 6s ease-in-out infinite;
+}
+@keyframes goldSweep { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+/* Pointer parallax wrappers for the floating shuttles. The outer layer carries
+   the cursor-driven translate; the inner SVG keeps its own float animation. */
+.shuttle-parallax {
+  position: absolute; z-index: 1; pointer-events: none; will-change: transform;
+  transform: translate3d(calc(var(--px, 0) * var(--depth, 1) * 14px),
+                         calc(var(--py, 0) * var(--depth, 1) * 14px), 0);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Hero scroll cue — a little animated mouse at the bottom of the hero */
+.hero-scroll-cue {
+  position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
+  z-index: 3; opacity: 0.7; transition: opacity 0.2s;
+}
+.hero-scroll-cue:hover { opacity: 1; }
+.hsc-mouse {
+  display: block; width: 24px; height: 38px; border: 2px solid rgba(255,255,255,0.55);
+  border-radius: 13px; position: relative;
+}
+.hsc-dot {
+  position: absolute; left: 50%; top: 7px; width: 4px; height: 7px; border-radius: 3px;
+  background: var(--gold-bright); transform: translateX(-50%);
+  animation: scrollCue 1.6s ease-in-out infinite;
+}
+@keyframes scrollCue { 0% { opacity: 0; transform: translate(-50%, 0); } 40% { opacity: 1; } 80%,100% { opacity: 0; transform: translate(-50%, 12px); } }
+
+/* Animated underline under centred public section headings */
+.public-head.center .public-h2 { position: relative; display: inline-block; }
+.public-head.center .public-h2::after {
+  content: ''; position: absolute; left: 50%; bottom: -10px; height: 3px; width: 0;
+  transform: translateX(-50%); border-radius: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--maroon-bright));
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.public-head.center:hover .public-h2::after,
+.public-head.center .public-h2:hover::after { width: 64px; }
+
+/* Feature cards — lift, glow and a light sheen sweep on hover */
+.feature-card {
+  position: relative; overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s, border-color 0.3s;
+}
+.feature-card::after {
+  content: ''; position: absolute; top: 0; left: -120%; width: 80%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.12), transparent);
+  transform: skewX(-18deg); transition: left 0.7s ease; pointer-events: none;
+}
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.4), 0 0 0 1px rgba(226,59,59,0.28);
+}
+.feature-card:hover::after { left: 130%; }
+.feature-ico { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+.feature-card:hover .feature-ico { transform: translateY(-2px) rotate(-6deg) scale(1.06); }
+
+/* Live next-session countdown */
+.countdown { display: flex; gap: 8px; margin: 8px 0 12px; }
+.cd-cell {
+  flex: 1; min-width: 0; text-align: center; padding: 8px 4px; border-radius: 12px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+}
+.cd-num { display: block; font-size: 26px; font-weight: 800; line-height: 1; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
+.cd-lbl { display: block; margin-top: 4px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
+.cd-live { margin: 8px 0 12px; padding: 12px; border-radius: 12px; font-weight: 800; color: #fff; text-align: center;
+  background: linear-gradient(135deg, rgba(226,59,59,0.22), rgba(31,95,214,0.18)); border: 1px solid rgba(226,59,59,0.4); }
+
+/* Back-to-top floating button */
+.back-to-top {
+  position: fixed; right: 22px; bottom: 22px; z-index: 250;
+  width: 46px; height: 46px; border-radius: 50%; cursor: pointer;
+  font-size: 20px; font-weight: 800; color: #fff; line-height: 1;
+  background: linear-gradient(135deg, var(--gold), var(--maroon-bright));
+  border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+}
+.back-to-top:hover { box-shadow: 0 14px 34px rgba(226,59,59,0.5); }
+
+/* Member chips already lift on hover; add a soft glow to match the new cards */
+.member-chip { will-change: transform; }
+.member-chip:hover { box-shadow: 0 10px 26px rgba(0,0,0,0.32); }
+
+@media (max-width: 680px) {
+  .hero-scroll-cue { display: none; }
+  .back-to-top { right: 16px; bottom: 16px; }
+}
+
+/* Reduced motion: silence the looping decorative animations specifically
+   (the global reset shortens durations, but we also stop the loops cleanly). */
+@media (prefers-reduced-motion: reduce) {
+  .public-hero-bg { animation: none; transform: scale(1.05); }
+  .public-hero-title .l2 { animation: none; }
+  .hsc-dot { animation: none; }
+  .shuttle-parallax { transition: none; }
+}

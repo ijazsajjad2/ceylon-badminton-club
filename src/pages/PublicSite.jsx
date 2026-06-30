@@ -1,8 +1,13 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import Avatar from '../components/Avatar.jsx'
 import Reveal from '../components/Reveal.jsx'
+import CountUp from '../components/CountUp.jsx'
+import ScrollProgress from '../components/ScrollProgress.jsx'
+import BackToTop from '../components/BackToTop.jsx'
+import SessionCountdown from '../components/SessionCountdown.jsx'
 import AdvancedGallery from '../components/AdvancedGallery.jsx'
 import { ShuttleLogo, ShuttleDeco } from '../components/Shuttle.jsx'
 import { TODAY_SESSION } from '../data/seed.js'
@@ -19,6 +24,8 @@ const FEATURES = [
 export default function PublicSite() {
   const { openLogin } = useAuth()
   const { players, sessions, matches } = useApp()
+  const reduce = useReducedMotion()
+  const heroRef = useRef(null)
 
   const memberCount = players.length
   const matchesPlayed = matches.length
@@ -26,12 +33,58 @@ export default function PublicSite() {
     () => sessions.find((s) => s.status === 'today') || sessions.find((s) => s.status === 'upcoming') || TODAY_SESSION,
     [sessions]
   )
+  // Start time for the live countdown — the first half of e.g. "20:00–22:00".
+  const nextStart = (nextSession.time || '20:00').split('–')[0].trim()
 
   const sayHello = () =>
     whatsappShare("🏸 Hi! I'd love to join the Ceylon Badminton Club in Riyadh — when's the next session?")
 
+  // Gentle pointer parallax for the hero: track the cursor's offset from centre
+  // as -1..1 and expose it as CSS vars the decorations read. Skipped entirely
+  // for reduced-motion and on coarse (touch) pointers.
+  useEffect(() => {
+    const el = heroRef.current
+    if (!el || reduce) return
+    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return
+    let raf = 0
+    const onMove = (e) => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const r = el.getBoundingClientRect()
+        const px = ((e.clientX - r.left) / r.width - 0.5) * 2
+        const py = ((e.clientY - r.top) / r.height - 0.5) * 2
+        el.style.setProperty('--px', px.toFixed(3))
+        el.style.setProperty('--py', py.toFixed(3))
+      })
+    }
+    const onLeave = () => {
+      el.style.setProperty('--px', '0')
+      el.style.setProperty('--py', '0')
+    }
+    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerleave', onLeave)
+    return () => {
+      cancelAnimationFrame(raf)
+      el.removeEventListener('pointermove', onMove)
+      el.removeEventListener('pointerleave', onLeave)
+    }
+  }, [reduce])
+
+  // Staggered hero entrance choreography.
+  const heroStagger = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
+  }
+  const heroItem = reduce
+    ? { hidden: { opacity: 1, y: 0 }, show: { opacity: 1, y: 0 } }
+    : {
+        hidden: { opacity: 0, y: 24 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+      }
+
   return (
     <div className="public-site">
+      <ScrollProgress />
       {/* ─────────── Public top nav ─────────── */}
       <header className="public-nav">
         <a href="#top" className="brand">
@@ -52,35 +105,47 @@ export default function PublicSite() {
       </header>
 
       {/* ─────────── Hero ─────────── */}
-      <section className="public-hero" id="top">
+      <section className="public-hero" id="top" ref={heroRef}>
         <div className="public-hero-bg" style={{ backgroundImage: `url(${HERO_PHOTO})` }} />
-        <ShuttleDeco size={150} className="shuttle-float" style={{ top: 90, right: 60 }} />
-        <ShuttleDeco size={90} className="shuttle-float" style={{ top: 220, right: 220, animationDelay: '1.4s' }} />
-        <div className="public-hero-inner">
-          <span className="eyebrow">Private Sri Lankan Club · Riyadh, KSA</span>
-          <h1 className="public-hero-title">
+        <div className="shuttle-parallax" style={{ top: 90, right: 60, '--depth': 1 }}>
+          <ShuttleDeco size={150} className="shuttle-float" />
+        </div>
+        <div className="shuttle-parallax" style={{ top: 220, right: 220, '--depth': 1.8 }}>
+          <ShuttleDeco size={90} className="shuttle-float" style={{ animationDelay: '1.4s' }} />
+        </div>
+        <motion.div
+          className="public-hero-inner"
+          variants={heroStagger}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.span className="eyebrow" variants={heroItem}>Private Sri Lankan Club · Riyadh, KSA</motion.span>
+          <motion.h1 className="public-hero-title" variants={heroItem}>
             <span className="l1">Ceylon</span>
             <span className="l2">Badminton Club</span>
-          </h1>
-          <p className="public-hero-sub">
+          </motion.h1>
+          <motion.p className="public-hero-sub" variants={heroItem}>
             A Sri Lankan badminton community in Riyadh. We meet twice a week, shuffle fresh random
             doubles every session, and play for the love of the game. Show up, get matched —
             <b> smash it together.</b>
-          </p>
-          <div className="public-hero-cta">
+          </motion.p>
+          <motion.div className="public-hero-cta" variants={heroItem}>
             <button className="btn btn-gold" onClick={openLogin}>🔑 Member Login</button>
             <a className="btn btn-ghost" href="#play">How we play →</a>
-          </div>
-          <div className="public-hero-stats">
-            <div className="phs-item"><b>{memberCount}</b><span>Members</span></div>
+          </motion.div>
+          <motion.div className="public-hero-stats" variants={heroItem}>
+            <div className="phs-item"><b><CountUp value={memberCount} /></b><span>Members</span></div>
             <span className="phs-div" />
             <div className="phs-item"><b>2×</b><span>Per week</span></div>
             <span className="phs-div" />
             <div className="phs-item"><b>2024</b><span>Established</span></div>
             <span className="phs-div" />
-            <div className="phs-item"><b>{matchesPlayed}+</b><span>Matches</span></div>
-          </div>
-        </div>
+            <div className="phs-item"><b><CountUp value={matchesPlayed} suffix="+" /></b><span>Matches</span></div>
+          </motion.div>
+        </motion.div>
+        <a href="#about" className="hero-scroll-cue" aria-label="Scroll to learn more">
+          <span className="hsc-mouse"><span className="hsc-dot" /></span>
+        </a>
       </section>
 
       {/* ─────────── About ─────────── */}
@@ -147,14 +212,29 @@ export default function PublicSite() {
           <h2 className="display public-h2">Our <span className="accent">Members</span> 👥</h2>
           <p className="public-lead">{memberCount} players make up the club — partners rotate every session, so everyone plays with everyone.</p>
         </Reveal>
-        <div className="members-roster">
+        <motion.div
+          className="members-roster"
+          variants={{ show: { transition: { staggerChildren: 0.035 } } }}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-60px' }}
+        >
           {players.map((p) => (
-            <div className="member-chip" key={p.id}>
+            <motion.div
+              className="member-chip"
+              key={p.id}
+              variants={
+                reduce
+                  ? { hidden: { opacity: 1 }, show: { opacity: 1 } }
+                  : { hidden: { opacity: 0, y: 14, scale: 0.96 }, show: { opacity: 1, y: 0, scale: 1 } }
+              }
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            >
               <Avatar player={p} size={40} />
               <span className="member-chip-name">{p.name}</span>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* ─────────── Sessions / visit ─────────── */}
@@ -169,7 +249,8 @@ export default function PublicSite() {
               <span className="hero-pill">📍 {nextSession.venue}, Riyadh</span>
             </div>
             <div className="next-session">
-              <span className="eyebrow">Next session</span>
+              <span className="eyebrow">Next session starts in</span>
+              <SessionCountdown dateIso={nextSession.date} time={nextStart} />
               <div className="display next-date">{fmtFullDate(nextSession.date)}</div>
               <div className="faint" style={{ fontSize: 13 }}>{nextSession.time} · {nextSession.courts} courts · random doubles</div>
             </div>
@@ -223,6 +304,8 @@ export default function PublicSite() {
         <span className="public-footer-mid">Smash It Together 🏸🇱🇰 · Riyadh, Saudi Arabia</span>
         <button className="public-footer-link" onClick={openLogin}>Members portal →</button>
       </footer>
+
+      <BackToTop />
     </div>
   )
 }
