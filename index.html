@@ -2,42 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0F1117" />
+    <meta name="theme-color" content="#0a1020" />
 
-    <title>Ceylon Badminton Club · Riyadh Chapter</title>
-    <meta
-      name="description"
-      content="A Sri Lankan badminton community in Riyadh. We meet twice a week, shuffle fresh random doubles every session, and play for the love of the game. New faces welcome — smash it together."
-    />
-    <meta name="keywords" content="badminton, Riyadh, Sri Lankan, Ceylon, club, doubles, Saudi Arabia, sports" />
-    <link rel="canonical" href="https://ceylonbadminton.com/" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <title>Ceylon Badminton Club · Riyadh</title>
+    <meta name="description" content="Ceylon Badminton Club — a Sri Lankan badminton community in Riyadh. We play random doubles twice a week (Wed nights & Sat mornings) at Green Badminton Club. Beginners welcome." />
 
-    <!-- Open Graph / social sharing (WhatsApp, Facebook, LinkedIn) -->
+    <!-- Icons + PWA -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon-180.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Ceylon BC" />
+
+    <!-- Open Graph (rich link previews on WhatsApp, etc.) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Ceylon Badminton Club" />
     <meta property="og:title" content="Ceylon Badminton Club · Riyadh" />
-    <meta
-      property="og:description"
-      content="A Sri Lankan badminton community in Riyadh — random doubles twice a week. New faces welcome. Smash it together. 🏸🇱🇰"
-    />
+    <meta property="og:description" content="A Sri Lankan badminton community in Riyadh. Random doubles, twice a week, everyone welcome. Come smash it together 🏸" />
     <meta property="og:url" content="https://ceylonbadminton.com/" />
-    <meta property="og:image" content="https://ceylonbadminton.com/og-cover.jpg" />
-    <meta property="og:image:alt" content="Team Ceylon Badminton Club, Riyadh" />
-    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="https://ceylonbadminton.com/gallery/club-08.jpg" />
+    <meta property="og:image:width" content="1600" />
+    <meta property="og:image:height" content="739" />
 
-    <!-- Twitter / X -->
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Ceylon Badminton Club · Riyadh" />
-    <meta
-      name="twitter:description"
-      content="A Sri Lankan badminton community in Riyadh — random doubles twice a week. Smash it together. 🏸🇱🇰"
-    />
-    <meta name="twitter:image" content="https://ceylonbadminton.com/og-cover.jpg" />
+    <meta name="twitter:description" content="A Sri Lankan badminton community in Riyadh. Random doubles, twice a week, everyone welcome 🏸" />
+    <meta name="twitter:image" content="https://ceylonbadminton.com/gallery/club-08.jpg" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -45,47 +38,6 @@
       href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
       rel="stylesheet"
     />
-    <!-- Preload the hero photo (LCP). type="image/webp" means only WebP-capable
-         browsers preload it, matching the CSS image-set() — no double download. -->
-    <link rel="preload" as="image" href="/gallery/club-08.webp" type="image/webp" fetchpriority="high" />
-
-    <!-- Structured data for search engines -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SportsClub",
-        "name": "Ceylon Badminton Club",
-        "description": "A Sri Lankan badminton community in Riyadh playing random doubles twice a week.",
-        "url": "https://ceylonbadminton.com/",
-        "logo": "https://ceylonbadminton.com/icon-512.png",
-        "image": "https://ceylonbadminton.com/og-cover.jpg",
-        "sport": "Badminton",
-        "areaServed": "Riyadh, Saudi Arabia",
-        "location": {
-          "@type": "Place",
-          "name": "Green Badminton Club",
-          "address": {
-            "@type": "PostalAddress",
-            "addressLocality": "Riyadh",
-            "addressCountry": "SA"
-          }
-        },
-        "openingHoursSpecification": [
-          {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": "Wednesday",
-            "opens": "20:00",
-            "closes": "22:00"
-          },
-          {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": "Saturday",
-            "opens": "08:00",
-            "closes": "10:00"
-          }
-        ]
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>
