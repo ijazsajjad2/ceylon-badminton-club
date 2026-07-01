@@ -23,14 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Enables GitHub Pages (Actions source) automatically if it isn't already,
-      # so no manual Settings → Pages toggle is needed. Requires an eligible
-      # repo (public, or private on a paid plan).
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
