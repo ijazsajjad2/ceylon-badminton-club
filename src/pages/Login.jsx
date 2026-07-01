@@ -15,8 +15,8 @@ export default function Login() {
     if (!username.trim() || !password) { setError('Enter your username and password.'); return }
     setError('')
     setLoading(true)
-    setTimeout(() => {
-      const res = login(username, password)
+    setTimeout(async () => {
+      const res = await login(username, password)
       if (!res.ok) setError(res.error)
       setLoading(false)
     }, 380)
