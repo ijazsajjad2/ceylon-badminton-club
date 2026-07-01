@@ -1,35 +1,44 @@
-// Privacy-friendly, cookie-free analytics shim.
+// Google Analytics 4 (gtag.js).
 //
-// It targets Plausible (https://plausible.io) but stays a no-op until a domain
-// is configured at build time via VITE_PLAUSIBLE_DOMAIN, so nothing is loaded
-// or sent by default. No personal data is ever collected — only event names.
+// GA4 Measurement IDs are public — they ship in the client bundle — so it's
+// safe to keep the ID here. Paste yours below (or provide VITE_GA_ID at build
+// time). Leave it blank to disable analytics entirely. Analytics only load in
+// production builds, so local dev never sends hits.
 
-const DOMAIN = import.meta.env.VITE_PLAUSIBLE_DOMAIN
-const SRC = import.meta.env.VITE_PLAUSIBLE_SRC || 'https://plausible.io/js/script.js'
+// 👉 Your GA4 Measurement ID, e.g. 'G-XXXXXXXXXX'
+const GA_MEASUREMENT_ID = ''
+
+const GA_ID = import.meta.env.VITE_GA_ID || GA_MEASUREMENT_ID
 
 let loaded = false
 
-// Inject the Plausible script once, only in the browser and only when enabled.
+// Load gtag.js once and start a GA4 session. No-op until an ID is configured.
 export function initAnalytics() {
-  if (loaded || !DOMAIN || typeof document === 'undefined') return
+  if (loaded || !GA_ID || typeof document === 'undefined') return
+  if (import.meta.env.DEV) return // never track local development
   loaded = true
-  window.plausible =
-    window.plausible ||
-    function () {
-      ;(window.plausible.q = window.plausible.q || []).push(arguments)
-    }
+
   const s = document.createElement('script')
-  s.defer = true
-  s.src = SRC
-  s.setAttribute('data-domain', DOMAIN)
+  s.async = true
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`
   document.head.appendChild(s)
+
+  window.dataLayer = window.dataLayer || []
+  function gtag() { window.dataLayer.push(arguments) }
+  window.gtag = gtag
+  gtag('js', new Date())
+  gtag('config', GA_ID)
 }
+
+// GA4 event names must be snake_case (letters, digits, underscores; <= 40 chars).
+const toEventName = (name) =>
+  String(name).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40)
 
 // Record a custom event. Safe to call whether or not analytics is enabled.
 export function track(event, props) {
-  if (!DOMAIN || typeof window === 'undefined') return
+  if (!GA_ID || typeof window === 'undefined' || typeof window.gtag !== 'function') return
   try {
-    window.plausible?.(event, props ? { props } : undefined)
+    window.gtag('event', toEventName(event), props || {})
   } catch {
     /* never let analytics break the UI */
   }
