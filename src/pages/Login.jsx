@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { ShuttleLogo } from '../components/Shuttle.jsx'
 
 export default function Login() {
   const { login, closeLogin } = useAuth()
@@ -29,7 +28,7 @@ export default function Login() {
 
         {/* Brand header */}
         <div className="login-brand">
-          <div className="login-logo"><ShuttleLogo size={36} /></div>
+          <img className="login-mark" src="/logo.png" alt="Ceylon Badminton Club crest" width="50" height="60" />
           <div>
             <div className="display login-club-name">Ceylon Badminton Club</div>
             <div className="login-sub">Riyadh Chapter · Members Portal</div>

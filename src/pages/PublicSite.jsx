@@ -9,7 +9,7 @@ import ScrollProgress from '../components/ScrollProgress.jsx'
 import BackToTop from '../components/BackToTop.jsx'
 import SessionCountdown from '../components/SessionCountdown.jsx'
 import JoinModal from '../components/JoinModal.jsx'
-import { ShuttleLogo, ShuttleDeco } from '../components/Shuttle.jsx'
+import { ShuttleDeco } from '../components/Shuttle.jsx'
 import { TODAY_SESSION } from '../data/seed.js'
 import { fmtFullDate } from '../lib/format.js'
 import { computeStats } from '../lib/stats.js'
@@ -133,7 +133,7 @@ export default function PublicSite() {
       {/* ─────────── Public top nav ─────────── */}
       <header className="public-nav">
         <a href="#top" className="brand">
-          <span className="brand-logo"><ShuttleLogo size={26} /></span>
+          <img className="brand-mark" src="/logo.png" alt="Ceylon Badminton Club crest" width="35" height="42" />
           <span className="brand-text">
             <span className="brand-name">Ceylon Badminton Club</span>
             <span className="brand-sub">Riyadh Chapter · <span className="brand-motto">Smash It Together 🏸</span></span>
@@ -403,7 +403,7 @@ export default function PublicSite() {
       {/* ─────────── Footer ─────────── */}
       <footer className="public-footer">
         <div className="brand">
-          <span className="brand-logo"><ShuttleLogo size={22} /></span>
+          <img className="brand-mark" src="/logo.png" alt="Ceylon Badminton Club crest" width="30" height="36" />
           <span className="brand-text">
             <span className="brand-name">Ceylon Badminton Club</span>
             <span className="brand-sub">Riyadh Chapter</span>

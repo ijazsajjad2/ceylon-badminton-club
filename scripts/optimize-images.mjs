@@ -5,19 +5,17 @@
  *      JPEG — several shipped larger than their full-size originals.
  *   2. Emits a WebP of the hero photo for the CSS image-set() (jpg stays the
  *      universal fallback).
- *   3. Rasterises the shuttle logo into PWA PNG icons + apple-touch-icon.
- *   4. Builds a 1200x630 branded Open Graph share card.
+ *   3. Builds a 1200x630 branded Open Graph share card (badged with the crest).
  *
+ * Favicons / PWA icons come from the club crest via scripts/make-logo.mjs.
  * Outputs are committed to the repo; this script is not part of the build.
  */
 import sharp from 'sharp'
-import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const pub = (p) => resolve(root, 'public', p)
-const GALLERY_BG = '#0F1117'
 const pad = (n) => String(n).padStart(2, '0')
 
 async function reencodeThumbnails() {
@@ -50,32 +48,6 @@ async function heroWebp() {
   console.log('Hero WebP written.')
 }
 
-async function pwaIcons() {
-  const svg = await readFile(pub('shuttle.svg'))
-  // Transparent "any" icons
-  for (const size of [192, 512]) {
-    await sharp(svg, { density: 384 })
-      .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-      .png()
-      .toFile(pub(`icon-${size}.png`))
-  }
-  // Maskable: solid background + shuttle inside the safe zone (~62%)
-  const inner = Math.round(512 * 0.62)
-  const shuttle = await sharp(svg, { density: 384 }).resize(inner, inner, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
-  await sharp({ create: { width: 512, height: 512, channels: 4, background: GALLERY_BG } })
-    .composite([{ input: shuttle, gravity: 'center' }])
-    .png()
-    .toFile(pub('icon-maskable-512.png'))
-  // Apple touch icon (no transparency)
-  const appleInner = Math.round(180 * 0.7)
-  const appleShuttle = await sharp(svg, { density: 384 }).resize(appleInner, appleInner, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
-  await sharp({ create: { width: 180, height: 180, channels: 4, background: GALLERY_BG } })
-    .composite([{ input: appleShuttle, gravity: 'center' }])
-    .png()
-    .toFile(pub('apple-touch-icon.png'))
-  console.log('PWA icons written.')
-}
-
 async function ogCover() {
   const W = 1200
   const H = 630
@@ -96,8 +68,14 @@ async function ogCover() {
       <text x="76" y="430" font-family="sans-serif" font-size="84" font-weight="800" fill="#ffffff">Ceylon Badminton Club</text>
       <text x="80" y="492" font-family="sans-serif" font-size="32" font-weight="600" fill="#e6ecf5">Random doubles, twice a week — smash it together.</text>
     </svg>`)
+  // The club crest, if it's been generated, badged onto the right side.
+  const layers = [{ input: overlay }]
+  try {
+    const crest = await sharp(pub('logo.png')).resize(250, 250, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
+    layers.push({ input: crest, top: 34, left: W - 290 })
+  } catch { /* logo not generated yet — text-only card */ }
   await sharp(base)
-    .composite([{ input: overlay }])
+    .composite(layers)
     .jpeg({ quality: 84, mozjpeg: true })
     .toFile(pub('og-cover.jpg'))
   console.log('OG cover written.')
@@ -105,6 +83,5 @@ async function ogCover() {
 
 await reencodeThumbnails()
 await heroWebp()
-await pwaIcons()
 await ogCover()
 console.log('Done.')
