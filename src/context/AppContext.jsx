@@ -39,7 +39,6 @@ function initState() {
     matches: MATCHES,
     sessions: SESSIONS,
     going: load('going', Object.fromEntries(TODAY_SESSION.attendees.map((id) => [id, true]))),
-    imPlaying: load('imPlaying', false),
     lastSessionPairs: load('lastSessionPairs', seedLastPairs()),
     videos: load('videos', VIDEO_SEED),
     draw: load('draw', null),
@@ -71,8 +70,6 @@ function reducer(state, action) {
       else going[action.id] = true
       return { ...state, going }
     }
-    case 'SET_IM_PLAYING':
-      return { ...state, imPlaying: action.value }
     case 'SET_LAST_PAIRS':
       return { ...state, lastSessionPairs: action.keys }
     case 'ADD_SESSION':
@@ -95,7 +92,6 @@ export function AppProvider({ children }) {
   // Persist slices (matches & sessions intentionally NOT persisted — derived from seed)
   useEffect(() => save('players', state.players), [state.players])
   useEffect(() => save('going', state.going), [state.going])
-  useEffect(() => save('imPlaying', state.imPlaying), [state.imPlaying])
   useEffect(() => save('lastSessionPairs', state.lastSessionPairs), [state.lastSessionPairs])
   useEffect(() => save('videos', state.videos), [state.videos])
   useEffect(() => save('draw', state.draw), [state.draw])

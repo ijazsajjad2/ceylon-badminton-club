@@ -27,7 +27,7 @@ function resultLine(match, playerById) {
 const RANK_MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 export default function Dashboard({ navigate }) {
-  const { matches, players, sessions, playerById, goingIds, imPlaying, pushToast } = useApp()
+  const { matches, players, sessions, playerById, goingIds, pushToast } = useApp()
   const { user, openLogin } = useAuth()
   const [showRecord, setShowRecord] = useState(false)
   const cd = useCountdown(TODAY_SESSION.date, TODAY_SESSION_START)
@@ -42,7 +42,7 @@ export default function Dashboard({ navigate }) {
   const stats = useMemo(() => computeStats(matches), [matches])
   const top5 = stats.slice(0, 5)
 
-  const playersToday = goingIds.length + (imPlaying ? 1 : 0)
+  const playersToday = goingIds.length
   const monthPrefix = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}` })()
   const sessionsThisMonth = sessions.filter((s) => s.date.startsWith(monthPrefix) && s.status !== 'upcoming').length
   const myStats = user?.playerId ? stats.find((s) => s.id === user.playerId) : null

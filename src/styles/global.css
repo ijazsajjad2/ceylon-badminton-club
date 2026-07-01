@@ -1588,3 +1588,8 @@ html { scroll-behavior: smooth; }
 .brand-crest-lg { height: 76px; }
 .public-footer .brand-crest-sm { height: 50px; }
 @media (max-width: 680px) { .brand-crest-md { height: 44px; } }
+
+/* RSVP grid: other members' tiles are read-only (you can only toggle yourself) */
+.pgrid-item.locked { opacity: 0.62; cursor: default; }
+.pgrid-item.locked:hover { transform: none; border-color: var(--stroke); background: rgba(255,255,255,0.03); }
+.pgrid-item.is-me { box-shadow: inset 0 0 0 1.5px var(--gold-bright); }
