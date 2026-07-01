@@ -4,6 +4,13 @@ import { CREDENTIALS, USERNAME_TO_PLAYER } from '../data/credentials.js'
 const AuthContext = createContext(null)
 export const useAuth = () => useContext(AuthContext)
 
+// SHA-256 → lowercase hex, via the browser's Web Crypto (needs https or
+// localhost — both apply here). Used to verify passwords against stored hashes.
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
@@ -15,9 +22,17 @@ export function AuthProvider({ children }) {
   // only see it when they choose to sign in or attempt a members-only action.
   const [loginOpen, setLoginOpen] = useState(false)
 
-  const login = (username, password) => {
+  const login = async (username, password) => {
     const key = username.toLowerCase().trim()
-    if (CREDENTIALS[key] !== undefined && CREDENTIALS[key] === password) {
+    const stored = CREDENTIALS[key]
+    if (!stored) return { ok: false, error: 'Wrong username or password.' }
+    let hash
+    try {
+      hash = await sha256Hex(password)
+    } catch {
+      return { ok: false, error: 'Login needs a secure (https) connection.' }
+    }
+    if (hash === stored) {
       const auth = { username: key, playerId: USERNAME_TO_PLAYER[key] || null }
       setUser(auth)
       localStorage.setItem('cbc.session', JSON.stringify(auth))
