@@ -1498,3 +1498,85 @@ html { scroll-behavior: smooth; }
 .reveal-in { animation: revealIn 0.55s cubic-bezier(0.22,1,0.36,1) both; }
 @keyframes revealIn { from { transform: translateY(16px); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .reveal-in { animation: none; } }
+
+/* ===================================================================
+   INTEGRATION — brand lockup, club leaders, scroll progress, back-to-top
+   (grafted onto the v2 public site)
+   =================================================================== */
+
+/* Scroll progress bar */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 300;
+  transform-origin: 0 50%; transform: scaleX(0);
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-bright) 50%, var(--maroon-bright) 100%);
+  box-shadow: 0 0 12px rgba(226,59,59,0.5);
+}
+
+/* Back-to-top floating button */
+.back-to-top {
+  position: fixed; right: 22px; bottom: 22px; z-index: 250;
+  width: 46px; height: 46px; border-radius: 50%; cursor: pointer;
+  font-size: 20px; font-weight: 800; color: #fff; line-height: 1;
+  background: linear-gradient(135deg, var(--gold), var(--maroon-bright));
+  border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+}
+.back-to-top:hover { box-shadow: 0 14px 34px rgba(226,59,59,0.5); }
+@media (max-width: 680px) { .back-to-top { right: 16px; bottom: 16px; } }
+
+/* Brand lockup: lion-shield crest + wordmark (live text) */
+.brand-link { display: inline-flex; align-items: center; text-decoration: none; min-width: 0; flex: 0 1 auto; }
+.brand-lockup { display: inline-flex; align-items: center; min-width: 0; }
+.brand-lockup-mark { width: auto; flex: 0 0 auto; display: block; filter: drop-shadow(0 2px 7px rgba(0,0,0,0.45)); }
+.brand-lockup-divider { flex: 0 0 auto; width: 1px; align-self: stretch; background: linear-gradient(180deg, transparent, rgba(255,255,255,0.22), transparent); }
+.brand-lockup-text { display: flex; flex-direction: column; line-height: 1; min-width: 0; }
+.brand-lockup-name {
+  font-family: var(--font-display); font-weight: 400;
+  background: linear-gradient(90deg, var(--gold-bright), var(--gold));
+  -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap;
+}
+.brand-lockup-sub { color: var(--text-dim); text-transform: uppercase; white-space: nowrap; }
+.brand-lockup-md { gap: 12px; }
+.brand-lockup-md .brand-lockup-mark { height: 44px; }
+.brand-lockup-md .brand-lockup-divider { height: 34px; margin-right: 2px; }
+.brand-lockup-md .brand-lockup-name { font-size: 25px; letter-spacing: 1.5px; }
+.brand-lockup-md .brand-lockup-sub { font-size: 10px; letter-spacing: 1.4px; margin-top: 4px; }
+.brand-lockup-sm { gap: 10px; }
+.brand-lockup-sm .brand-lockup-mark { height: 34px; }
+.brand-lockup-sm .brand-lockup-divider { height: 26px; }
+.brand-lockup-sm .brand-lockup-name { font-size: 20px; letter-spacing: 1.2px; }
+.brand-lockup-sm .brand-lockup-sub { font-size: 9px; letter-spacing: 1.3px; margin-top: 3px; }
+.brand-lockup-lg { gap: 13px; max-width: 100%; }
+.brand-lockup-lg .brand-lockup-mark { height: 56px; filter: drop-shadow(0 4px 14px rgba(0,0,0,0.5)); }
+.brand-lockup-lg .brand-lockup-divider { height: 42px; }
+.brand-lockup-lg .brand-lockup-name { font-size: 28px; letter-spacing: 1.6px; }
+.brand-lockup-lg .brand-lockup-sub { font-size: 11px; letter-spacing: 1.5px; margin-top: 5px; }
+@media (max-width: 680px) {
+  .brand-lockup-md .brand-lockup-mark { height: 38px; }
+  .brand-lockup-md .brand-lockup-name { font-size: 21px; }
+  .public-nav .brand-lockup-divider { display: none; }
+}
+
+/* Club leaders podium */
+.leaders-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.leader-card {
+  position: relative; overflow: hidden; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s, border-color 0.3s;
+}
+.leader-card:hover { transform: translateY(-6px); box-shadow: 0 18px 44px rgba(0,0,0,0.4); }
+.leader-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--maroon-bright) 70%, transparent);
+}
+.leader-rank-1 { border-color: rgba(242,201,76,0.4) !important; }
+.leader-rank-1::before { background: linear-gradient(90deg, #F2C94C, #D4A017); height: 4px; }
+.leader-medal { font-size: 30px; line-height: 1; margin-bottom: 2px; }
+.leader-name { font-size: 18px; font-weight: 800; color: #fff; }
+.leader-points { font-size: 30px; font-weight: 800; color: var(--gold-bright); line-height: 1; }
+.leader-points span { font-size: 13px; font-weight: 700; color: var(--text-faint); margin-left: 3px; }
+.leader-meta { font-size: 12.5px; color: var(--text-dim); font-weight: 600; }
+.leader-form { display: flex; gap: 5px; margin-top: 4px; }
+.form-dot { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; }
+.form-W { background: rgba(47,174,107,0.85); }
+.form-L { background: rgba(226,59,59,0.7); }
+@media (max-width: 760px) { .leaders-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; } }

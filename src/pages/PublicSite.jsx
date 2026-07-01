@@ -4,9 +4,13 @@ import { useApp } from '../context/AppContext.jsx'
 import Avatar from '../components/Avatar.jsx'
 import Reveal from '../components/Reveal.jsx'
 import AdvancedGallery from '../components/AdvancedGallery.jsx'
-import { ShuttleLogo, ShuttleDeco } from '../components/Shuttle.jsx'
+import BrandLockup from '../components/BrandLockup.jsx'
+import ScrollProgress from '../components/ScrollProgress.jsx'
+import BackToTop from '../components/BackToTop.jsx'
+import { ShuttleDeco } from '../components/Shuttle.jsx'
 import useScrollSpy from '../hooks/useScrollSpy.js'
 import { computeStats, setsWon } from '../lib/stats.js'
+import { track } from '../lib/analytics.js'
 import { TODAY_SESSION } from '../data/seed.js'
 import { fmtFullDate, fmtDate } from '../lib/format.js'
 import { HERO_PHOTO } from '../data/gallery.js'
@@ -75,19 +79,21 @@ export default function PublicSite() {
     () => matches.filter((m) => !m.live && m.winner).slice(0, 6).map((m) => buildResult(m, playerById)),
     [matches, playerById]
   )
+  // Top players by leaderboard points, for the public "Club Leaders" podium.
+  const leaders = useMemo(
+    () => computeStats(matches).filter((r) => r.played > 0).slice(0, 3),
+    [matches]
+  )
 
-  const sayHello = () => whatsappJoin()
+  const sayHello = () => { track('WhatsApp join'); whatsappJoin() }
 
   return (
     <div className="public-site">
+      <ScrollProgress />
       {/* ─────────── Public top nav ─────────── */}
       <header className="public-nav">
-        <a href="#top" className="brand">
-          <span className="brand-logo"><ShuttleLogo size={26} /></span>
-          <span className="brand-text">
-            <span className="brand-name">Ceylon Badminton Club</span>
-            <span className="brand-sub">Riyadh Chapter · <span className="brand-motto">Smash It Together 🏸</span></span>
-          </span>
+        <a href="#top" className="brand-link" aria-label="Ceylon Badminton Club — home">
+          <BrandLockup size="md" sub="Riyadh Chapter · Smash It Together" />
         </a>
         <nav className="public-links" aria-label="Sections">
           {NAV.map(([id, label]) => (
@@ -221,6 +227,39 @@ export default function PublicSite() {
         </div>
       </section>
 
+      {/* ─────────── Club leaders (top players) ─────────── */}
+      {leaders.length > 0 && (
+        <section id="leaders" className="band">
+          <div className="public-section">
+            <Reveal className="public-head center">
+              <span className="eyebrow">On the leaderboard</span>
+              <h2 className="display public-h2">Club <span className="accent">Leaders</span> 🏆</h2>
+              <p className="public-lead">Our top players by points — every win, partner and point is tracked across the season.</p>
+            </Reveal>
+            <div className="leaders-grid">
+              {leaders.map((p, i) => (
+                <Reveal key={p.id} delay={i * 0.08}>
+                  <div className={`glass card-pad leader-card leader-rank-${i + 1}`}>
+                    <div className="leader-medal">{['🥇', '🥈', '🥉'][i] || `#${p.rank}`}</div>
+                    <Avatar player={p} size={64} ring />
+                    <div className="leader-name">{p.name}</div>
+                    <div className="leader-points mono">{p.points}<span> pts</span></div>
+                    <div className="leader-meta">{p.won}W · {p.lost}L · {p.winPct}% win</div>
+                    {p.form.length > 0 && (
+                      <div className="leader-form" aria-label="Recent form">
+                        {p.form.map((r, idx) => (
+                          <span key={idx} className={`form-dot form-${r}`} title={r === 'W' ? 'Win' : 'Loss'}>{r}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ─────────── Our members ─────────── */}
       <section id="members" className="band">
         <div className="public-section">
@@ -323,13 +362,7 @@ export default function PublicSite() {
       <footer className="public-footer">
         <div className="public-footer-grid">
           <div className="footer-brand">
-            <div className="brand">
-              <span className="brand-logo"><ShuttleLogo size={24} /></span>
-              <span className="brand-text">
-                <span className="brand-name">Ceylon Badminton Club</span>
-                <span className="brand-sub">Riyadh Chapter · Est. 2024</span>
-              </span>
-            </div>
+            <BrandLockup size="sm" sub="Riyadh Chapter · Est. 2024" />
             <p className="footer-tag">Smash It Together 🏸🇱🇰 — a Sri Lankan badminton community in Riyadh.</p>
             <div className="footer-socials">
               <button className="footer-social" onClick={sayHello} aria-label="WhatsApp">📲 WhatsApp</button>
@@ -354,6 +387,8 @@ export default function PublicSite() {
           <span className="faint">Made with 🏸 in Riyadh, KSA</span>
         </div>
       </footer>
+
+      <BackToTop />
     </div>
   )
 }
