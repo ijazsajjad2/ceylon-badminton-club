@@ -14,7 +14,8 @@ import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const pub = (p) => resolve(root, 'public', p)
-const SRC = process.argv[2]
+// Committed brand source of truth; override with `node scripts/make-logo.mjs <path>`.
+const SRC = process.argv[2] || resolve(root, 'brand/lion-crest.png')
 const NAVY = '#0b1533'
 
 async function cutout() {
