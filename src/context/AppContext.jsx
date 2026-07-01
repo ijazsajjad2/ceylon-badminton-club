@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useS
 import { PLAYERS } from '../data/players.js'
 import { MATCHES, SESSIONS, TODAY_SESSION, VIDEO_SEED } from '../data/seed.js'
 import { load, save } from '../lib/storage.js'
+import { getSupabase, hasSupabase } from '../lib/supabase.js'
 
 const AppContext = createContext(null)
 export const useApp = () => useContext(AppContext)
@@ -70,6 +71,15 @@ function reducer(state, action) {
       else going[action.id] = true
       return { ...state, going }
     }
+    case 'SET_GOING': {
+      // Idempotent set (used by RSVP + realtime sync — safe against echoes).
+      const going = { ...state.going }
+      if (action.value) going[action.id] = true
+      else delete going[action.id]
+      return { ...state, going }
+    }
+    case 'REPLACE_GOING':
+      return { ...state, going: action.going }
     case 'SET_LAST_PAIRS':
       return { ...state, lastSessionPairs: action.keys }
     case 'ADD_SESSION':
@@ -106,6 +116,62 @@ export function AppProvider({ children }) {
 
   const dismissToast = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), [])
 
+  // RSVP for a player. Updates local state immediately (optimistic), and — when
+  // a Supabase project is configured — writes to the shared roster so every
+  // device sees it. Any backend error is swallowed so the app stays usable.
+  const rsvp = useCallback(async (playerId, value) => {
+    dispatch({ type: 'SET_GOING', id: playerId, value })
+    if (!hasSupabase) return
+    try {
+      const sb = await getSupabase()
+      if (!sb) return
+      await sb.from('attendance').upsert(
+        { session_date: TODAY_SESSION.date, player_id: playerId, going: value, updated_at: new Date().toISOString() },
+        { onConflict: 'session_date,player_id' }
+      )
+    } catch { /* stay local on any backend error */ }
+  }, [])
+
+  // When a shared backend is configured, load the live roster for today's
+  // session and subscribe to realtime changes. No-op otherwise.
+  useEffect(() => {
+    if (!hasSupabase) return
+    let channel = null
+    let alive = true
+    ;(async () => {
+      try {
+        const sb = await getSupabase()
+        if (!sb || !alive) return
+        const { data } = await sb
+          .from('attendance')
+          .select('player_id, going')
+          .eq('session_date', TODAY_SESSION.date)
+        if (data && alive) {
+          const map = {}
+          for (const row of data) if (row.going) map[row.player_id] = true
+          dispatch({ type: 'REPLACE_GOING', going: map })
+        }
+        channel = sb
+          .channel('attendance-' + TODAY_SESSION.date)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'attendance', filter: `session_date=eq.${TODAY_SESSION.date}` },
+            (payload) => {
+              const row = payload.new && payload.new.player_id ? payload.new : payload.old
+              if (!row) return
+              const value = payload.eventType !== 'DELETE' && !!(payload.new && payload.new.going)
+              dispatch({ type: 'SET_GOING', id: row.player_id, value })
+            }
+          )
+          .subscribe()
+      } catch { /* stay local */ }
+    })()
+    return () => {
+      alive = false
+      try { channel && channel.unsubscribe() } catch { /* ignore */ }
+    }
+  }, [])
+
   const playerById = useMemo(() => {
     const map = {}
     for (const p of state.players) map[p.id] = p
@@ -121,8 +187,8 @@ export function AppProvider({ children }) {
   }, [state.videos])
 
   const value = useMemo(
-    () => ({ ...state, dispatch, toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch }),
-    [state, toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch]
+    () => ({ ...state, dispatch, rsvp, sharedRoster: hasSupabase, toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch }),
+    [state, rsvp, toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch]
   )
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

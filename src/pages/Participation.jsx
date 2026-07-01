@@ -10,7 +10,7 @@ import { fmtFullDate, whatsappShare } from '../lib/format.js'
 const TARGET = 20
 
 export default function Participation({ navigate }) {
-  const { players, playerById, going, goingIds, lastSessionPairs, dispatch, pushToast } = useApp()
+  const { players, playerById, going, goingIds, lastSessionPairs, rsvp, sharedRoster, pushToast } = useApp()
   const { user, openLogin } = useAuth()
   const [result, setResult] = useState(null)
   const [revealKey, setRevealKey] = useState(0)
@@ -50,7 +50,7 @@ export default function Participation({ navigate }) {
 
   const toggleMe = () => requireAuth(() => {
     if (!myId) { pushToast('Your account has no player profile — ask the admin to link it.', 'info'); return }
-    dispatch({ type: 'TOGGLE_GOING', id: myId })
+    rsvp(myId, !imGoing)
     pushToast(!imGoing ? "You're in! See you on court 🏸" : 'Removed your RSVP', !imGoing ? 'success' : 'info')
   }, 'Sign in as a member to RSVP 🔒')
 
@@ -129,6 +129,7 @@ export default function Participation({ navigate }) {
         {isAdmin
           ? 'As admin you can toggle anyone. Only “going” players get arranged into teams.'
           : 'Mark yourself with “Count me in” above. You can only RSVP for yourself — others mark themselves.'}
+        {sharedRoster && <span style={{ color: 'var(--gold-bright)', fontWeight: 700 }}> · 🟢 Live across everyone’s devices</span>}
       </p>
       <div className="pgrid">
         {players.map((p) => {
@@ -137,7 +138,7 @@ export default function Participation({ navigate }) {
           const editable = canToggle(p.id)
           const onClick = () => {
             if (!user) return requireAuth(() => {}, 'Sign in to RSVP 🔒')
-            if (editable) dispatch({ type: 'TOGGLE_GOING', id: p.id })
+            if (editable) rsvp(p.id, !isGoing)
             else pushToast('You can only mark yourself — use “Count me in”. 🏸', 'info')
           }
           return (
