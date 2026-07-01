@@ -9,6 +9,7 @@ import ScrollProgress from '../components/ScrollProgress.jsx'
 import BackToTop from '../components/BackToTop.jsx'
 import SessionCountdown from '../components/SessionCountdown.jsx'
 import JoinModal from '../components/JoinModal.jsx'
+import BrandLockup from '../components/BrandLockup.jsx'
 import { ShuttleDeco } from '../components/Shuttle.jsx'
 import { TODAY_SESSION } from '../data/seed.js'
 import { fmtFullDate } from '../lib/format.js'
@@ -132,12 +133,8 @@ export default function PublicSite() {
       <ScrollProgress />
       {/* ─────────── Public top nav ─────────── */}
       <header className="public-nav">
-        <a href="#top" className="brand">
-          <img className="brand-mark" src="/logo.png" alt="Ceylon Badminton Club crest" width="35" height="42" />
-          <span className="brand-text">
-            <span className="brand-name">Ceylon Badminton Club</span>
-            <span className="brand-sub">Riyadh Chapter · <span className="brand-motto">Smash It Together 🏸</span></span>
-          </span>
+        <a href="#top" className="brand-link" aria-label="Ceylon Badminton Club — home">
+          <BrandLockup size="md" sub="Riyadh Chapter · Smash It Together" />
         </a>
         <nav className="public-links" aria-label="Sections">
           {NAV_SECTIONS.map((s) => (
@@ -402,13 +399,7 @@ export default function PublicSite() {
 
       {/* ─────────── Footer ─────────── */}
       <footer className="public-footer">
-        <div className="brand">
-          <img className="brand-mark" src="/logo.png" alt="Ceylon Badminton Club crest" width="30" height="36" />
-          <span className="brand-text">
-            <span className="brand-name">Ceylon Badminton Club</span>
-            <span className="brand-sub">Riyadh Chapter</span>
-          </span>
-        </div>
+        <BrandLockup size="sm" sub="Riyadh Chapter" />
         <span className="public-footer-mid">Smash It Together 🏸🇱🇰 · Riyadh, Saudi Arabia</span>
         <button className="public-footer-link" onClick={handleLogin}>Members portal →</button>
       </footer>

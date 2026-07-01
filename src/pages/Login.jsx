@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
+import BrandLockup from '../components/BrandLockup.jsx'
 
 export default function Login() {
   const { login, closeLogin } = useAuth()
@@ -27,13 +28,7 @@ export default function Login() {
       <div className="login-wrap">
 
         {/* Brand header */}
-        <div className="login-brand">
-          <img className="login-mark" src="/logo.png" alt="Ceylon Badminton Club crest" width="50" height="60" />
-          <div>
-            <div className="display login-club-name">Ceylon Badminton Club</div>
-            <div className="login-sub">Riyadh Chapter · Members Portal</div>
-          </div>
-        </div>
+        <BrandLockup size="lg" sub="Riyadh Chapter · Members Portal" className="login-brand" />
 
         {/* Card */}
         <div className="glass login-card">

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import BrandLockup from './BrandLockup.jsx'
 
 export const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', emoji: '🏠' },
@@ -21,13 +22,7 @@ export function Navbar({ active, onNavigate }) {
 
   return (
     <header className="navbar">
-      <div className="brand">
-        <img className="brand-mark" src="/logo.png" alt="Ceylon Badminton Club crest" width="35" height="42" />
-        <span className="brand-text">
-          <span className="brand-name">Ceylon Badminton Club</span>
-          <span className="brand-sub">Riyadh Chapter · <span className="brand-motto">Smash It Together 🏸</span></span>
-        </span>
-      </div>
+      <BrandLockup size="md" sub="Riyadh Chapter · Smash It Together" />
 
       <nav className="nav-tabs" ref={tabsRef} aria-label="Primary">
         <span className="nav-pill" style={{ left: pill.left, width: pill.width }} />

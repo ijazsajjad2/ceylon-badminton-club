@@ -1589,3 +1589,54 @@ html { scroll-behavior: smooth; }
   filter: drop-shadow(0 4px 14px rgba(0,0,0,0.5));
 }
 @media (max-width: 680px) { .brand-mark { height: 36px; } }
+
+/* ===================================================================
+   BRAND LOCKUP — lion-shield crest + wordmark (live text)
+   =================================================================== */
+.brand-lockup { display: inline-flex; align-items: center; min-width: 0; }
+.brand-lockup-mark {
+  width: auto; flex: 0 0 auto; display: block;
+  filter: drop-shadow(0 2px 7px rgba(0,0,0,0.45));
+}
+.brand-lockup-divider {
+  flex: 0 0 auto; width: 1px; align-self: stretch;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.22), transparent);
+}
+.brand-lockup-text { display: flex; flex-direction: column; line-height: 1; min-width: 0; }
+.brand-lockup-name {
+  font-family: var(--font-display); font-weight: 400;
+  background: linear-gradient(90deg, var(--gold-bright), var(--gold));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  white-space: nowrap;
+}
+.brand-lockup-sub {
+  color: var(--text-dim); text-transform: uppercase; white-space: nowrap;
+}
+
+/* Size variants */
+.brand-lockup-md { gap: 12px; }
+.brand-lockup-md .brand-lockup-mark { height: 44px; }
+.brand-lockup-md .brand-lockup-divider { height: 34px; margin-right: 2px; }
+.brand-lockup-md .brand-lockup-name { font-size: 25px; letter-spacing: 1.5px; }
+.brand-lockup-md .brand-lockup-sub { font-size: 10px; letter-spacing: 1.4px; margin-top: 4px; }
+
+.brand-lockup-sm { gap: 10px; }
+.brand-lockup-sm .brand-lockup-mark { height: 34px; }
+.brand-lockup-sm .brand-lockup-divider { height: 26px; }
+.brand-lockup-sm .brand-lockup-name { font-size: 20px; letter-spacing: 1.2px; }
+.brand-lockup-sm .brand-lockup-sub { font-size: 9px; letter-spacing: 1.3px; margin-top: 3px; }
+
+.brand-lockup-lg { gap: 13px; max-width: 100%; }
+.brand-lockup-lg .brand-lockup-mark { height: 56px; filter: drop-shadow(0 4px 14px rgba(0,0,0,0.5)); }
+.brand-lockup-lg .brand-lockup-divider { height: 42px; }
+.brand-lockup-lg .brand-lockup-name { font-size: 28px; letter-spacing: 1.6px; }
+.brand-lockup-lg .brand-lockup-sub { font-size: 11px; letter-spacing: 1.5px; margin-top: 5px; }
+
+@media (max-width: 680px) {
+  .brand-lockup-md .brand-lockup-mark { height: 38px; }
+  .brand-lockup-md .brand-lockup-name { font-size: 21px; }
+  /* On very narrow phones the public nav hides its links; keep the lockup tidy */
+  .public-nav .brand-lockup-divider { display: none; }
+}
+/* Public-nav brand anchor wrapping the lockup */
+.brand-link { display: inline-flex; align-items: center; text-decoration: none; min-width: 0; flex: 0 1 auto; }
