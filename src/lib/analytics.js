@@ -6,7 +6,7 @@
 // production builds, so local dev never sends hits.
 
 // 👉 Your GA4 Measurement ID, e.g. 'G-XXXXXXXXXX'
-const GA_MEASUREMENT_ID = ''
+const GA_MEASUREMENT_ID = 'G-V2PTMTG3MT'
 
 const GA_ID = import.meta.env.VITE_GA_ID || GA_MEASUREMENT_ID
 
