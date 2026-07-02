@@ -30,6 +30,14 @@ export default function AdvancedGallery({ photos = GALLERY_PHOTOS }) {
         columns={(w) => (w < 480 ? 2 : w < 900 ? 3 : 4)}
         componentsProps={{ image: { loading: 'lazy', decoding: 'async' } }}
         onClick={({ index: i }) => setIndex(i)}
+        render={{
+          extras: (_, { photo }) => (
+            <span className="ph-overlay" aria-hidden="true">
+              {photo.tag && <span className="ph-tag">{photo.tag}</span>}
+              <span className="ph-cap">{photo.caption}</span>
+            </span>
+          ),
+        }}
       />
       {index >= 0 && (
         <Suspense fallback={null}>

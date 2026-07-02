@@ -36,10 +36,20 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts load async (media swap) so they never block first paint;
+         display=swap keeps text visible on the fallback meanwhile. -->
     <link
       href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <!-- Preload the hero photo (LCP) so it paints sooner -->
     <link rel="preload" as="image" href="/gallery/club-08.jpg" fetchpriority="high" />
 

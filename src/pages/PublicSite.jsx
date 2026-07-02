@@ -23,9 +23,12 @@ import ShuttleParticles from '../components/ShuttleParticles.jsx'
 import useScrollSpy from '../hooks/useScrollSpy.js'
 import { computeStats, setsWon } from '../lib/stats.js'
 import { track } from '../lib/analytics.js'
+import { playSmash } from '../lib/sfx.js'
+import SoundToggle from '../components/SoundToggle.jsx'
 import { TODAY_SESSION } from '../data/seed.js'
 import { fmtFullDate, fmtDate, dayName } from '../lib/format.js'
-import { HERO_PHOTO } from '../data/gallery.js'
+import { HERO_PHOTO, MILESTONES } from '../data/gallery.js'
+import { TESTIMONIALS } from '../data/testimonials.js'
 import {
   whatsappJoin, MAP_EMBED_URL, MAP_DIRECTIONS_URL, MAP_SHARE_URL, INSTAGRAM_URL,
 } from '../lib/contact.js'
@@ -102,7 +105,7 @@ export default function PublicSite() {
     [matches]
   )
 
-  const openJoin = () => { track('Join opened'); setJoinOpen(true) }
+  const openJoin = () => { track('Join opened'); playSmash(); setJoinOpen(true) }
   const sayHello = () => { track('WhatsApp join'); whatsappJoin() }
   const handleLogin = () => { track('Member login clicked'); openLogin() }
 
@@ -364,6 +367,54 @@ export default function PublicSite() {
         </section>
       )}
 
+      {/* ─────────── Milestones (real trophy moments) ─────────── */}
+      <section id="milestones" className="band tint">
+        <div className="public-section">
+          <SectionHeading
+            eyebrow="Trophy cabinet"
+            title="Club"
+            accent="Milestones"
+            lead="Tournament days, trophy nights and podium moments — straight from the club’s own camera roll."
+          />
+          <div className="milestones-strip" role="list">
+            {MILESTONES.map((m, i) => (
+              <Reveal key={m.src} delay={i * 0.06}>
+                <figure className="milestone-card glass" role="listitem">
+                  <img src={m.src} alt={`Ceylon Badminton Club — ${m.title}`} width={m.width} height={m.height} loading="lazy" decoding="async" />
+                  <figcaption>
+                    <span className="milestone-ico" aria-hidden="true">🏆</span>
+                    {m.title}
+                  </figcaption>
+                </figure>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────── Member voices (renders only with real quotes) ─────────── */}
+      {TESTIMONIALS.length > 0 && (
+        <section id="voices" className="band">
+          <div className="public-section">
+            <SectionHeading
+              eyebrow="From the members"
+              title="Why We"
+              accent="Play"
+            />
+            <div className="voices-grid">
+              {TESTIMONIALS.map((t, i) => (
+                <Reveal key={t.name + i} delay={i * 0.08}>
+                  <blockquote className="glass card-pad voice-card">
+                    <p>“{t.quote}”</p>
+                    <footer><b>{t.name}</b>{t.role && <span> · {t.role}</span>}</footer>
+                  </blockquote>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ─────────── Members ─────────── */}
       <section id="members" className="band tint">
         <div className="public-section">
@@ -479,6 +530,7 @@ export default function PublicSite() {
       </footer>
 
       <BackToTop />
+      <SoundToggle />
       {joinOpen && <JoinModal onClose={() => setJoinOpen(false)} />}
     </div>
   )
