@@ -1,22 +1,32 @@
 # Android app
 
-The club site is now wrapped as a real installable Android app, in `android/`.
-It's a **Trusted Web Activity (TWA)** — Google's official, recommended way to
-turn an existing PWA into a Play Store app. It's a tiny native shell
-(`com.google.androidbrowserhelper.trusted.LauncherActivity`) that opens
-**https://ceylonbadminton.com** full-screen with no browser address bar. There's
-no separate app code to maintain — the app always shows whatever is currently
-live on the site, including the existing offline support (`sw.js`) and PWA
-manifest already in `public/`.
+The club app is a **standalone Android app**, in `android/`. The production
+build of the website is **bundled inside the APK** at build time and rendered
+by an embedded WebView (`MainActivity` + `WebViewAssetLoader`, served over a
+secure virtual origin so login/crypto work). That means:
+
+- **No server, domain, or DNS needed** — the app runs entirely from the
+  files inside the APK. It opens instantly and works fully offline.
+- Online extras (Google Analytics, the optional Supabase live sync, YouTube
+  thumbnails, external links) light up automatically when there's a
+  connection.
+- The flip side: the app shows the site *as of when the APK was built*. CI
+  rebuilds and republishes the APK automatically on **every site change**,
+  so "update the app" = re-download from the same link below.
+
+> History: v1.0–1.1 used a Trusted Web Activity that loaded
+> `https://ceylonbadminton.com` live — but until that domain's DNS is
+> connected, a TWA has nothing to show (the app opened and immediately
+> died). v1.2 switched to the bundled standalone architecture above, which
+> doesn't depend on the domain at all.
 
 Package name: `com.ceylonbadminton.app` · App name: **Ceylon Badminton Club**.
 
-App polish built in: branded splash screen (navy + club crest), portrait
-lock (matching the web manifest), adaptive launcher icons with Android 13+
-themed-icon (Material You) support, a WebView fallback so the app opens
-full-screen even on phones without Chrome, notification delegation (ready
-for future web push), and App Links (`autoVerify`) so tapping
-ceylonbadminton.com links opens the app once the domain verifies.
+App polish built in: portrait lock, adaptive launcher icons with Android
+13+ themed-icon (Material You) support, navy background matching the site
+(no white flash on launch), external links opening in the right app
+(WhatsApp/YouTube/browser) instead of inside the club app, and WebView
+state preserved across rotation/backgrounding.
 
 ## Get the app (no Android Studio, no GitHub login needed)
 
@@ -25,9 +35,9 @@ The final, signed APK is published automatically to **GitHub Releases**:
 > **https://github.com/ijazsajjad2/ceylon-badminton-club/releases/tag/android-latest**
 > → download **`CeylonBadmintonClub.apk`**
 
-That link always has the newest build — every push to `main` that touches
-`android/` rebuilds and replaces it. Share the link directly with club
-members; no GitHub account is needed to download.
+That link always has the newest build — every push to `main` that changes
+the site or the app shell rebuilds and replaces it. Share the link directly
+with club members; no GitHub account is needed to download.
 
 Two other ways to get builds, from **GitHub → Actions → "Build Android app"**
 (these do require being logged in):
@@ -58,10 +68,8 @@ GitHub Actions secrets and reference them from the workflow.
    `CeylonBadmintonClub.apk` (or send the file over WhatsApp/Drive/USB).
 2. Open it from the Downloads notification or Files app — Android will ask
    to allow installs from that source once. Install.
-3. Open the app. First launch will look like a Chrome tab (with a URL bar)
-   until the domain is verified (see below) — after that it opens full-screen
-   with no browser chrome, indistinguishable from a native app. On phones
-   without Chrome it falls back to a built-in WebView, still full-screen.
+3. Open the app — the full club site loads instantly, full-screen, no
+   browser UI, no internet required.
 
 Or via `adb` with the phone connected over USB (developer mode + USB
 debugging enabled): `adb install -r CeylonBadmintonClub.apk`.
@@ -69,27 +77,15 @@ debugging enabled): `adb install -r CeylonBadmintonClub.apk`.
 All builds share one signature (see "Signing" below), so newer APKs install
 straight over older ones — no uninstall needed.
 
-## Domain verification (Digital Asset Links)
+## Domain verification (Digital Asset Links) — kept for later
 
-For Chrome to hide its UI and treat the app as the verified owner of
-`ceylonbadminton.com`, the site must publish a signed statement matching the
-app's signing certificate. That's already wired up:
-
-- `public/.well-known/assetlinks.json` — published automatically at
-  `https://ceylonbadminton.com/.well-known/assetlinks.json` on every deploy
-  (verified locally: `vite build` copies it into `dist/` correctly).
-- It lists the SHA-256 fingerprint of `android/keystore/debug.keystore`,
-  which signs **all** builds (debug and release — see "Signing" above), so
-  any build of the app verifies against the domain.
-- Verification only works once `ceylonbadminton.com` is actually live and
-  serving that file over HTTPS. Until then the app still works, it just shows
-  a Chrome URL bar (falls back to a normal Custom Tab).
-
-You can check it's live yourself once DNS is connected:
-`https://ceylonbadminton.com/.well-known/assetlinks.json` should return the
-JSON in that file. Chrome also has a checker: **Statement List Generator /
-Digital Asset Links API** at
-`https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://ceylonbadminton.com&relation=delegate_permission/common.handle_all_urls`.
+The standalone app doesn't need the domain at all. But
+`public/.well-known/assetlinks.json` (listing the committed keystore's
+SHA-256 fingerprint) stays published at
+`https://ceylonbadminton.com/.well-known/assetlinks.json` for when DNS is
+connected — it enables App Links (ceylonbadminton.com links opening the
+app) and a possible future switch back to a live-loading Trusted Web
+Activity, whose code lives in this repo's history (v1.0–1.1).
 
 ## Publishing on the Google Play Store
 
@@ -131,26 +127,25 @@ end — here's the exact path:
 7. Start on the **Internal testing** track first (instant, no review), then
    promote to Production once you're happy.
 
-## Why a TWA instead of a "real" native rebuild
+## Why a bundled WebView instead of a "real" native rebuild
 
-- **Zero duplicate code** — the app is the website. Every future site change
-  (new sections, the scorekeeper/confirm system, etc.) ships to the app
-  automatically, no app update needed.
-- **Small** — a few hundred KB shell vs. megabytes for a full rebuild.
-- **Already had the hard prerequisites** — a complete PWA manifest, icons,
-  service worker and offline page were already built earlier for the site,
-  which is exactly what a TWA needs.
+- **Zero duplicate code** — the app IS the website, byte for byte. One
+  codebase; CI rebuilds the APK on every site change so the two never
+  drift.
+- **Works today, with nothing external** — no domain, no server, no DNS,
+  no Chrome required on the phone. Fully offline.
+- **A one-file native shell** — `MainActivity.java` (~100 lines) is the
+  entire native surface. Easy to audit, nothing to maintain.
 
-If you outgrow this later — e.g. you want native push notifications beyond
-web push, camera access, or a Play Store listing that looks less like "just
-a website" — the natural next step is [Capacitor](https://capacitorjs.com/),
-which bundles the built site with a real native project and native plugin
-access. Not needed today.
+If you outgrow this later — e.g. you want native push notifications,
+camera access, or other device APIs — the natural next step is
+[Capacitor](https://capacitorjs.com/), which is this same architecture
+plus a native plugin ecosystem. Not needed today.
 
 ## Everyone else: no app required
 
-Since the site is already a full PWA, anyone can get an app-like icon on
-their home screen today with zero install: open the site in Chrome → menu →
-**"Add to Home Screen" / "Install app"**. The Android app above is for a
-proper Play Store listing; the PWA install covers "I want an icon on my
-phone" right now.
+Since the site is also a full PWA, once `ceylonbadminton.com` is live
+anyone can get an app-like icon with zero install: open the site in Chrome
+→ menu → **"Add to Home Screen" / "Install app"**. The Android app above
+works right now without the domain; the PWA install becomes a second
+option once DNS is connected.

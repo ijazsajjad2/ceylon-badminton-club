@@ -1,10 +1,19 @@
 name: Build Android app
 
+# The app bundles the built website inside the APK (standalone — no server
+# needed), so it must be rebuilt when the site changes too, not just when
+# the android/ shell does.
 on:
   push:
     branches: [main]
     paths:
       - 'android/**'
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
       - '.github/workflows/android-build.yml'
   workflow_dispatch:
 
@@ -22,6 +31,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Build website
+        working-directory: .
+        run: |
+          npm ci
+          npm run build
+
+      - name: Bundle website into app assets
+        working-directory: .
+        run: |
+          rm -rf android/app/src/main/assets
+          mkdir -p android/app/src/main/assets
+          cp -r dist/* android/app/src/main/assets/
 
       - name: Setup JDK 17
         uses: actions/setup-java@v4
@@ -65,6 +93,6 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk CeylonBadmintonClub.apk
           gh release create android-latest \
             --title "Ceylon Badminton Club — Android app (latest)" \
-            --notes "Latest signed Android APK, rebuilt automatically from main. Download CeylonBadmintonClub.apk below and open it on your phone to install. See ANDROID_APP.md for details." \
+            --notes "Latest signed Android APK, rebuilt automatically from main. The whole club site is bundled inside — standalone, works offline. Download CeylonBadmintonClub.apk below and open it on your phone to install. See ANDROID_APP.md for details." \
             2>/dev/null || true
           gh release upload android-latest CeylonBadmintonClub.apk --clobber
