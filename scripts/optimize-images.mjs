@@ -51,22 +51,28 @@ async function heroWebp() {
 async function ogCover() {
   const W = 1200
   const H = 630
-  const base = await sharp(pub('gallery/club-11.jpg'))
+  // Same photo as the site hero so the share card matches the landing page.
+  const base = await sharp(pub('gallery/club-08.jpg'))
     .resize(W, H, { fit: 'cover', position: 'attention' })
     .toBuffer()
   const overlay = Buffer.from(`
     <svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#0F1117" stop-opacity="0.35"/>
-          <stop offset="0.55" stop-color="#0F1117" stop-opacity="0.72"/>
-          <stop offset="1" stop-color="#0F1117" stop-opacity="0.95"/>
+          <stop offset="0" stop-color="#0a1020" stop-opacity="0.42"/>
+          <stop offset="0.55" stop-color="#0a1020" stop-opacity="0.78"/>
+          <stop offset="1" stop-color="#0a1020" stop-opacity="0.97"/>
         </linearGradient>
       </defs>
       <rect width="${W}" height="${H}" fill="url(#shade)"/>
-      <text x="80" y="330" font-family="sans-serif" font-size="28" font-weight="700" letter-spacing="5" fill="#ff6b6b">PRIVATE SRI LANKAN CLUB · RIYADH</text>
-      <text x="76" y="430" font-family="sans-serif" font-size="84" font-weight="800" fill="#ffffff">Ceylon Badminton Club</text>
-      <text x="80" y="492" font-family="sans-serif" font-size="32" font-weight="600" fill="#e6ecf5">Random doubles, twice a week — smash it together.</text>
+      <!-- badge chips, echoing the hero -->
+      <rect x="76" y="252" rx="19" width="318" height="38" fill="#ffffff" fill-opacity="0.1" stroke="#ffffff" stroke-opacity="0.28"/>
+      <text x="235" y="278" text-anchor="middle" font-family="sans-serif" font-size="19" font-weight="800" letter-spacing="2" fill="#e6ecf5">RIYADH, SAUDI ARABIA</text>
+      <rect x="410" y="252" rx="19" width="130" height="38" fill="#d62839"/>
+      <text x="475" y="278" text-anchor="middle" font-family="sans-serif" font-size="19" font-weight="800" letter-spacing="2" fill="#ffffff">EST. 2024</text>
+      <text x="76" y="398" font-family="sans-serif" font-size="82" font-weight="800" fill="#ffffff">Ceylon Badminton Club</text>
+      <text x="80" y="448" font-family="sans-serif" font-size="30" font-weight="700" fill="#ff6b6b">Sri Lankan badminton community in Riyadh</text>
+      <text x="80" y="500" font-family="sans-serif" font-size="26" font-weight="600" fill="#d4dce9">Random doubles · Wed 8–10 PM &amp; Sat 8–10 AM · Green Badminton Club</text>
     </svg>`)
   // The club crest, if it's been generated, badged onto the right side.
   const layers = [{ input: overlay }]
@@ -81,7 +87,9 @@ async function ogCover() {
   console.log('OG cover written.')
 }
 
-await reencodeThumbnails()
-await heroWebp()
-await ogCover()
+// `--only=og` regenerates just the share card (skips thumbnail re-encodes).
+const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7)
+if (!only || only === 'thumbs') await reencodeThumbnails()
+if (!only || only === 'hero') await heroWebp()
+if (!only || only === 'og') await ogCover()
 console.log('Done.')

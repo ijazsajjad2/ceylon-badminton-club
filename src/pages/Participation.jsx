@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import Avatar from '../components/Avatar.jsx'
 import { ShuttleDeco } from '../components/Shuttle.jsx'
 import { generateRandomPairs } from '../lib/pairing.js'
+import SessionFlyer from '../components/SessionFlyer.jsx'
 import { TODAY, TODAY_SESSION } from '../data/seed.js'
 import { fmtFullDate, whatsappShare } from '../lib/format.js'
 
@@ -94,6 +95,9 @@ export default function Participation({ navigate }) {
               <span className="hero-pill">🗓 {fmtFullDate(TODAY_SESSION.date)}</span>
               <span className="hero-pill">🕓 {TODAY_SESSION.time}</span>
               <span className="hero-pill">🏟 {TODAY_SESSION.courts} Courts</span>
+            </div>
+            <div className="row wrap" style={{ marginTop: 12, gap: 10 }}>
+              <SessionFlyer session={TODAY_SESSION} pushToast={pushToast} />
             </div>
           </div>
         </div>

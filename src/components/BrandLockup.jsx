@@ -7,6 +7,8 @@ export default function BrandLockup({ size = 'md', className = '' }) {
     <img
       className={`brand-crest brand-crest-${size} ${className}`.trim()}
       src="/logo.png"
+      width="640"
+      height="640"
       alt="Ceylon Badminton Club crest"
     />
   )
