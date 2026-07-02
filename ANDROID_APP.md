@@ -95,7 +95,7 @@ end — here's the exact path:
    Data Safety form (this app itself collects no data beyond what the
    website already does — GA4 analytics, and the login system described in
    the main README).
-6. **Target API level** — already set to 35 (Android 15), which meets
+6. **Target API level** — already set to 36 (Android 16), which meets
    Google Play's current new-app requirement.
 7. Start on the **Internal testing** track first (instant, no review), then
    promote to Production once you're happy.
