@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import Modal from './Modal.jsx'
-import { whatsappShare } from '../lib/format.js'
+import { whatsappJoin } from '../lib/contact.js'
 import { track } from '../lib/analytics.js'
 
 const LEVELS = ['Beginner', 'Improver', 'Intermediate', 'Advanced']
@@ -22,7 +22,7 @@ export default function JoinModal({ onClose }) {
   const send = (e) => {
     e.preventDefault()
     track('Join WhatsApp sent', { level, day })
-    whatsappShare(message)
+    whatsappJoin(message)
     onClose()
   }
 

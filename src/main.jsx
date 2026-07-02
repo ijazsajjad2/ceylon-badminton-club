@@ -19,18 +19,22 @@ createRoot(document.getElementById('root')).render(
 )
 
 // Register the PWA service worker in production only (keeps dev/HMR clean).
-// Auto-refresh once when a new version takes over, so visitors never get stuck
-// on a stale cached build after a deploy.
+// Auto-refresh once when a NEW version takes over, so visitors never get stuck
+// on a stale cached build after a deploy. The first-ever claim on a fresh
+// visit (no prior controller) must NOT reload — that would restart the page
+// mid-boot for every new visitor.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   let refreshing = false
+  let firstClaim = !navigator.serviceWorker.controller
   navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (firstClaim) { firstClaim = false; return }
     if (refreshing) return
     refreshing = true
     window.location.reload()
   })
   window.addEventListener('load', () => {
-    // The SW calls skipWaiting()+clients.claim(), so a new build takes control
-    // right away and the controllerchange handler above reloads to fresh assets.
+    // The SW calls skipWaiting()+clients.claim(), so an updated build takes
+    // control right away and the handler above reloads to fresh assets.
     navigator.serviceWorker.register('/sw.js').catch(() => {})
   })
 }

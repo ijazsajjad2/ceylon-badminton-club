@@ -1,26 +1,42 @@
-import { useMemo } from 'react'
+import { Suspense, lazy, useMemo, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import Avatar from '../components/Avatar.jsx'
 import Reveal from '../components/Reveal.jsx'
-import AdvancedGallery from '../components/AdvancedGallery.jsx'
+import CountUp from '../components/CountUp.jsx'
 import BrandLockup from '../components/BrandLockup.jsx'
 import ScrollProgress from '../components/ScrollProgress.jsx'
 import BackToTop from '../components/BackToTop.jsx'
-import { ShuttleDeco } from '../components/Shuttle.jsx'
+import PublicNav from '../components/PublicNav.jsx'
+import SectionHeading from '../components/SectionHeading.jsx'
+import GlassCard from '../components/GlassCard.jsx'
+import StatTile from '../components/StatTile.jsx'
+import SessionsShowcase from '../components/SessionCard.jsx'
+import MemberCard from '../components/MemberCard.jsx'
+import EventCard from '../components/EventCard.jsx'
+import CTASection from '../components/CTASection.jsx'
+import JoinModal from '../components/JoinModal.jsx'
+import AnimatedShuttlecock from '../components/AnimatedShuttlecock.jsx'
+import CourtLines from '../components/CourtLines.jsx'
+import ShuttleParticles from '../components/ShuttleParticles.jsx'
 import useScrollSpy from '../hooks/useScrollSpy.js'
 import { computeStats, setsWon } from '../lib/stats.js'
 import { track } from '../lib/analytics.js'
 import { TODAY_SESSION } from '../data/seed.js'
-import { fmtFullDate, fmtDate } from '../lib/format.js'
+import { fmtFullDate, fmtDate, dayName } from '../lib/format.js'
 import { HERO_PHOTO } from '../data/gallery.js'
 import {
   whatsappJoin, MAP_EMBED_URL, MAP_DIRECTIONS_URL, MAP_SHARE_URL, INSTAGRAM_URL,
 } from '../lib/contact.js'
 
+// Gallery pulls in react-photo-album (and, in turn, the lightbox) — lazy-loaded
+// so the landing page paints without it.
+const AdvancedGallery = lazy(() => import('../components/AdvancedGallery.jsx'))
+
 const NAV = [
-  ['about', 'About'], ['play', 'How we play'], ['gallery', 'Gallery'],
-  ['results', 'Results'], ['members', 'Members'], ['visit', 'Sessions'],
+  ['about', 'About'], ['sessions', 'Sessions'], ['gallery', 'Gallery'],
+  ['results', 'Results'], ['members', 'Members'], ['faq', 'FAQ'],
 ]
 
 const FEATURES = [
@@ -60,6 +76,8 @@ export default function PublicSite() {
   const { openLogin } = useAuth()
   const { players, sessions, matches, playerById } = useApp()
   const active = useScrollSpy(NAV.map((n) => n[0]))
+  const reduce = useReducedMotion()
+  const [joinOpen, setJoinOpen] = useState(false)
 
   const memberCount = players.length
   const matchesPlayed = matches.length
@@ -69,70 +87,79 @@ export default function PublicSite() {
     () => sessions.find((s) => s.status === 'upcoming') || TODAY_SESSION,
     [sessions]
   )
+  const upcoming = useMemo(() => sessions.filter((s) => s.status === 'upcoming').slice(0, 2), [sessions])
   const statById = useMemo(() => {
     const map = {}
     for (const s of computeStats(matches)) map[s.id] = s
     return map
   }, [matches])
-
   const recentResults = useMemo(
-    () => matches.filter((m) => !m.live && m.winner).slice(0, 6).map((m) => buildResult(m, playerById)),
+    () => matches.filter((m) => !m.live && m.winner).slice(0, 5).map((m) => buildResult(m, playerById)),
     [matches, playerById]
   )
-  // Top players by leaderboard points, for the public "Club Leaders" podium.
   const leaders = useMemo(
     () => computeStats(matches).filter((r) => r.played > 0).slice(0, 3),
     [matches]
   )
 
+  const openJoin = () => { track('Join opened'); setJoinOpen(true) }
   const sayHello = () => { track('WhatsApp join'); whatsappJoin() }
+  const handleLogin = () => { track('Member login clicked'); openLogin() }
+
+  // Hero entrance choreography.
+  const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } }
+  const item = reduce
+    ? { hidden: { opacity: 1, y: 0 }, show: { opacity: 1, y: 0 } }
+    : { hidden: { opacity: 0, y: 26 }, show: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] } } }
 
   return (
     <div className="public-site">
       <ScrollProgress />
-      {/* ─────────── Public top nav ─────────── */}
-      <header className="public-nav">
-        <a href="#top" className="brand-link" aria-label="Ceylon Badminton Club — home">
-          <BrandLockup size="md" sub="Riyadh Chapter · Smash It Together" />
-        </a>
-        <nav className="public-links" aria-label="Sections">
-          {NAV.map(([id, label]) => (
-            <a key={id} href={`#${id}`} className={active === id ? 'is-active' : ''}>{label}</a>
-          ))}
-        </nav>
-        <button className="btn btn-gold btn-sm public-login" onClick={openLogin}>🔑 Member Login</button>
-      </header>
+      <PublicNav nav={NAV} active={active} onLogin={handleLogin} />
 
       {/* ─────────── Hero ─────────── */}
       <section className="public-hero" id="top">
         <div className="public-hero-bg" style={{ backgroundImage: `url(${HERO_PHOTO})` }} />
-        <ShuttleDeco size={150} className="shuttle-float" style={{ top: 90, right: 60 }} />
-        <ShuttleDeco size={90} className="shuttle-float" style={{ top: 220, right: 220, animationDelay: '1.4s' }} />
-        <div className="public-hero-inner">
-          <span className="eyebrow">Private Sri Lankan Club · Riyadh, KSA</span>
-          <h1 className="public-hero-title">
+        <div className="hero-net" aria-hidden="true" />
+        <CourtLines className="hero-court" opacity={0.12} parallax={34} />
+        <ShuttleParticles />
+        <AnimatedShuttlecock mode="hero" size={46} duration={13} className="hero-shuttle" />
+
+        <motion.div className="public-hero-inner" variants={stagger} initial="hidden" animate="show">
+          <motion.div className="hero-badges" variants={item}>
+            <span className="hero-badge">📍 Riyadh, Saudi Arabia</span>
+            <span className="hero-badge hero-badge-gold">Est. 2024</span>
+            <span className="hero-badge">{memberCount} Members</span>
+          </motion.div>
+          <motion.h1 className="public-hero-title" variants={item}>
             <span className="l1">Ceylon</span>
             <span className="l2">Badminton Club</span>
-          </h1>
-          <p className="public-hero-sub">
-            A Sri Lankan badminton community in Riyadh. We meet twice a week, shuffle fresh random
-            doubles every session, and play for the love of the game. Show up, get matched —
-            <b> smash it together.</b>
-          </p>
-          <div className="public-hero-cta">
-            <button className="btn btn-wa" onClick={sayHello}>📲 Come play with us</button>
-            <button className="btn btn-ghost" onClick={openLogin}>🔑 Member Login</button>
-          </div>
-          <div className="public-hero-stats">
-            <div className="phs-item"><b>{memberCount}</b><span>Members</span></div>
+          </motion.h1>
+          <motion.p className="hero-tagline" variants={item}>
+            Sri Lankan badminton community in Riyadh
+          </motion.p>
+          <motion.p className="public-hero-sub" variants={item}>
+            Random doubles every <b>Wednesday night</b> and <b>Saturday morning</b> at Green
+            Badminton Club. Show up, get matched — <b>smash it together.</b>
+          </motion.p>
+          <motion.div className="public-hero-cta" variants={item}>
+            <button className="btn btn-gold btn-lg btn-smash" onClick={openJoin}>
+              <span className="smash-trail" aria-hidden="true" />
+              🏸 Join the Club
+            </button>
+            <a className="btn btn-ghost" href="#members">View Members</a>
+            <a className="btn btn-ghost" href="#sessions">Weekly Sessions</a>
+          </motion.div>
+          <motion.div className="public-hero-stats" variants={item}>
+            <div className="phs-item"><b><CountUp value={memberCount} /></b><span>Members</span></div>
             <span className="phs-div" />
             <div className="phs-item"><b>2×</b><span>Per week</span></div>
             <span className="phs-div" />
             <div className="phs-item"><b>2024</b><span>Established</span></div>
             <span className="phs-div" />
-            <div className="phs-item"><b>{matchesPlayed}+</b><span>Matches</span></div>
-          </div>
-        </div>
+            <div className="phs-item"><b><CountUp value={matchesPlayed} suffix="+" /></b><span>Matches</span></div>
+          </motion.div>
+        </motion.div>
         <a className="hero-scroll" href="#about" aria-label="Scroll to learn more"><span>Scroll</span><i>↓</i></a>
       </section>
 
@@ -145,7 +172,7 @@ export default function PublicSite() {
             <p className="about-text">
               Ceylon Badminton Club brings together Sri Lankans across Riyadh who share one thing —
               a love for badminton. What started as a few friends booking a court has grown into a
-              tight community that plays, competes and celebrates together every week.
+              tight community built around fitness, friendship, discipline and competition.
             </p>
             <p className="about-text">
               There are no fixed partners and no permanent teams here. Every session we shuffle fresh
@@ -157,8 +184,13 @@ export default function PublicSite() {
               <li><span className="ap-ico">🇱🇰</span><span>A proudly Sri Lankan community, all skill levels welcome</span></li>
               <li><span className="ap-ico">🏆</span><span>Personal leaderboard, match history &amp; video highlights</span></li>
             </ul>
+            <button className="btn btn-gold btn-smash" style={{ marginTop: 18 }} onClick={openJoin}>
+              <span className="smash-trail" aria-hidden="true" />
+              Come play with us
+            </button>
           </Reveal>
           <Reveal delay={0.1} className="glass card-pad facts-card">
+            <AnimatedShuttlecock mode="float" size={64} className="facts-shuttle" />
             <span className="eyebrow">Quick facts</span>
             <div className="fact-row"><span className="fact-k">📅 Established</span><span className="fact-v">2024</span></div>
             <div className="fact-row"><span className="fact-k">📍 Venue</span><span className="fact-v">Green Badminton Club</span></div>
@@ -166,29 +198,66 @@ export default function PublicSite() {
             <div className="fact-row"><span className="fact-k">🕓 Hours</span><span className="fact-v">8–10 PM / 8–10 AM</span></div>
             <div className="fact-row"><span className="fact-k">👥 Members</span><span className="fact-v">{memberCount}</span></div>
             <div className="fact-row"><span className="fact-k">🏸 Format</span><span className="fact-v">Random doubles</span></div>
-            <button className="btn btn-wa" style={{ width: '100%', justifyContent: 'center', marginTop: 14 }} onClick={sayHello}>📲 Ask to join</button>
+            <button className="btn btn-wa" style={{ width: '100%', justifyContent: 'center', marginTop: 14 }} onClick={sayHello}>📲 Ask on WhatsApp</button>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ─────────── Weekly sessions ─────────── */}
+      <section id="sessions" className="band tint">
+        <div className="public-section">
+          <SectionHeading
+            eyebrow="Every single week"
+            title="Weekly"
+            accent="Sessions"
+            lead="Two nights on court, one club. The shuttle doesn’t stop — and neither do we."
+          />
+          <SessionsShowcase onJoin={openJoin} />
+          <Reveal delay={0.15}>
+            <div className="next-session-strip glass">
+              <span className="eyebrow">Next session</span>
+              <span className="display next-strip-date">{fmtFullDate(nextSession.date)}</span>
+              <span className="next-strip-meta mono">{nextSession.time} · {nextSession.courts} courts</span>
+              <a className="btn btn-ghost btn-sm" href={MAP_DIRECTIONS_URL} target="_blank" rel="noopener noreferrer">🧭 Directions</a>
+            </div>
           </Reveal>
         </div>
       </section>
 
       {/* ─────────── How we play ─────────── */}
-      <section id="play" className="band tint">
+      <section id="play" className="band">
         <div className="public-section">
-          <Reveal className="public-head center">
-            <span className="eyebrow">The Ceylon Way</span>
-            <h2 className="display public-h2">How We <span className="accent">Play</span></h2>
-            <p className="public-lead">Simple, social and fair — the format that keeps everyone coming back.</p>
-          </Reveal>
+          <SectionHeading
+            eyebrow="The Ceylon Way"
+            title="How We"
+            accent="Play"
+            lead="Simple, social and fair — the format that keeps everyone coming back."
+          />
           <div className="feature-grid">
             {FEATURES.map((f, i) => (
               <Reveal key={f.title} delay={i * 0.08}>
-                <div className="glass card-pad feature-card">
+                <GlassCard className="feature-card">
                   <span className="feature-ico">{f.icon}</span>
                   <h3 className="feature-title">{f.title}</h3>
                   <p className="feature-text">{f.text}</p>
-                </div>
+                </GlassCard>
               </Reveal>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────── Club stats ─────────── */}
+      <section id="stats" className="band tint stats-band">
+        <CourtLines opacity={0.06} parallax={20} />
+        <div className="public-section">
+          <SectionHeading eyebrow="The club in numbers" title="Club" accent="Stats" />
+          <div className="stats-grid">
+            <StatTile icon="📅" text="2024" label="Established" delay={0} />
+            <StatTile icon="👥" value={memberCount} label="Members" delay={0.06} />
+            <StatTile icon="🗓" text="Wed & Sat" label="Sessions weekly" delay={0.12} />
+            <StatTile icon="⚔️" value={matchesPlayed} suffix="+" label="Matches tracked" delay={0.18} />
+            <StatTile icon="🔀" text="Doubles" label="Random format" delay={0.24} />
           </div>
         </div>
       </section>
@@ -196,46 +265,81 @@ export default function PublicSite() {
       {/* ─────────── Gallery ─────────── */}
       <section id="gallery" className="band">
         <div className="public-section">
-          <Reveal className="public-head center">
-            <span className="eyebrow">In action</span>
-            <h2 className="display public-h2">Life at the <span className="accent">Club</span> 🏸</h2>
-            <p className="public-lead">Real moments from our sessions, tournaments and trophy nights — tap any photo to view full screen.</p>
+          <SectionHeading
+            eyebrow="In action"
+            title="Life at the"
+            accent="Club"
+            lead="Real moments from our sessions, tournaments and trophy nights — tap any photo to view full screen."
+          />
+          <Reveal>
+            <Suspense fallback={<div className="gallery-loading">Loading photos…</div>}>
+              <AdvancedGallery />
+            </Suspense>
           </Reveal>
-          <Reveal><AdvancedGallery /></Reveal>
         </div>
       </section>
 
-      {/* ─────────── Recent results ─────────── */}
+      {/* ─────────── Results & upcoming ─────────── */}
       <section id="results" className="band tint">
         <div className="public-section">
-          <Reveal className="public-head center">
-            <span className="eyebrow">On the scoreboard</span>
-            <h2 className="display public-h2">Recent <span className="accent">Results</span></h2>
-            <p className="public-lead">The latest scores straight from the courts.</p>
-          </Reveal>
-          <Reveal className="results-list">
-            {recentResults.map((r) => (
-              <div className="result-row glass" key={r.id}>
-                <span className={`badge ${r.type === 'doubles' ? 'badge-doubles' : 'badge-singles'}`}>{r.type === 'doubles' ? 'Doubles' : 'Singles'}</span>
-                <span className="result-text"><b className="gold">{r.win}</b> beat {r.lose}</span>
-                <span className="result-score mono">{r.score}</span>
-                <span className="result-meta faint">{r.sets} · {fmtDate(r.date)}</span>
-              </div>
-            ))}
-            {recentResults.length === 0 && <div className="glass card-pad dim center">Scores will appear here after the next session.</div>}
-          </Reveal>
+          <SectionHeading
+            eyebrow="On the scoreboard"
+            title="Results &"
+            accent="Events"
+            lead="The latest scores straight from the courts, and what’s coming up next."
+          />
+          <div className="events-cols">
+            <div className="events-col">
+              <h3 className="events-col-h display">Recent results</h3>
+              {recentResults.map((r, i) => (
+                <EventCard
+                  key={r.id}
+                  dateBadge={fmtDate(r.date)}
+                  title={<><b className="gold">{r.win}</b> beat {r.lose}</>}
+                  meta={[`${r.score} · ${r.sets}`, r.type === 'doubles' ? 'Doubles' : 'Singles']}
+                  status={r.score}
+                  tone="result"
+                  delay={i * 0.05}
+                />
+              ))}
+              {recentResults.length === 0 && (
+                <GlassCard className="dim center">Scores will appear here after the next session.</GlassCard>
+              )}
+            </div>
+            <div className="events-col">
+              <h3 className="events-col-h display">Upcoming sessions</h3>
+              {upcoming.map((s, i) => (
+                <EventCard
+                  key={s.id}
+                  dateBadge={fmtDate(s.date)}
+                  title={`${dayName(s.date) === 'Wed' ? 'Wednesday Night' : 'Saturday Morning'} Doubles`}
+                  meta={[`🕓 ${s.time}`, `📍 ${s.venue}`, `🏟 ${s.courts} courts`]}
+                  status="Open"
+                  tone="upcoming"
+                  delay={i * 0.05}
+                />
+              ))}
+              <Reveal delay={0.15}>
+                <button className="btn btn-gold btn-smash" style={{ width: '100%', justifyContent: 'center' }} onClick={openJoin}>
+                  <span className="smash-trail" aria-hidden="true" />
+                  Play in the next one →
+                </button>
+              </Reveal>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ─────────── Club leaders (top players) ─────────── */}
+      {/* ─────────── Club leaders ─────────── */}
       {leaders.length > 0 && (
         <section id="leaders" className="band">
           <div className="public-section">
-            <Reveal className="public-head center">
-              <span className="eyebrow">On the leaderboard</span>
-              <h2 className="display public-h2">Club <span className="accent">Leaders</span> 🏆</h2>
-              <p className="public-lead">Our top players by points — every win, partner and point is tracked across the season.</p>
-            </Reveal>
+            <SectionHeading
+              eyebrow="On the leaderboard"
+              title="Club"
+              accent="Leaders"
+              lead="Our top players by points — every win, partner and point is tracked across the season."
+            />
             <div className="leaders-grid">
               {leaders.map((p, i) => (
                 <Reveal key={p.id} delay={i * 0.08}>
@@ -260,33 +364,31 @@ export default function PublicSite() {
         </section>
       )}
 
-      {/* ─────────── Our members ─────────── */}
-      <section id="members" className="band">
+      {/* ─────────── Members ─────────── */}
+      <section id="members" className="band tint">
         <div className="public-section">
-          <Reveal className="public-head center">
-            <span className="eyebrow">The squad</span>
-            <h2 className="display public-h2">Our <span className="accent">Members</span> 👥</h2>
-            <p className="public-lead">{memberCount} players make up the club — partners rotate every session, so everyone plays with everyone.</p>
-          </Reveal>
-          <div className="members-roster">
-            {players.map((p) => {
-              const s = statById[p.id]
-              return (
-                <div className="member-chip" key={p.id}>
-                  <Avatar player={p} size={40} />
-                  <div className="member-chip-text">
-                    <span className="member-chip-name">{p.name}</span>
-                    <span className="member-chip-stat">{s ? `${s.played} games · ${s.winPct}% win` : 'New member'}</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <SectionHeading
+            eyebrow="The squad"
+            title="Our"
+            accent="Members"
+            lead={`${memberCount} players make up the club — partners rotate every session, so everyone plays with everyone.`}
+          />
+          <motion.div
+            className="members-grid"
+            variants={{ show: { transition: { staggerChildren: 0.04 } } }}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: '-60px' }}
+          >
+            {players.map((p, i) => (
+              <MemberCard key={p.id} player={p} stat={statById[p.id]} index={i} />
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* ─────────── Sessions / visit + map ─────────── */}
-      <section id="visit" className="band tint">
+      {/* ─────────── Visit / map ─────────── */}
+      <section id="visit" className="band">
         <div className="public-section">
           <div className="visit-grid">
             <Reveal className="glass card-pad visit-card">
@@ -307,7 +409,6 @@ export default function PublicSite() {
                 <a className="btn btn-ghost" href={MAP_DIRECTIONS_URL} target="_blank" rel="noopener noreferrer">🧭 Directions</a>
               </div>
             </Reveal>
-
             <Reveal delay={0.1} className="glass map-card">
               <iframe
                 title="Green Badminton Club location"
@@ -324,18 +425,19 @@ export default function PublicSite() {
       </section>
 
       {/* ─────────── FAQ ─────────── */}
-      <section id="faq" className="band">
+      <section id="faq" className="band tint">
         <div className="public-section">
-          <Reveal className="public-head center">
-            <span className="eyebrow">Good to know</span>
-            <h2 className="display public-h2">Frequently <span className="accent">Asked</span></h2>
-            <p className="public-lead">New to the club? Here’s what most people want to know.</p>
-          </Reveal>
+          <SectionHeading
+            eyebrow="Good to know"
+            title="Frequently"
+            accent="Asked"
+            lead="New to the club? Here’s what most people want to know."
+          />
           <Reveal className="faq-list">
-            {FAQ.map((item) => (
-              <details className="faq-item glass" key={item.q}>
-                <summary>{item.q}<span className="faq-plus">+</span></summary>
-                <p>{item.a}</p>
+            {FAQ.map((item2) => (
+              <details className="faq-item glass" key={item2.q}>
+                <summary>{item2.q}<span className="faq-plus">+</span></summary>
+                <p>{item2.a}</p>
               </details>
             ))}
           </Reveal>
@@ -343,29 +445,17 @@ export default function PublicSite() {
       </section>
 
       {/* ─────────── Join CTA ─────────── */}
-      <section className="public-cta">
-        <Reveal className="glass card-pad public-cta-card">
-          <ShuttleDeco size={160} className="shuttle-float" style={{ top: -20, right: 20, opacity: 0.08 }} />
-          <span className="eyebrow">Sri Lankan &amp; in Riyadh?</span>
-          <h2 className="display public-cta-title">Grab a racket. Join the club.</h2>
-          <p className="public-cta-sub">
-            New faces are always welcome — beginners included. Message us and we’ll get you on court
-            this week. Your first session is on us.
-          </p>
-          <div className="row wrap center" style={{ gap: 12, justifyContent: 'center' }}>
-            <button className="btn btn-wa btn-lg" onClick={sayHello}>📲 Say hello on WhatsApp</button>
-          </div>
-        </Reveal>
-      </section>
+      <CTASection onJoin={openJoin} onLogin={handleLogin} />
 
       {/* ─────────── Footer ─────────── */}
       <footer className="public-footer">
+        <div className="footer-net" aria-hidden="true" />
         <div className="public-footer-grid">
           <div className="footer-brand">
-            <BrandLockup size="sm" sub="Riyadh Chapter · Est. 2024" />
+            <BrandLockup size="sm" sub="Riyadh · Est. 2024" />
             <p className="footer-tag">Smash It Together 🏸🇱🇰 — a Sri Lankan badminton community in Riyadh.</p>
             <div className="footer-socials">
-              <button className="footer-social" onClick={sayHello} aria-label="WhatsApp">📲 WhatsApp</button>
+              <button className="footer-social" onClick={sayHello} aria-label="Contact us on WhatsApp">📲 WhatsApp</button>
               {INSTAGRAM_URL && <a className="footer-social" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">📸 Instagram</a>}
               <a className="footer-social" href={MAP_SHARE_URL} target="_blank" rel="noopener noreferrer">📍 Map</a>
             </div>
@@ -379,7 +469,7 @@ export default function PublicSite() {
             <span className="footer-line">🗓 Wed 8–10 PM · Sat 8–10 AM</span>
             <span className="footer-line">📍 Green Badminton Club, Riyadh</span>
             <a href={MAP_DIRECTIONS_URL} target="_blank" rel="noopener noreferrer">🧭 Get directions</a>
-            <button className="footer-portal" onClick={openLogin}>🔑 Members portal →</button>
+            <button className="footer-portal" onClick={handleLogin}>🔑 Members portal →</button>
           </div>
         </div>
         <div className="public-footer-base">
@@ -389,6 +479,7 @@ export default function PublicSite() {
       </footer>
 
       <BackToTop />
+      {joinOpen && <JoinModal onClose={() => setJoinOpen(false)} />}
     </div>
   )
 }
