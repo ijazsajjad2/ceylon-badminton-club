@@ -28,12 +28,13 @@ const RANK_MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 export default function Dashboard({ navigate }) {
   const { matches, players, sessions, playerById, goingIds, pushToast } = useApp()
-  const { user, openLogin } = useAuth()
+  const { user, openLogin, isScorekeeper } = useAuth()
   const [showRecord, setShowRecord] = useState(false)
   const cd = useCountdown(TODAY_SESSION.date, TODAY_SESSION_START)
 
   const tryRecord = () => {
     if (!user) { pushToast('Sign in as a member to record a score 🔒', 'info'); return openLogin() }
+    if (!isScorekeeper) { pushToast('Only Ijaz (the club scorekeeper) can record match scores. 🏸', 'info'); return }
     setShowRecord(true)
   }
 

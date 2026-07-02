@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Avatar from './Avatar.jsx'
 import { useApp } from '../context/AppContext.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 import { setsWon } from '../lib/stats.js'
 import { fmtDate } from '../lib/format.js'
 import VideoThumb from './VideoThumb.jsx'
@@ -22,6 +23,33 @@ function Team({ ids, side, isWinner }) {
         {players.length === 1 && side && <span className="faint" style={{ fontSize: 11 }}>singles</span>}
       </div>
     </div>
+  )
+}
+
+// Any signed-in member can confirm a recorded result. The ranking always
+// includes every match regardless — this only marks the match itself.
+function MatchConfirm({ match }) {
+  const { user } = useAuth()
+  const { confirmMatch } = useApp()
+  const confirmedBy = match.confirmedBy || []
+  const isConfirmed = confirmedBy.length > 0
+  const iConfirmed = !!user && confirmedBy.includes(user.username)
+
+  return (
+    <span className="match-confirm-wrap">
+      <span className={`badge ${isConfirmed ? 'badge-confirmed' : 'badge-pending'}`}>
+        {isConfirmed ? `✅ Confirmed${confirmedBy.length > 1 ? ` ×${confirmedBy.length}` : ''}` : '⏳ Pending confirmation'}
+      </span>
+      {user && !iConfirmed && (
+        <button
+          type="button"
+          className="btn btn-sm btn-ghost match-confirm-btn"
+          onClick={(e) => { e.stopPropagation(); confirmMatch(match.id) }}
+        >
+          Confirm
+        </button>
+      )}
+    </span>
   )
 }
 
@@ -81,6 +109,7 @@ export default function MatchCard({ match, expandable = true, onPlayClip }) {
         <span>🕓 {match.time}</span>
         <span>🏟 Court {match.court}</span>
         {clips.length > 0 && <span className="badge badge-doubles" style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setOpen(true) }}>🎥 {clips.length} clip{clips.length > 1 ? 's' : ''}</span>}
+        {!match.live && match.winner && <MatchConfirm match={match} />}
         {expandable && <span className="faint">{open ? '▲ hide' : '▼ scorecard'}</span>}
       </div>
 

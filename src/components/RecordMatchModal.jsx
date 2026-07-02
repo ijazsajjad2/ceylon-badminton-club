@@ -16,7 +16,7 @@ function ToggleSwitch({ value, onChange }) {
 }
 
 export default function RecordMatchModal({ onClose, prefill }) {
-  const { players, dispatch, pushToast } = useApp()
+  const { players, recordMatch, pushToast } = useApp()
   const [type, setType] = useState(prefill?.type || 'doubles')
   const [sel, setSel] = useState(
     prefill?.players || { a1: '', a2: '', b1: '', b2: '' }
@@ -84,7 +84,7 @@ export default function RecordMatchModal({ onClose, prefill }) {
 
   const usedExcept = (selfKey) => Object.entries(sel).filter(([k]) => k !== selfKey).map(([, v]) => v).filter(Boolean)
 
-  const save = () => {
+  const save = async () => {
     setShowErr(true)
     if (!canSave) {
       pushToast(setError || 'Please complete all required fields', 'error')
@@ -103,7 +103,8 @@ export default function RecordMatchModal({ onClose, prefill }) {
       winner,
       live: false,
     }
-    dispatch({ type: 'ADD_MATCH', match })
+    const res = await recordMatch(match)
+    if (!res.ok) return // recordMatch already surfaced the reason via a toast
     const aNames = match.teamA.map((id) => players.find((p) => p.id === id)?.name).join(' & ')
     const bNames = match.teamB.map((id) => players.find((p) => p.id === id)?.name).join(' & ')
     pushToast(`Saved: ${winner === 'A' ? aNames : bNames} won ${Math.max(setsA, setsB)}–${Math.min(setsA, setsB)} 🏸`, 'success')

@@ -14,27 +14,42 @@ const FILTERS = [
   { key: 'month', label: 'This Month' },
 ]
 
+const isoLocal = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+// The Mon–Sun week containing today, computed relative to the real "now".
 function inWeek(date) {
-  // week containing today's session, Wed 2026-06-17 (Mon–Sun 06-15..06-21)
-  return date >= '2026-06-15' && date <= '2026-06-21'
+  const now = new Date()
+  const dow = (now.getDay() + 6) % 7 // Mon=0 .. Sun=6
+  const mon = new Date(now); mon.setDate(now.getDate() - dow)
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
+  return date >= isoLocal(mon) && date <= isoLocal(sun)
+}
+
+function inMonth(date) {
+  const now = new Date()
+  const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  return date.startsWith(prefix)
 }
 
 export default function Matches({ prefillMatch, clearPrefill }) {
   const { matches, pushToast } = useApp()
-  const { user, openLogin } = useAuth()
+  const { user, openLogin, isScorekeeper } = useAuth()
   const [filter, setFilter] = useState('all')
   const [showRecord, setShowRecord] = useState(false)
   const [showSingles, setShowSingles] = useState(true)
 
   const tryRecord = () => {
     if (!user) { pushToast('Sign in as a member to record a match 🔒', 'info'); return openLogin() }
+    if (!isScorekeeper) { pushToast('Only Ijaz (the club scorekeeper) can record match scores. 🏸', 'info'); return }
     setShowRecord(true)
   }
 
-  // Open record modal if we arrived with a prefilled match from pairing.
+  // Open record modal if we arrived with a prefilled match from pairing
+  // (scorekeeper only — a prefill from a non-scorekeeper session is dropped).
   useEffect(() => {
-    if (prefillMatch) setShowRecord(true)
-  }, [prefillMatch])
+    if (prefillMatch && isScorekeeper) setShowRecord(true)
+    else if (prefillMatch) { pushToast('Only Ijaz (the club scorekeeper) can record match scores. 🏸', 'info'); clearPrefill?.() }
+  }, [prefillMatch, isScorekeeper, clearPrefill, pushToast])
 
   const filtered = useMemo(() => {
     return matches.filter((m) => {
@@ -42,7 +57,7 @@ export default function Matches({ prefillMatch, clearPrefill }) {
       if (filter === 'singles') return m.type === 'singles'
       if (filter === 'today') return m.date === TODAY
       if (filter === 'week') return inWeek(m.date)
-      if (filter === 'month') return m.date.startsWith('2026-06')
+      if (filter === 'month') return inMonth(m.date)
       return true
     })
   }, [matches, filter])

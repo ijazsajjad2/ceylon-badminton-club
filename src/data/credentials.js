@@ -28,6 +28,9 @@ export const CREDENTIALS = {
   admin:      "70f4ede8f9c641de6f127a379c54165cb728f873c3a9a1fbb8ebf933c82d56cc",
 }
 
+// The one account allowed to record match scores — the club's scorekeeper.
+export const SCOREKEEPER_USERNAME = 'ijaz'
+
 // Maps username -> player ID for personalisation.
 export const USERNAME_TO_PLAYER = {
   tharindu:   "p1",
