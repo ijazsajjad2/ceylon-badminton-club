@@ -1,0 +1,50 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.ceylonbadminton.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.ceylonbadminton.app"
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file("../keystore/debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // No signingConfig here on purpose: the Play Store release build must be
+            // signed with your own upload key, never the shared debug key above.
+            // See ../../ANDROID_APP.md for how to create one and wire it in.
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Trusted Web Activity launcher — wraps the live PWA at https://ceylonbadminton.com
+    // in a full-screen Chrome Custom Tab with no browser chrome once the domain is
+    // verified via Digital Asset Links (see public/.well-known/assetlinks.json).
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.0'
+}

@@ -20,3 +20,15 @@ yarn-error.log*
 
 # local tooling
 .claude/
+
+# Android build outputs (the app project itself — android/ — is committed;
+# only the generated build junk below is not)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/*.iml
+android/.idea/
+android/captures/
+android/.cxx/
+

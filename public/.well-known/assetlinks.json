@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ceylonbadminton.app",
+      "sha256_cert_fingerprints": [
+        "B2:48:18:79:85:B7:BD:BB:27:D1:38:5F:67:F4:45:6E:A6:2B:BA:27:AF:74:D8:AE:96:E2:58:BE:12:35:F4:F0"
+      ]
+    }
+  }
+]
