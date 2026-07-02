@@ -72,6 +72,7 @@ function buildResult(m, playerById) {
     sets: m.sets.length > 1 ? `${Math.max(sa, sb)}–${Math.min(sa, sb)} sets` : 'straight sets',
     type: m.type,
     date: m.date,
+    confirmed: (m.confirmedBy || []).length > 0,
   }
 }
 
@@ -299,7 +300,7 @@ export default function PublicSite() {
                   key={r.id}
                   dateBadge={fmtDate(r.date)}
                   title={<><b className="gold">{r.win}</b> beat {r.lose}</>}
-                  meta={[`${r.score} · ${r.sets}`, r.type === 'doubles' ? 'Doubles' : 'Singles']}
+                  meta={[`${r.score} · ${r.sets}`, r.type === 'doubles' ? 'Doubles' : 'Singles', r.confirmed ? '✅ Confirmed' : '⏳ Pending']}
                   status={r.score}
                   tone="result"
                   delay={i * 0.05}

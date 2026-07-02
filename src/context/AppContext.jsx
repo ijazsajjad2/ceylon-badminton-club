@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState, useCallback } from 'react'
 import { PLAYERS } from '../data/players.js'
 import { MATCHES, SESSIONS, TODAY_SESSION, VIDEO_SEED } from '../data/seed.js'
+import { SCOREKEEPER_USERNAME } from '../data/credentials.js'
 import { load, save } from '../lib/storage.js'
 import { getSupabase, hasSupabase } from '../lib/supabase.js'
+import { useAuth } from './AuthContext.jsx'
 
 const AppContext = createContext(null)
 export const useApp = () => useContext(AppContext)
@@ -11,18 +13,55 @@ const duoKey = (a, b) => [a, b].sort().join('~')
 
 // Seed "last session pairs" from the most recent past session's real duos,
 // so the very first generated pairing already tries to avoid them.
-function seedLastPairs() {
+function seedLastPairs(matches) {
   const past = SESSIONS.filter((s) => s.status === 'past')
   const last = past[past.length - 1]
   if (!last) return []
   const keys = new Set()
-  for (const m of MATCHES) {
+  for (const m of matches) {
     if (m.sessionId === last.id && m.type === 'doubles') {
       keys.add(duoKey(m.teamA[0], m.teamA[1]))
       keys.add(duoKey(m.teamB[0], m.teamB[1]))
     }
   }
   return [...keys]
+}
+
+// Local <-> Supabase row shape for matches (snake_case columns, jsonb arrays).
+function matchToRow(m) {
+  return {
+    id: m.id,
+    session_id: m.sessionId,
+    date: m.date,
+    time: m.time,
+    court: m.court,
+    type: m.type,
+    team_a: m.teamA,
+    team_b: m.teamB,
+    sets: m.sets,
+    winner: m.winner,
+    live: !!m.live,
+    recorded_by: m.recordedBy || null,
+    confirmed_by: m.confirmedBy || [],
+    updated_at: new Date().toISOString(),
+  }
+}
+function rowToMatch(r) {
+  return {
+    id: r.id,
+    sessionId: r.session_id,
+    date: r.date,
+    time: r.time,
+    court: r.court,
+    type: r.type,
+    teamA: r.team_a,
+    teamB: r.team_b,
+    sets: r.sets,
+    winner: r.winner,
+    live: !!r.live,
+    recordedBy: r.recorded_by,
+    confirmedBy: r.confirmed_by || [],
+  }
 }
 
 function initState() {
@@ -33,14 +72,18 @@ function initState() {
   const extraPlayers = stored ? stored.filter((p) => !canonicalIds.has(p.id)) : []
   const players = [...PLAYERS, ...extraPlayers]
 
+  // Matches start from the (empty) seed and are recorded by the scorekeeper
+  // from here on — persisted locally, and synced via Supabase if configured.
+  const matches = load('matches', MATCHES)
+
   return {
     players,
-    // Sessions & matches are always derived fresh from the seed so the schedule
+    matches,
+    // Sessions are always derived fresh from the seed so the schedule
     // auto-rolls to the real upcoming Wed/Sat (never frozen in localStorage).
-    matches: MATCHES,
     sessions: SESSIONS,
     going: load('going', Object.fromEntries(TODAY_SESSION.attendees.map((id) => [id, true]))),
-    lastSessionPairs: load('lastSessionPairs', seedLastPairs()),
+    lastSessionPairs: load('lastSessionPairs', seedLastPairs(matches)),
     videos: load('videos', VIDEO_SEED),
     draw: load('draw', null),
   }
@@ -48,13 +91,26 @@ function initState() {
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'ADD_MATCH':
-      return { ...state, matches: [action.match, ...state.matches] }
-    case 'UPDATE_MATCH':
+    case 'SET_MATCH': {
+      // Upsert by id — used both for optimistic local writes and realtime echoes.
+      const exists = state.matches.some((m) => m.id === action.match.id)
+      const matches = exists
+        ? state.matches.map((m) => (m.id === action.match.id ? action.match : m))
+        : [action.match, ...state.matches]
+      return { ...state, matches }
+    }
+    case 'REPLACE_MATCHES':
+      return { ...state, matches: action.matches }
+    case 'CONFIRM_MATCH': {
       return {
         ...state,
-        matches: state.matches.map((m) => (m.id === action.match.id ? action.match : m)),
+        matches: state.matches.map((m) => {
+          if (m.id !== action.matchId) return m
+          if (m.confirmedBy && m.confirmedBy.includes(action.who)) return m
+          return { ...m, confirmedBy: [...(m.confirmedBy || []), action.who] }
+        }),
       }
+    }
     case 'ADD_PLAYER':
       return { ...state, players: [...state.players, action.player] }
     case 'UPDATE_PLAYER':
@@ -98,9 +154,11 @@ export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, undefined, initState)
   const [toasts, setToasts] = useState([])
   const toastId = useRef(0)
+  const { user: authUser, isScorekeeper } = useAuth()
 
-  // Persist slices (matches & sessions intentionally NOT persisted — derived from seed)
+  // Persist slices (sessions intentionally NOT persisted — derived from seed)
   useEffect(() => save('players', state.players), [state.players])
+  useEffect(() => save('matches', state.matches), [state.matches])
   useEffect(() => save('going', state.going), [state.going])
   useEffect(() => save('lastSessionPairs', state.lastSessionPairs), [state.lastSessionPairs])
   useEffect(() => save('videos', state.videos), [state.videos])
@@ -131,6 +189,45 @@ export function AppProvider({ children }) {
       )
     } catch { /* stay local on any backend error */ }
   }, [])
+
+  // Record a match score. Client-side gated to the scorekeeper account only
+  // (SCOREKEEPER_USERNAME) — this is a convenience gate like the rest of the
+  // login system, not server-enforced security. Writes locally, and syncs to
+  // Supabase (if configured) so every member's device can see and confirm it.
+  const recordMatch = useCallback(async (match) => {
+    if (!authUser || authUser.username !== SCOREKEEPER_USERNAME) {
+      pushToast('Only the club scorekeeper can record match scores.', 'error')
+      return { ok: false }
+    }
+    const full = { ...match, confirmedBy: [], recordedBy: authUser.username }
+    dispatch({ type: 'SET_MATCH', match: full })
+    if (hasSupabase) {
+      try {
+        const sb = await getSupabase()
+        if (sb) await sb.from('matches').upsert(matchToRow(full))
+      } catch { /* stay local on any backend error */ }
+    }
+    return { ok: true }
+  }, [authUser, pushToast])
+
+  // Any signed-in member can confirm a recorded result actually happened as
+  // scored. The ranking always includes every match regardless of
+  // confirmation — this only marks the match itself as confirmed.
+  const confirmMatch = useCallback(async (matchId) => {
+    if (!authUser) return
+    const who = authUser.username
+    dispatch({ type: 'CONFIRM_MATCH', matchId, who })
+    if (!hasSupabase) return
+    try {
+      const sb = await getSupabase()
+      if (!sb) return
+      const { data } = await sb.from('matches').select('confirmed_by').eq('id', matchId).maybeSingle()
+      const current = (data && data.confirmed_by) || []
+      if (!current.includes(who)) {
+        await sb.from('matches').update({ confirmed_by: [...current, who], updated_at: new Date().toISOString() }).eq('id', matchId)
+      }
+    } catch { /* stay local on any backend error */ }
+  }, [authUser])
 
   // When a shared backend is configured, load the live roster for today's
   // session and subscribe to realtime changes. No-op otherwise.
@@ -172,6 +269,38 @@ export function AppProvider({ children }) {
     }
   }, [])
 
+  // Same pattern for the shared match ledger: initial load + realtime upserts.
+  useEffect(() => {
+    if (!hasSupabase) return
+    let channel = null
+    let alive = true
+    ;(async () => {
+      try {
+        const sb = await getSupabase()
+        if (!sb || !alive) return
+        const { data } = await sb.from('matches').select('*').order('date', { ascending: false })
+        if (data && alive) {
+          dispatch({ type: 'REPLACE_MATCHES', matches: data.map(rowToMatch) })
+        }
+        channel = sb
+          .channel('matches-all')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'matches' },
+            (payload) => {
+              if (payload.eventType === 'DELETE') return
+              dispatch({ type: 'SET_MATCH', match: rowToMatch(payload.new) })
+            }
+          )
+          .subscribe()
+      } catch { /* stay local */ }
+    })()
+    return () => {
+      alive = false
+      try { channel && channel.unsubscribe() } catch { /* ignore */ }
+    }
+  }, [])
+
   const playerById = useMemo(() => {
     const map = {}
     for (const p of state.players) map[p.id] = p
@@ -187,8 +316,11 @@ export function AppProvider({ children }) {
   }, [state.videos])
 
   const value = useMemo(
-    () => ({ ...state, dispatch, rsvp, sharedRoster: hasSupabase, toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch }),
-    [state, rsvp, toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch]
+    () => ({
+      ...state, dispatch, rsvp, recordMatch, confirmMatch, isScorekeeper,
+      sharedRoster: hasSupabase, toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch,
+    }),
+    [state, rsvp, recordMatch, confirmMatch, isScorekeeper, toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch]
   )
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

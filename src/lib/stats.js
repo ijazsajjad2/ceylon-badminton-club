@@ -140,8 +140,17 @@ function currentStreak(results) {
 
 export function filterByPeriod(matches, period) {
   if (period === 'all') return matches
-  // 'month' = June 2026, 'season' = last 90 days-ish (May–Jun here)
-  if (period === 'month') return matches.filter((m) => m.date.startsWith('2026-06'))
-  if (period === 'season') return matches.filter((m) => m.date >= '2026-05-01')
+  const now = new Date()
+  if (period === 'month') {
+    const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    return matches.filter((m) => m.date.startsWith(prefix))
+  }
+  if (period === 'season') {
+    // Last ~90 days, relative to today.
+    const cutoff = new Date(now)
+    cutoff.setDate(cutoff.getDate() - 90)
+    const iso = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`
+    return matches.filter((m) => m.date >= iso)
+  }
   return matches
 }

@@ -12,7 +12,7 @@ const TARGET = 20
 
 export default function Participation({ navigate }) {
   const { players, playerById, going, goingIds, lastSessionPairs, rsvp, sharedRoster, pushToast } = useApp()
-  const { user, openLogin } = useAuth()
+  const { user, openLogin, isScorekeeper } = useAuth()
   const [result, setResult] = useState(null)
   const [revealKey, setRevealKey] = useState(0)
 
@@ -56,6 +56,7 @@ export default function Participation({ navigate }) {
   }, 'Sign in as a member to RSVP 🔒')
 
   const trackMatch = (m) => requireAuth(() => {
+    if (!isScorekeeper) { pushToast('Only Ijaz (the club scorekeeper) can record match scores. 🏸', 'info'); return }
     navigate('matches', {
       prefillMatch: {
         type: 'doubles',

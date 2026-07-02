@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react'
-import { CREDENTIALS, USERNAME_TO_PLAYER } from '../data/credentials.js'
+import { CREDENTIALS, USERNAME_TO_PLAYER, SCOREKEEPER_USERNAME } from '../data/credentials.js'
 
 const AuthContext = createContext(null)
 export const useAuth = () => useContext(AuthContext)
@@ -50,8 +50,12 @@ export function AuthProvider({ children }) {
   const openLogin = useCallback(() => setLoginOpen(true), [])
   const closeLogin = useCallback(() => setLoginOpen(false), [])
 
+  // Derived fresh from the live session every render (never trust a stored
+  // flag) — true only for the one account allowed to record match scores.
+  const isScorekeeper = user?.username === SCOREKEEPER_USERNAME
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loginOpen, openLogin, closeLogin }}>
+    <AuthContext.Provider value={{ user, login, logout, loginOpen, openLogin, closeLogin, isScorekeeper }}>
       {children}
     </AuthContext.Provider>
   )

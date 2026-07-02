@@ -48,6 +48,8 @@ export default function Leaderboard() {
       <h1 className="section-title" style={{ fontSize: 34, marginTop: 6 }}>Leaderboard 🏆</h1>
       <p className="section-sub">
         <b className="gold">Individual Rankings</b> — partners change every session, so wins & points are credited to each player personally.
+        Scores are recorded by the club scorekeeper; every match counts here whether or not it's been confirmed yet — open a match on the{' '}
+        <b>Matches</b> page and tap <b>Confirm</b> to mark it verified.
       </p>
 
       <div className="row spread wrap" style={{ gap: 10 }}>

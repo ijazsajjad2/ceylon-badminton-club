@@ -1911,3 +1911,9 @@ html { scroll-behavior: smooth; }
 .sound-toggle:hover { transform: translateY(-2px); }
 .sound-toggle.on { border-color: rgba(226,59,59,0.55); box-shadow: 0 10px 28px rgba(226,59,59,0.3); }
 @media (max-width: 680px) { .sound-toggle { right: 16px; bottom: 74px; } }
+
+/* Match result confirmation (peer verification of a recorded score) */
+.match-confirm-wrap { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+.badge-confirmed { background: rgba(47,174,107,0.16); color: #7ee2a8; border: 1px solid rgba(47,174,107,0.35); }
+.badge-pending { background: rgba(255,255,255,0.05); color: var(--text-faint); border: 1px solid var(--stroke-strong); }
+.match-confirm-btn { padding: 3px 10px; font-size: 10.5px; letter-spacing: 0.3px; }
