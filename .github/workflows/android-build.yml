@@ -1,4 +1,4 @@
-name: Build Android app (debug APK)
+name: Build Android app
 
 on:
   push:
@@ -7,6 +7,11 @@ on:
       - 'android/**'
       - '.github/workflows/android-build.yml'
   workflow_dispatch:
+
+# contents: write lets the job publish the release APK to GitHub Releases so
+# club members get a stable, login-free download link.
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -33,12 +38,33 @@ jobs:
       - name: Grant execute permission to gradlew
         run: chmod +x gradlew
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Build debug + release APKs
+        run: ./gradlew assembleDebug assembleRelease --no-daemon
 
-      - name: Upload APK artifact
+      - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ceylon-badminton-club-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Upload release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ceylon-badminton-club-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+
+      # Publish/refresh the "android-latest" GitHub Release so the newest
+      # signed APK is always downloadable at a stable public URL:
+      # https://github.com/<owner>/<repo>/releases/tag/android-latest
+      - name: Publish release APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk CeylonBadmintonClub.apk
+          gh release create android-latest \
+            --title "Ceylon Badminton Club — Android app (latest)" \
+            --notes "Latest signed Android APK, rebuilt automatically from main. Download CeylonBadmintonClub.apk below and open it on your phone to install. See ANDROID_APP.md for details." \
+            2>/dev/null || true
+          gh release upload android-latest CeylonBadmintonClub.apk --clobber

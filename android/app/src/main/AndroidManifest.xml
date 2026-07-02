@@ -49,6 +49,18 @@
                 android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY"
                 android:value="com.ceylonbadminton.app.fileprovider" />
 
+            <!-- Match the web manifest's portrait-primary orientation. -->
+            <meta-data
+                android:name="android.support.customtabs.trusted.SCREEN_ORIENTATION"
+                android:value="portrait" />
+
+            <!-- On devices with no TWA-capable browser (no Chrome), fall back
+                 to an in-app WebView instead of a bare Custom Tab, so the app
+                 still opens full-screen everywhere. -->
+            <meta-data
+                android:name="android.support.customtabs.trusted.FALLBACK_STRATEGY"
+                android:value="webview" />
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
