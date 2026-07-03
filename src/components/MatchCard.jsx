@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { setsWon } from '../lib/stats.js'
 import { fmtDate } from '../lib/format.js'
+import { fireConfetti } from '../lib/confetti.js'
 import VideoThumb from './VideoThumb.jsx'
 
 function Team({ ids, side, isWinner }) {
@@ -44,7 +45,12 @@ function MatchConfirm({ match }) {
         <button
           type="button"
           className="btn btn-sm btn-ghost match-confirm-btn"
-          onClick={(e) => { e.stopPropagation(); confirmMatch(match.id) }}
+          onClick={(e) => {
+            e.stopPropagation()
+            confirmMatch(match.id)
+            // Small celebratory burst from the tap point.
+            fireConfetti({ x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight, count: 70 })
+          }}
         >
           Confirm
         </button>

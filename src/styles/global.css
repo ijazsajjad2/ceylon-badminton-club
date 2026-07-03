@@ -186,7 +186,8 @@ button { font-family: inherit; cursor: pointer; }
   transition: left 0.38s cubic-bezier(0.22, 1, 0.36, 1), width 0.38s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 0;
 }
-.nav-emoji { font-size: 14px; }
+.nav-ic { flex: 0 0 auto; opacity: 0.85; }
+.nav-tab.active .nav-ic { opacity: 1; }
 
 /* ===================== BOTTOM TABS (mobile) ===================== */
 .bottom-tabs {
@@ -205,13 +206,16 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 9.5px; font-weight: 600; letter-spacing: 0.2px;
   position: relative; transition: color 0.2s;
 }
-.bt-item .bt-emoji { font-size: 19px; transition: transform 0.25s; }
+.bt-item .bt-ic { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .bt-item.active { color: var(--gold-bright); }
-.bt-item.active .bt-emoji { transform: translateY(-2px) scale(1.12); }
+.bt-item.active .bt-ic { transform: translateY(-2px) scale(1.12); }
 .bt-item.active::before {
-  content: ''; position: absolute; top: 6px; width: 28px; height: 3px; border-radius: 3px;
-  background: var(--gold-bright); box-shadow: 0 0 10px var(--gold);
+  content: ''; position: absolute; top: 5px; width: 28px; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--gold-bright), var(--gold));
+  box-shadow: 0 0 10px var(--gold);
+  animation: btPillIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+@keyframes btPillIn { from { transform: scaleX(0.2); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
 
 /* ===================== PAGE TRANSITIONS ===================== */
 .page-viewport { position: relative; overflow: hidden; }
@@ -410,7 +414,7 @@ button { font-family: inherit; cursor: pointer; }
 .hero-title .l1 { display: block; color: #fff; }
 .hero-title .l2 {
   display: block;
-  background: linear-gradient(90deg, var(--gold-bright), var(--gold) 60%, var(--maroon-bright));
+  background: linear-gradient(92deg, #ff8585, var(--gold-bright) 45%, var(--gold));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .hero-meta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
@@ -1164,13 +1168,15 @@ html { scroll-behavior: smooth; }
 }
 .public-hero-bg {
   position: absolute; inset: 0; background-size: cover; background-position: center;
-  transform: scale(1.05); filter: saturate(1.05);
+  /* Desaturate slightly: the court photo's green cast fought the navy/red
+     brand and muddied the headline. */
+  transform: scale(1.05); filter: saturate(0.82) contrast(1.04);
 }
 .public-hero-bg::after {
   content: ''; position: absolute; inset: 0;
   background:
-    linear-gradient(180deg, rgba(15,17,23,0.68) 0%, rgba(15,17,23,0.82) 55%, rgba(15,17,23,0.97) 100%),
-    linear-gradient(90deg, rgba(31,95,214,0.4), transparent 55%);
+    linear-gradient(180deg, rgba(15,17,23,0.76) 0%, rgba(15,17,23,0.86) 55%, rgba(15,17,23,0.98) 100%),
+    linear-gradient(90deg, rgba(31,95,214,0.42), transparent 55%);
 }
 .public-hero-inner { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; width: 100%; }
 .public-hero-title {
@@ -1180,7 +1186,7 @@ html { scroll-behavior: smooth; }
 .public-hero-title .l1 { display: block; color: #fff; }
 .public-hero-title .l2 {
   display: block;
-  background: linear-gradient(90deg, var(--gold-bright), var(--gold) 55%, var(--maroon-bright));
+  background: linear-gradient(92deg, #ff8585, var(--gold-bright) 45%, var(--gold));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .public-hero-sub {
@@ -1917,3 +1923,38 @@ html { scroll-behavior: smooth; }
 .badge-confirmed { background: rgba(47,174,107,0.16); color: #7ee2a8; border: 1px solid rgba(47,174,107,0.35); }
 .badge-pending { background: rgba(255,255,255,0.05); color: var(--text-faint); border: 1px solid var(--stroke-strong); }
 .match-confirm-btn { padding: 3px 10px; font-size: 10.5px; letter-spacing: 0.3px; }
+
+/* ===================== UI ATTRACTIVENESS BATCH ===================== */
+
+/* Friendly zero states — a fresh club shouldn't show dead zeros */
+.stat-zero {
+  font-family: var(--font-display);
+  font-size: 23px; line-height: 1.05; letter-spacing: 1px;
+  color: var(--gold-bright);
+  padding: 11px 0 6px;
+}
+
+/* Compact members-dashboard hero: session ticket, not a second wordmark */
+.hero-title-compact { font-size: clamp(30px, 5.4vw, 56px); letter-spacing: 1.5px; }
+.hero-title-compact .l2 { font-size: 0.58em; margin-top: 7px; letter-spacing: 2px; }
+
+/* Tactile press feedback everywhere interactive */
+.fab:active, .chip:active, .bt-item:active .bt-ic, .nav-tab:active, .hero-pill:active { transform: scale(0.95); }
+.fab, .chip, .nav-tab { transition: transform 0.13s ease, background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s; }
+
+/* Leaderboard podium: crown on the champion + a warmer #1 card */
+.podium-crown {
+  position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+  font-size: 22px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+  animation: crownFloat 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes crownFloat {
+  0%, 100% { transform: translateX(-50%) translateY(0) rotate(-4deg); }
+  50% { transform: translateX(-50%) translateY(-4px) rotate(4deg); }
+}
+
+/* Softer boundaries between public-page bands */
+.band.tint {
+  box-shadow: inset 0 26px 34px -30px rgba(0,0,0,0.5), inset 0 -26px 34px -30px rgba(0,0,0,0.5);
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export default function StatCounter({ value, label, icon, duration = 1200 }) {
+export default function StatCounter({ value, label, icon, duration = 1200, zeroText }) {
   const [n, setN] = useState(0)
 
   useEffect(() => {
@@ -24,6 +24,18 @@ export default function StatCounter({ value, label, icon, duration = 1200 }) {
       clearTimeout(settle)
     }
   }, [value, duration])
+
+  // A fresh club shouldn't greet members with a wall of dead zeros — swap in
+  // a warm call-to-action until the number becomes real.
+  if (value === 0 && zeroText) {
+    return (
+      <div className="glass stat-card hoverable">
+        {icon && <span className="stat-icon">{icon}</span>}
+        <div className="stat-zero">{zeroText}</div>
+        <div className="stat-label">{label}</div>
+      </div>
+    )
+  }
 
   return (
     <div className="glass stat-card hoverable">

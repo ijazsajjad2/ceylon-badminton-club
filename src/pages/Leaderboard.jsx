@@ -83,6 +83,7 @@ export default function Leaderboard() {
             const place = p.rank
             return (
               <div key={p.id} className={`glass podium-card podium-anim podium-${place}`} onClick={() => setOpenId(p.id)} style={{ cursor: 'pointer', animationDelay: `${place * 0.1}s` }}>
+                {place === 1 && <span className="podium-crown" aria-hidden="true">👑</span>}
                 <div className="medal">{place === 1 ? '🥇' : place === 2 ? '🥈' : '🥉'}</div>
                 <Avatar player={p} size={place === 1 ? 64 : 50} ring={place === 1} />
                 <div className="podium-name">{p.name}</div>
@@ -141,7 +142,13 @@ export default function Leaderboard() {
             })}
           </tbody>
         </table>
-        {filtered.length === 0 && <div className="glass card-pad dim center">No players match "{query}".</div>}
+        {filtered.length === 0 && (
+          <div className="glass card-pad dim center">
+            {ranked.length === 0
+              ? 'No ranked players yet — rankings begin with the first recorded match. 🏸'
+              : `No players match "${query}".`}
+          </div>
+        )}
       </div>
 
       {openId && <PlayerSheet playerId={openId} onClose={() => setOpenId(null)} />}

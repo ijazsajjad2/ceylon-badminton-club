@@ -1,14 +1,15 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import BrandLockup from './BrandLockup.jsx'
+import NavIcon from './Icons.jsx'
 
 export const NAV_ITEMS = [
-  { key: 'dashboard', label: 'Dashboard', emoji: '🏠' },
-  { key: 'participation', label: 'Sessions', emoji: '🎲' },
-  { key: 'matches', label: 'Matches', emoji: '🏸' },
-  { key: 'leaderboard', label: 'Leaderboard', emoji: '🏆' },
-  { key: 'schedule', label: 'Schedule', emoji: '📅' },
-  { key: 'profiles', label: 'Players', emoji: '👥' },
-  { key: 'highlights', label: 'Highlights', emoji: '🎬' },
+  { key: 'dashboard', label: 'Dashboard', icon: 'home' },
+  { key: 'participation', label: 'Sessions', icon: 'shuffle' },
+  { key: 'matches', label: 'Matches', icon: 'shuttle' },
+  { key: 'leaderboard', label: 'Leaderboard', icon: 'trophy' },
+  { key: 'schedule', label: 'Schedule', icon: 'calendar' },
+  { key: 'profiles', label: 'Players', icon: 'users' },
+  { key: 'highlights', label: 'Highlights', icon: 'film' },
 ]
 
 export function Navbar({ active, onNavigate }) {
@@ -34,7 +35,7 @@ export function Navbar({ active, onNavigate }) {
             onClick={() => onNavigate(item.key)}
             aria-current={active === item.key ? 'page' : undefined}
           >
-            <span className="nav-emoji">{item.emoji}</span>
+            <NavIcon name={item.icon} size={16} className="nav-ic" />
             {item.label}
           </button>
         ))}
@@ -53,7 +54,7 @@ export function BottomTabs({ active, onNavigate }) {
           onClick={() => onNavigate(item.key)}
           aria-current={active === item.key ? 'page' : undefined}
         >
-          <span className="bt-emoji">{item.emoji}</span>
+          <NavIcon name={item.icon} size={21} className="bt-ic" />
           {item.label}
         </button>
       ))}
