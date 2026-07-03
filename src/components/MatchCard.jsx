@@ -6,6 +6,7 @@ import { setsWon } from '../lib/stats.js'
 import { fmtDate } from '../lib/format.js'
 import { fireConfetti } from '../lib/confetti.js'
 import VideoThumb from './VideoThumb.jsx'
+import ResultCardButton from './ResultCard.jsx'
 
 function Team({ ids, side, isWinner }) {
   const { playerById } = useApp()
@@ -62,7 +63,7 @@ function MatchConfirm({ match }) {
 export default function MatchCard({ match, expandable = true, onPlayClip }) {
   const [open, setOpen] = useState(false)
   const [activeClip, setActiveClip] = useState(null)
-  const { playerById, videosByMatch } = useApp()
+  const { playerById, videosByMatch, pushToast } = useApp()
   const clips = videosByMatch?.[match.id] || []
   const { a, b } = match.live ? { a: 0, b: 0 } : setsWon(match)
   const isDoubles = match.type === 'doubles'
@@ -155,6 +156,11 @@ export default function MatchCard({ match, expandable = true, onPlayClip }) {
                 </tr>
               </tbody>
             </table>
+            {!match.live && match.winner && (
+              <div style={{ marginTop: 12, textAlign: 'right' }}>
+                <ResultCardButton match={match} playerById={playerById} pushToast={pushToast} />
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -44,7 +44,7 @@ export default function PlayerSheet({ playerId, onClose }) {
     .map(([id, wl]) => ({ id, ...wl, total: wl.w + wl.l }))
     .sort((a, b) => b.total - a.total)
   const rivals = Object.entries(s.rivals)
-    .map(([id, count]) => ({ id, count }))
+    .map(([id, r]) => ({ id, ...r }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5)
 
@@ -116,7 +116,10 @@ export default function PlayerSheet({ playerId, onClose }) {
               <div className="partner-row" key={r.id}>
                 <Avatar player={playerById[r.id]} size={30} />
                 <span style={{ fontWeight: 600, fontSize: 13.5 }}>{playerById[r.id]?.name}</span>
-                <span className="wl mono">{r.count}× faced</span>
+                <span className="wl">
+                  <span className="w">{r.w}W</span> · <span className="l">{r.l}L</span>
+                  <span className="faint" style={{ marginLeft: 8, fontSize: 11 }}>{r.count}× faced</span>
+                </span>
               </div>
             )) : <span className="dim">No opponents recorded yet.</span>}
           </div>

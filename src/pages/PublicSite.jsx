@@ -21,6 +21,7 @@ import AnimatedShuttlecock from '../components/AnimatedShuttlecock.jsx'
 import CourtLines from '../components/CourtLines.jsx'
 import ShuttleParticles from '../components/ShuttleParticles.jsx'
 import useScrollSpy from '../hooks/useScrollSpy.js'
+import RotatingGreeting from '../components/RotatingGreeting.jsx'
 import { computeStats, setsWon } from '../lib/stats.js'
 import { track } from '../lib/analytics.js'
 import { playSmash } from '../lib/sfx.js'
@@ -140,7 +141,7 @@ export default function PublicSite() {
             <span className="l2">Badminton Club</span>
           </motion.h1>
           <motion.p className="hero-tagline" variants={item}>
-            Sri Lankan badminton community in Riyadh
+            <RotatingGreeting /> — Sri Lankan badminton community in Riyadh
           </motion.p>
           <motion.p className="public-hero-sub" variants={item}>
             Random doubles every <b>Wednesday night</b> and <b>Saturday morning</b> at Green

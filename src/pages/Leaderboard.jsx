@@ -18,7 +18,7 @@ function RankDelta({ delta }) {
 }
 
 export default function Leaderboard() {
-  const { matches } = useApp()
+  const { matches, sessions, playerById } = useApp()
   const [period, setPeriod] = useState('month')
   const [query, setQuery] = useState('')
   const [openId, setOpenId] = useState(null)
@@ -42,6 +42,22 @@ export default function Leaderboard() {
 
   // Most varied partnerships
   const mostVaried = [...stats].sort((a, b) => b.partnerCount - a.partnerCount)[0]
+
+  // Season awards — computed live from real data, locked until it exists.
+  const awards = useMemo(() => {
+    const all = computeStats(matches).filter((p) => p.played > 0)
+    const golden = [...all].sort((x, y) => y.points - x.points)[0] || null
+    const attend = {}
+    sessions.forEach((s) => (s.attendees || []).forEach((id) => { attend[id] = (attend[id] || 0) + 1 }))
+    const ironTop = Object.entries(attend).sort((x, y) => y[1] - x[1])[0]
+    const iron = ironTop ? { ...playerById[ironTop[0]], n: ironTop[1] } : null
+    const team = [...all].filter((p) => p.partnerCount > 0).sort((x, y) => y.partnerCount - x.partnerCount)[0] || null
+    return [
+      { key: 'golden', icon: '🏆', title: 'Golden Racket', desc: 'Most points this season', p: golden, stat: golden ? `${golden.points} pts` : null },
+      { key: 'iron', icon: '🛡️', title: 'Iron Man', desc: 'Best session attendance', p: iron, stat: iron ? `${iron.n} sessions` : null },
+      { key: 'team', icon: '🤝', title: 'Team Player', desc: 'Most different partners', p: team, stat: team ? `${team.partnerCount} partners` : null },
+    ]
+  }, [matches, sessions, playerById])
 
   return (
     <div className="page-wrap">
@@ -149,6 +165,28 @@ export default function Leaderboard() {
               : `No players match "${query}".`}
           </div>
         )}
+      </div>
+
+      {/* Season awards */}
+      <h2 className="section-title" style={{ marginTop: 34 }}>Season <span className="accent">Awards</span> 🎖️</h2>
+      <p className="section-sub">Earned automatically as the season's matches and attendance build up.</p>
+      <div className="awards-grid">
+        {awards.map((a) => (
+          <div key={a.key} className={`glass card-pad award-card ${a.p ? '' : 'award-locked'}`}>
+            <span className="award-icon" aria-hidden="true">{a.icon}</span>
+            <div className="award-title display">{a.title}</div>
+            <div className="faint" style={{ fontSize: 11.5 }}>{a.desc}</div>
+            {a.p ? (
+              <div className="row" style={{ gap: 8, marginTop: 10, justifyContent: 'center' }}>
+                <Avatar player={playerById[a.p.id]} size={30} />
+                <b style={{ fontSize: 14 }}>{a.p.name}</b>
+                <span className="num gold" style={{ fontSize: 12 }}>{a.stat}</span>
+              </div>
+            ) : (
+              <div className="dim" style={{ fontSize: 12, marginTop: 10 }}>🔒 Unlocks as the season progresses</div>
+            )}
+          </div>
+        ))}
       </div>
 
       {openId && <PlayerSheet playerId={openId} onClose={() => setOpenId(null)} />}
