@@ -86,16 +86,13 @@ export default function Dashboard({ navigate }) {
         <ShuttleDeco size={160} className="shuttle-float" style={{ top: 10, right: 30 }} />
         <ShuttleDeco size={90} className="shuttle-float" style={{ top: 120, right: 180, animationDelay: '1.2s' }} />
         <div className="hero-content">
-          <span className="eyebrow">Private Sri Lankan Club · Riyadh, KSA</span>
-          <h1 className="hero-title">
-            <span className="l1">Ceylon</span>
-            <span className="l2">Badminton Club</span>
+          <span className="eyebrow">Next Practice Session</span>
+          <h1 className="hero-title hero-title-compact">
+            <span className="l1">{fmtFullDate(TODAY_SESSION.date)}</span>
+            <span className="l2">{TODAY_SESSION.time} · {TODAY_SESSION.venue}</span>
           </h1>
           <div className="hero-meta">
-            <span className="hero-pill">📍 {TODAY_SESSION.venue}</span>
-            <span className="hero-pill">🗓 {fmtFullDate(TODAY_SESSION.date)}</span>
-            <span className="hero-pill">🕓 {TODAY_SESSION.time}</span>
-            <span className="hero-pill">🔀 Random doubles every session</span>
+            <span className="hero-pill">🔀 Random doubles — pairs drawn on court</span>
           </div>
           <div className="countdown-box" aria-label="Countdown to the next session">
             {cd.done ? (
@@ -116,10 +113,10 @@ export default function Dashboard({ navigate }) {
 
       {/* Stats */}
       <div className="stat-grid" style={{ marginTop: 18 }}>
-        <StatCounter value={playersToday} label="Going to Next" icon="🏸" />
-        <StatCounter value={matches.length} label="Matches Played" icon="⚔️" />
+        <StatCounter value={playersToday} label="Going to Next" icon="🏸" zeroText="Be the first!" />
+        <StatCounter value={matches.length} label="Matches Played" icon="⚔️" zeroText="Season starts now" />
         <StatCounter value={players.length} label="Active Members" icon="👥" />
-        <StatCounter value={sessionsThisMonth} label="Sessions This Month" icon="📅" />
+        <StatCounter value={sessionsThisMonth} label="Sessions This Month" icon="📅" zeroText="Kicking off soon" />
       </div>
 
       <div className="dash-cols" style={{ marginTop: 22 }}>

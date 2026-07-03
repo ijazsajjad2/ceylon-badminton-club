@@ -1,5 +1,16 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+// Self-hosted fonts (bundled into the build): guarantees the display
+// typography renders everywhere, including the offline Android app where
+// CDN-hosted fonts can never load.
+import '@fontsource/bebas-neue/400.css'
+import '@fontsource/inter/400.css'
+import '@fontsource/inter/500.css'
+import '@fontsource/inter/600.css'
+import '@fontsource/inter/700.css'
+import '@fontsource/inter/800.css'
+import '@fontsource/jetbrains-mono/500.css'
+import '@fontsource/jetbrains-mono/700.css'
 import App from './App.jsx'
 import { AppProvider } from './context/AppContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'

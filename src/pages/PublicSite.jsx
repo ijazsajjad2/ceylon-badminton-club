@@ -161,7 +161,11 @@ export default function PublicSite() {
             <span className="phs-div" />
             <div className="phs-item"><b>2024</b><span>Established</span></div>
             <span className="phs-div" />
-            <div className="phs-item"><b><CountUp value={matchesPlayed} suffix="+" /></b><span>Matches</span></div>
+            {matchesPlayed > 0 ? (
+              <div className="phs-item"><b><CountUp value={matchesPlayed} suffix="+" /></b><span>Matches</span></div>
+            ) : (
+              <div className="phs-item"><b>2</b><span>Courts</span></div>
+            )}
           </motion.div>
         </motion.div>
         <a className="hero-scroll" href="#about" aria-label="Scroll to learn more"><span>Scroll</span><i>↓</i></a>
@@ -260,7 +264,11 @@ export default function PublicSite() {
             <StatTile icon="📅" text="2024" label="Established" delay={0} />
             <StatTile icon="👥" value={memberCount} label="Members" delay={0.06} />
             <StatTile icon="🗓" text="Wed & Sat" label="Sessions weekly" delay={0.12} />
-            <StatTile icon="⚔️" value={matchesPlayed} suffix="+" label="Matches tracked" delay={0.18} />
+            {matchesPlayed > 0 ? (
+              <StatTile icon="⚔️" value={matchesPlayed} suffix="+" label="Matches tracked" delay={0.18} />
+            ) : (
+              <StatTile icon="🏟" text="2 courts" label="Every session" delay={0.18} />
+            )}
             <StatTile icon="🔀" text="Doubles" label="Random format" delay={0.24} />
           </div>
         </div>
