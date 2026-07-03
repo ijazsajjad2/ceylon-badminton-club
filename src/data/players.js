@@ -1,4 +1,6 @@
 // 16 real CBC Riyadh members — partners change every session, nobody is fixed.
+// Optional per-player `photo` field ('/avatars/<id>.jpg', see public/avatars/
+// README.md) shows a real photo in avatars, falling back to initials.
 
 // Avatar gradients drawn from the club-jersey palette: navy base with red &
 // royal-blue splashes (a couple of crimson/indigo variants for variety).

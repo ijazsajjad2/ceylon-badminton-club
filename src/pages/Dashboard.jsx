@@ -52,6 +52,17 @@ export default function Dashboard({ navigate }) {
     () => matches.filter((m) => !m.live && m.winner).slice(0, 6),
     [matches]
   )
+
+  // Player of the Week: best points haul across the last 7 days of matches.
+  const mvp = useMemo(() => {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 7)
+    const iso = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`
+    const week = matches.filter((m) => !m.live && m.winner && m.date >= iso)
+    if (!week.length) return null
+    const best = computeStats(week).filter((p) => p.played > 0)[0]
+    return best || null
+  }, [matches])
   const latest = recent.slice(0, 3)
 
   const tickerItems = useMemo(() => {
@@ -118,6 +129,20 @@ export default function Dashboard({ navigate }) {
         <StatCounter value={players.length} label="Active Members" icon="👥" />
         <StatCounter value={sessionsThisMonth} label="Sessions This Month" icon="📅" zeroText="Kicking off soon" />
       </div>
+
+      {mvp && (
+        <div className="glass card-pad mvp-card" style={{ marginTop: 16 }}>
+          <span className="mvp-flame" aria-hidden="true">🔥</span>
+          <Avatar player={playerById[mvp.id]} size={54} ring />
+          <div style={{ minWidth: 0 }}>
+            <div className="eyebrow" style={{ fontSize: 10.5 }}>Player of the Week</div>
+            <div className="display" style={{ fontSize: 26, marginTop: 2 }}>{mvp.name}</div>
+            <div className="faint" style={{ fontSize: 12.5 }}>
+              {mvp.won}W · {mvp.winPct}% win rate · <b className="gold">{mvp.points} pts</b> this week
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="dash-cols" style={{ marginTop: 22 }}>
         <div>

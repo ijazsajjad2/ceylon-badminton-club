@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navbar, BottomTabs, NAV_ITEMS } from './components/Navbar.jsx'
 import Toasts from './components/Toasts.jsx'
+import WelcomeTour from './components/WelcomeTour.jsx'
 import Skeleton from './components/Skeleton.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Participation from './pages/Participation.jsx'
@@ -84,6 +85,7 @@ function MembersApp() {
         <button className="user-bar-logout" onClick={logout}>Sign out</button>
       </div>
       <Toasts />
+      <WelcomeTour />
       {loading ? (
         <Skeleton />
       ) : (

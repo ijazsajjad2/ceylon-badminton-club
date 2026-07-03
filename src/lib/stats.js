@@ -62,7 +62,7 @@ export function computeStats(matches) {
       points: 0,
       pointsScored: 0,
       partners: {}, // partnerId -> { w, l }
-      rivals: {}, // oppId -> count
+      rivals: {}, // oppId -> { w, l, count } (from this player's perspective)
       results: [], // chronological 'W'/'L'
       monthly: {}, // 'YYYY-MM' -> wins
     }
@@ -106,9 +106,14 @@ export function computeStats(matches) {
             else s.partners[partner].l++
           }
         }
-        // rivals
+        // rivals — track the head-to-head record, not just encounters
         const opp = teamOf(m, side === 'A' ? 'B' : 'A')
-        for (const o of opp) s.rivals[o] = (s.rivals[o] || 0) + 1
+        for (const o of opp) {
+          if (!s.rivals[o]) s.rivals[o] = { w: 0, l: 0, count: 0 }
+          s.rivals[o].count++
+          if (isWin) s.rivals[o].w++
+          else s.rivals[o].l++
+        }
       }
     }
   }

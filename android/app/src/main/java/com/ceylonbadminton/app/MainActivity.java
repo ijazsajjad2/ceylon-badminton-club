@@ -13,6 +13,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewClientCompat;
 
@@ -34,6 +35,7 @@ public class MainActivity extends Activity {
     private static final String START_URL = "https://" + APP_HOST + "/index.html";
 
     private WebView webView;
+    private SwipeRefreshLayout swipe;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -41,7 +43,16 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         webView = new WebView(this);
-        setContentView(webView);
+
+        // Pull-to-refresh, the way members expect from native apps. Only
+        // triggers when the page itself is scrolled to the very top.
+        swipe = new SwipeRefreshLayout(this);
+        swipe.addView(webView);
+        swipe.setColorSchemeColors(Color.parseColor("#E23B3B"), Color.parseColor("#2F7BF0"));
+        swipe.setProgressBackgroundColorSchemeColor(Color.parseColor("#101527"));
+        swipe.setOnRefreshListener(() -> webView.reload());
+        swipe.setOnChildScrollUpCallback((parent, child) -> webView.getScrollY() > 0);
+        setContentView(swipe);
 
         final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
                 .setDomain(APP_HOST)
@@ -78,6 +89,12 @@ public class MainActivity extends Activity {
                     // No handler for this scheme — swallow rather than crash.
                 }
                 return true;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (swipe != null) swipe.setRefreshing(false);
             }
         });
 
