@@ -13,6 +13,7 @@ import SectionHeading from '../components/SectionHeading.jsx'
 import GlassCard from '../components/GlassCard.jsx'
 import StatTile from '../components/StatTile.jsx'
 import SessionsShowcase from '../components/SessionCard.jsx'
+import SessionCountdown from '../components/SessionCountdown.jsx'
 import MemberCard from '../components/MemberCard.jsx'
 import EventCard from '../components/EventCard.jsx'
 import CTASection from '../components/CTASection.jsx'
@@ -131,43 +132,57 @@ export default function PublicSite() {
         <AnimatedShuttlecock mode="hero" size={46} duration={13} className="hero-shuttle" />
 
         <motion.div className="public-hero-inner" variants={stagger} initial="hidden" animate="show">
-          <motion.div className="hero-badges" variants={item}>
-            <span className="hero-badge">📍 Riyadh, Saudi Arabia</span>
-            <span className="hero-badge hero-badge-gold">Est. 2024</span>
-            <span className="hero-badge">{memberCount} Members</span>
-          </motion.div>
-          <motion.h1 className="public-hero-title" variants={item}>
-            <span className="l1">Ceylon</span>
-            <span className="l2">Badminton Club</span>
-          </motion.h1>
-          <motion.p className="hero-tagline" variants={item}>
-            <RotatingGreeting /> — Sri Lankan badminton community in Riyadh
-          </motion.p>
-          <motion.p className="public-hero-sub" variants={item}>
-            Random doubles every <b>Wednesday night</b> and <b>Saturday morning</b> at Green
-            Badminton Club. Show up, get matched — <b>smash it together.</b>
-          </motion.p>
-          <motion.div className="public-hero-cta" variants={item}>
-            <button className="btn btn-gold btn-lg btn-smash" onClick={openJoin}>
+          <div className="hero-main">
+            <motion.div className="hero-badges" variants={item}>
+              <span className="hero-badge">📍 Riyadh, Saudi Arabia</span>
+              <span className="hero-badge hero-badge-gold">Est. 2024</span>
+              <span className="hero-badge">{memberCount} Members</span>
+            </motion.div>
+            <motion.h1 className="public-hero-title" variants={item}>
+              <span className="l1">Ceylon</span>
+              <span className="l2">Badminton Club</span>
+            </motion.h1>
+            <motion.p className="hero-tagline" variants={item}>
+              <RotatingGreeting /> — Sri Lankan badminton community in Riyadh
+            </motion.p>
+            <motion.p className="public-hero-sub" variants={item}>
+              Random doubles every <b>Wednesday night</b> and <b>Saturday morning</b> at Green
+              Badminton Club. Show up, get matched — <b>smash it together.</b>
+            </motion.p>
+            <motion.div className="public-hero-cta" variants={item}>
+              <button className="btn btn-gold btn-lg btn-smash" onClick={openJoin}>
+                <span className="smash-trail" aria-hidden="true" />
+                🏸 Join the Club
+              </button>
+              <a className="btn btn-ghost" href="#members">View Members</a>
+              <a className="btn btn-ghost" href="#sessions">Weekly Sessions</a>
+            </motion.div>
+            <motion.div className="public-hero-stats" variants={item}>
+              <div className="phs-item"><b><CountUp value={memberCount} /></b><span>Members</span></div>
+              <span className="phs-div" />
+              <div className="phs-item"><b>2×</b><span>Per week</span></div>
+              <span className="phs-div" />
+              <div className="phs-item"><b>2024</b><span>Established</span></div>
+              <span className="phs-div" />
+              {matchesPlayed > 0 ? (
+                <div className="phs-item"><b><CountUp value={matchesPlayed} suffix="+" /></b><span>Matches</span></div>
+              ) : (
+                <div className="phs-item"><b>2</b><span>Courts</span></div>
+              )}
+            </motion.div>
+          </div>
+          {/* Desktop-only session ticket: puts the next session (with a live
+              countdown) in the hero's otherwise-empty right half. */}
+          <motion.aside className="hero-session-card glass" variants={item} aria-label="Next session">
+            <span className="eyebrow">Next session</span>
+            <div className="display hero-session-day">{fmtFullDate(nextSession.date)}</div>
+            <div className="hero-session-meta mono">{nextSession.time} · {nextSession.courts} courts · {nextSession.venue}</div>
+            <SessionCountdown dateIso={nextSession.date} time={nextSession.time.split('–')[0]} />
+            <button className="btn btn-gold btn-sm btn-smash" onClick={openJoin}>
               <span className="smash-trail" aria-hidden="true" />
-              🏸 Join the Club
+              Play in this one →
             </button>
-            <a className="btn btn-ghost" href="#members">View Members</a>
-            <a className="btn btn-ghost" href="#sessions">Weekly Sessions</a>
-          </motion.div>
-          <motion.div className="public-hero-stats" variants={item}>
-            <div className="phs-item"><b><CountUp value={memberCount} /></b><span>Members</span></div>
-            <span className="phs-div" />
-            <div className="phs-item"><b>2×</b><span>Per week</span></div>
-            <span className="phs-div" />
-            <div className="phs-item"><b>2024</b><span>Established</span></div>
-            <span className="phs-div" />
-            {matchesPlayed > 0 ? (
-              <div className="phs-item"><b><CountUp value={matchesPlayed} suffix="+" /></b><span>Matches</span></div>
-            ) : (
-              <div className="phs-item"><b>2</b><span>Courts</span></div>
-            )}
-          </motion.div>
+          </motion.aside>
         </motion.div>
         <a className="hero-scroll" href="#about" aria-label="Scroll to learn more"><span>Scroll</span><i>↓</i></a>
       </section>
@@ -201,13 +216,15 @@ export default function PublicSite() {
           <Reveal delay={0.1} className="glass card-pad facts-card">
             <AnimatedShuttlecock mode="float" size={64} className="facts-shuttle" />
             <span className="eyebrow">Quick facts</span>
-            <div className="fact-row"><span className="fact-k">📅 Established</span><span className="fact-v">2024</span></div>
-            <div className="fact-row"><span className="fact-k">📍 Venue</span><span className="fact-v">Green Badminton Club</span></div>
-            <div className="fact-row"><span className="fact-k">🗓 Plays</span><span className="fact-v">Wed &amp; Sat</span></div>
-            <div className="fact-row"><span className="fact-k">🕓 Hours</span><span className="fact-v">8–10 PM / 8–10 AM</span></div>
-            <div className="fact-row"><span className="fact-k">👥 Members</span><span className="fact-v">{memberCount}</span></div>
-            <div className="fact-row"><span className="fact-k">🏸 Format</span><span className="fact-v">Random doubles</span></div>
-            <button className="btn btn-wa" style={{ width: '100%', justifyContent: 'center', marginTop: 14 }} onClick={sayHello}>📲 Ask on WhatsApp</button>
+            <div className="fact-rows">
+              <div className="fact-row"><span className="fact-k">📅 Established</span><span className="fact-v">2024</span></div>
+              <div className="fact-row"><span className="fact-k">📍 Venue</span><span className="fact-v">Green Badminton Club</span></div>
+              <div className="fact-row"><span className="fact-k">🗓 Plays</span><span className="fact-v">Wed &amp; Sat</span></div>
+              <div className="fact-row"><span className="fact-k">🕓 Hours</span><span className="fact-v">8–10 PM / 8–10 AM</span></div>
+              <div className="fact-row"><span className="fact-k">👥 Members</span><span className="fact-v">{memberCount}</span></div>
+              <div className="fact-row"><span className="fact-k">🏸 Format</span><span className="fact-v">Random doubles</span></div>
+            </div>
+            <button className="btn btn-wa facts-cta" onClick={sayHello}>📲 Ask on WhatsApp</button>
           </Reveal>
         </div>
       </section>

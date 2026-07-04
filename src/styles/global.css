@@ -48,6 +48,12 @@
   --nav-h: 66px;
   --tab-h: 64px;
 
+  /* Layout rhythm — one container width + fluid gutters/section spacing so
+     every public band breathes the same at any viewport. */
+  --container: 1180px;
+  --pad-x: clamp(18px, 4vw, 26px);
+  --sec-y: clamp(52px, 7vw, 88px);
+
   --font-display: 'Bebas Neue', sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -1162,8 +1168,9 @@ html { scroll-behavior: smooth; }
 /* Hero */
 .public-hero {
   position: relative; overflow: hidden;
-  min-height: 92vh; display: flex; align-items: center;
-  padding: calc(var(--public-nav-h) + 40px) 26px 60px;
+  min-height: 92vh; min-height: 92svh; /* svh: stable under mobile URL-bar collapse */
+  display: flex; align-items: center;
+  padding: calc(var(--public-nav-h) + 40px) var(--pad-x) 60px;
   border-bottom: 1px solid var(--stroke);
 }
 .public-hero-bg {
@@ -1202,11 +1209,13 @@ html { scroll-behavior: smooth; }
 }
 .phs-item { display: flex; flex-direction: column; align-items: center; padding: 8px 22px; gap: 2px; }
 .phs-item b { font-family: var(--font-display); font-size: 30px; line-height: 1; color: var(--gold-bright); }
-.phs-item span { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+/* Direct child only: CountUp renders its own <span> inside the <b>, which must
+   keep the big display style — not get shrunk by the label style. */
+.phs-item > span { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
 .phs-div { width: 1px; height: 36px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
 
 /* Generic public section */
-.public-section { max-width: 1180px; margin: 0 auto; padding: 64px 26px; }
+.public-section { max-width: var(--container); margin: 0 auto; padding: var(--sec-y) var(--pad-x); }
 .public-head { max-width: 640px; margin: 0 auto 36px; }
 .public-head.center { text-align: center; }
 .public-h2 { font-size: clamp(30px, 4vw, 42px); letter-spacing: 0.5px; margin: 8px 0 10px; color: #fff; }
@@ -1284,7 +1293,7 @@ html { scroll-behavior: smooth; }
 @media (max-width: 560px) { .members-roster { grid-template-columns: repeat(2, 1fr); } }
 
 /* Join CTA band */
-.public-cta { max-width: 1180px; margin: 0 auto; padding: 20px 26px 72px; }
+.public-cta { max-width: var(--container); margin: 0 auto; padding: 20px var(--pad-x) calc(var(--sec-y) - 16px); }
 .public-cta-card {
   text-align: center; padding: 48px 32px; position: relative; overflow: hidden;
   border: 1px solid rgba(226,59,59,0.22) !important;
@@ -1319,11 +1328,7 @@ html { scroll-behavior: smooth; }
   .public-nav { gap: 12px; padding: 0 16px; }
   .public-login { margin-left: auto; }
   .public-nav .brand-name { font-size: 17px; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .public-hero { min-height: 86vh; }
-  .public-hero-stats { flex-wrap: wrap; justify-content: center; }
   .phs-div { display: none; }
-  .public-section { padding: 48px 18px; }
-  .public-footer { justify-content: center; text-align: center; }
 }
 
 /* ===================================================================
@@ -1408,9 +1413,11 @@ html { scroll-behavior: smooth; }
 .hero-scroll:hover { color: var(--gold-bright); }
 @keyframes scrollbob { 0%,100% { transform: translateY(0); opacity: 0.7; } 50% { transform: translateY(5px); opacity: 1; } }
 
-/* About: text + quick-facts panel */
-.about-grid2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; align-items: start; }
+/* About: text + quick-facts panel (stretched so the two cards bottom-align) */
+.about-grid2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; align-items: stretch; }
 .facts-card { display: flex; flex-direction: column; }
+.facts-card .fact-rows { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.facts-cta { width: 100%; justify-content: center; margin-top: 14px; }
 .fact-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 11px 0; border-bottom: 1px solid var(--stroke); font-size: 14px;
@@ -1465,7 +1472,7 @@ html { scroll-behavior: smooth; }
 /* ── Richer footer (overrides the old flex footer) ── */
 .public-footer {
   display: block; border-top: 1px solid var(--stroke); margin-top: 0;
-  max-width: 1180px; margin-left: auto; margin-right: auto; padding: 0 26px;
+  max-width: var(--container); margin-left: auto; margin-right: auto; padding: 0 var(--pad-x);
 }
 .public-footer-grid {
   display: grid; grid-template-columns: 1.6fr 1fr 1.2fr; gap: 28px; padding: 44px 0 28px;
@@ -1495,7 +1502,12 @@ html { scroll-behavior: smooth; }
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   border-top: 1px solid var(--stroke); padding: 18px 0; font-size: 12px; color: var(--text-faint);
 }
-@media (max-width: 780px) {
+@media (max-width: 900px) {
+  /* Tablet: brand spans the top, link columns share a row beneath it. */
+  .public-footer-grid { grid-template-columns: 1fr 1fr; gap: 26px; }
+  .footer-brand { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
   .public-footer-grid { grid-template-columns: 1fr; gap: 22px; }
   .public-footer-base { justify-content: center; text-align: center; }
 }
@@ -1818,21 +1830,28 @@ html { scroll-behavior: smooth; }
 
 /* ── Responsive ── */
 @media (max-width: 1020px) {
-  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  /* 5 tiles on a 6-track grid: rows of 3 + 2, both rows full-width — no orphan. */
+  .stats-grid { grid-template-columns: repeat(6, 1fr); }
+  .stats-grid > * { grid-column: span 2; }
+  .stats-grid > :nth-child(4), .stats-grid > :nth-child(5) { grid-column: span 3; }
   .members-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 900px) {
   .events-cols { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
-  .sessions-grid { grid-template-columns: 1fr; gap: 54px; }
+  .sessions-grid { grid-template-columns: 1fr; gap: 24px; }
+  .sessions-stage { padding: 20px 0 10px; }
   .sessions-shuttle { height: 100%; inset: 0; opacity: 0.5; }
 }
 @media (max-width: 680px) {
   .nav-burger { display: flex; margin-left: auto; }
   .public-login { display: none; }
   .public-nav .brand-lockup-sub { display: none; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Rows of 2 + a full-width closer. */
+  .stats-grid { gap: 10px; }
+  .stats-grid > * { grid-column: span 3; }
+  .stats-grid > :nth-child(5) { grid-column: 1 / -1; }
   .members-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .hero-badges { justify-content: flex-start; }
   .hero-tagline { font-size: 15px; }
@@ -2010,3 +2029,91 @@ html { scroll-behavior: smooth; }
 .tour-dots { display: flex; gap: 7px; justify-content: center; margin-top: 16px; }
 .tour-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.18); transition: background 0.2s, transform 0.2s; }
 .tour-dot.on { background: var(--gold-bright); transform: scale(1.25); }
+
+/* ===================================================================
+   LAYOUT OPTIMIZATION BATCH — fluid rhythm, hero session ticket,
+   mobile-first grids (hero CTA/stats, roster rows), smarter wrapping
+   =================================================================== */
+
+/* Headlines break on balanced lines; body copy avoids orphan words. */
+.public-h2, .public-hero-title, .about-headline, .public-cta-title,
+.session-title, .events-col-h { text-wrap: balance; }
+.public-lead, .public-hero-sub, .about-text, .public-cta-sub,
+.feature-text, .session-note { text-wrap: pretty; }
+
+/* Tiles fill their Reveal wrappers so grid rows stay flush. */
+.stats-grid .stat-tile { height: 100%; }
+.stats-grid > * > :only-child { height: 100%; }
+
+/* ── Hero session ticket (desktop only): live countdown fills the empty
+      right half of the hero instead of leaving it to the background. ── */
+.hero-session-card { display: none; }
+@media (min-width: 1200px) {
+  .public-hero-inner {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: clamp(32px, 5vw, 72px); align-items: center;
+  }
+  .hero-session-card {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+    padding: 26px 28px 24px; border-radius: var(--r-xl);
+    border-color: rgba(226,59,59,0.25) !important;
+  }
+  .hero-session-day { font-size: 30px; color: #fff; margin-top: 6px; }
+  .hero-session-meta { font-size: 13px; color: var(--text-dim); }
+  .hero-session-card .btn { margin-top: 16px; }
+}
+.countdown { display: flex; gap: 10px; margin-top: 16px; }
+.cd-live {
+  margin-top: 16px; padding: 10px 16px; border-radius: 12px;
+  font-weight: 800; font-size: 14px; color: var(--gold-bright);
+  background: rgba(226,59,59,0.1); border: 1px solid rgba(226,59,59,0.3);
+}
+
+/* ── Mobile hero: full-width CTA stack (primary on top, secondaries split
+      a row), even 2×2 stat grid, no scroll cue fighting the content. ── */
+@media (max-width: 680px) {
+  .public-hero { min-height: 100svh; padding-bottom: 44px; }
+  .hero-scroll { display: none; }
+  .public-hero-cta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .public-hero-cta > :first-child { grid-column: 1 / -1; }
+  .public-hero-cta .btn { justify-content: center; padding-left: 12px; padding-right: 12px; }
+  .public-hero-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+    width: 100%; margin-top: 26px; padding: 8px;
+  }
+  .phs-item { padding: 12px 6px; }
+}
+
+/* ── Roster on phones: compact one-per-line rows read faster and cut the
+      section to half the scroll height of stacked portrait cards. ── */
+@media (max-width: 560px) {
+  .members-grid { grid-template-columns: 1fr; gap: 9px; }
+  .member-card {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'av name lvl' 'av stat lvl';
+    column-gap: 13px; row-gap: 3px; align-items: center; justify-items: start;
+    padding: 11px 16px; text-align: left;
+  }
+  .member-card .avatar { grid-area: av; }
+  .member-card-name { grid-area: name; margin-top: 0; }
+  .member-card-stat { grid-area: stat; }
+  .member-card-level {
+    grid-area: lvl; justify-self: end;
+    padding: 4px 9px; border-radius: 999px;
+    background: rgba(226,59,59,0.1); border: 1px solid rgba(226,59,59,0.28);
+  }
+  .member-card-shuttle { display: none; }
+}
+
+/* Gallery suspense placeholder keeps the band from collapsing pre-load. */
+.gallery-loading {
+  min-height: 320px; display: grid; place-items: center;
+  color: var(--text-faint); font-size: 13.5px; font-weight: 600;
+  border: 1px dashed var(--stroke-strong); border-radius: var(--r-lg);
+}
+
+/* Floating controls: slightly smaller on phones so they cover less content. */
+@media (max-width: 680px) {
+  .back-to-top { width: 42px; height: 42px; font-size: 18px; }
+  .sound-toggle { width: 42px; height: 42px; font-size: 16px; bottom: 70px; }
+}
