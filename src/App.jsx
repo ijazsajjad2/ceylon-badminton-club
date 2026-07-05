@@ -1,19 +1,24 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { Navbar, BottomTabs, NAV_ITEMS } from './components/Navbar.jsx'
 import Toasts from './components/Toasts.jsx'
 import WelcomeTour from './components/WelcomeTour.jsx'
 import Skeleton from './components/Skeleton.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import Participation from './pages/Participation.jsx'
-import Matches from './pages/Matches.jsx'
-import Leaderboard from './pages/Leaderboard.jsx'
-import Schedule from './pages/Schedule.jsx'
-import Profiles from './pages/Profiles.jsx'
-import Highlights from './pages/Highlights.jsx'
-import Login from './pages/Login.jsx'
 import PublicSite from './pages/PublicSite.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import { useApp } from './context/AppContext.jsx'
+
+// Member-portal pages (and Login) are behind a signed-in gate, so they're
+// lazy-loaded — public-site visitors (the overwhelming majority) never pay
+// for their JS, including the Recharts charts pulled in by Dashboard,
+// Leaderboard and PlayerSheet.
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'))
+const Participation = lazy(() => import('./pages/Participation.jsx'))
+const Matches = lazy(() => import('./pages/Matches.jsx'))
+const Leaderboard = lazy(() => import('./pages/Leaderboard.jsx'))
+const Schedule = lazy(() => import('./pages/Schedule.jsx'))
+const Profiles = lazy(() => import('./pages/Profiles.jsx'))
+const Highlights = lazy(() => import('./pages/Highlights.jsx'))
+const Login = lazy(() => import('./pages/Login.jsx'))
 
 const ORDER = NAV_ITEMS.map((n) => n.key)
 
@@ -29,7 +34,11 @@ function PublicShell() {
   return (
     <>
       <PublicSite />
-      {loginOpen && <Login />}
+      {loginOpen && (
+        <Suspense fallback={null}>
+          <Login />
+        </Suspense>
+      )}
     </>
   )
 }
@@ -99,7 +108,7 @@ function MembersApp() {
               if (e.target === e.currentTarget) e.currentTarget.style.animation = 'none'
             }}
           >
-            {renderPage()}
+            <Suspense fallback={<Skeleton />}>{renderPage()}</Suspense>
           </div>
         </div>
       )}

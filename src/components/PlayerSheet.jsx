@@ -7,7 +7,7 @@ import Avatar from './Avatar.jsx'
 import MatchCard from './MatchCard.jsx'
 import { computeStats } from '../lib/stats.js'
 import { LEVELS } from '../data/players.js'
-import { MONTHS } from '../lib/format.js'
+import MonthlyWinsChart from './charts/MonthlyWinsChart.tsx'
 
 export default function PlayerSheet({ playerId, onClose }) {
   const { matches, playerById, dispatch } = useApp()
@@ -48,9 +48,6 @@ export default function PlayerSheet({ playerId, onClose }) {
     .sort((a, b) => b.count - a.count)
     .slice(0, 5)
 
-  // monthly wins for the season
-  const months = ['2026-03', '2026-04', '2026-05', '2026-06']
-  const maxWins = Math.max(1, ...months.map((m) => s.monthly[m] || 0))
   const lv = LEVELS[player.level]
 
   return createPortal(
@@ -124,21 +121,10 @@ export default function PlayerSheet({ playerId, onClose }) {
             )) : <span className="dim">No opponents recorded yet.</span>}
           </div>
 
-          {/* Monthly bar chart */}
+          {/* Monthly wins */}
           <h3 className="section-title" style={{ fontSize: 19 }}>📊 Monthly Wins</h3>
-          <div className="glass card-pad">
-            <div className="barchart">
-              {months.map((m) => {
-                const wins = s.monthly[m] || 0
-                return (
-                  <div className="bar-col" key={m}>
-                    <span className="bar-val">{wins}</span>
-                    <div className="bar" style={{ height: `${(wins / maxWins) * 100}%` }} />
-                    <span className="bar-lbl">{MONTHS[Number(m.slice(5)) - 1]}</span>
-                  </div>
-                )
-              })}
-            </div>
+          <div className="glass card-pad chart-card">
+            <MonthlyWinsChart monthly={s.monthly} />
           </div>
 
           {/* Recent matches */}

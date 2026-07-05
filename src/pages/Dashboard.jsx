@@ -6,6 +6,7 @@ import MatchCard from '../components/MatchCard.jsx'
 import Avatar from '../components/Avatar.jsx'
 import RecordMatchModal from '../components/RecordMatchModal.jsx'
 import { ShuttleDeco } from '../components/Shuttle.jsx'
+import MonthlyActivityChart from '../components/charts/MonthlyActivityChart.tsx'
 import { computeStats, setsWon } from '../lib/stats.js'
 import { TODAY, TODAY_SESSION, TODAY_SESSION_START } from '../data/seed.js'
 import { fmtFullDate } from '../lib/format.js'
@@ -143,6 +144,11 @@ export default function Dashboard({ navigate }) {
           </div>
         </div>
       )}
+
+      <h2 className="section-title" style={{ marginTop: 22 }}>Club <span className="accent">Activity</span></h2>
+      <div className="glass card-pad chart-card">
+        <MonthlyActivityChart matches={matches} />
+      </div>
 
       <div className="dash-cols" style={{ marginTop: 22 }}>
         <div>

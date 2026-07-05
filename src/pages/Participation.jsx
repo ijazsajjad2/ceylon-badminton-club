@@ -7,6 +7,8 @@ import { generateRandomPairs } from '../lib/pairing.js'
 import SessionFlyer from '../components/SessionFlyer.jsx'
 import { TODAY, TODAY_SESSION } from '../data/seed.js'
 import { fmtFullDate, whatsappShare } from '../lib/format.js'
+import { firePuffConfetti } from '../lib/confetti.ts'
+import { playPop } from '../lib/sfx.js'
 
 const TARGET = 20
 
@@ -53,6 +55,7 @@ export default function Participation({ navigate }) {
     if (!myId) { pushToast('Your account has no player profile — ask the admin to link it.', 'info'); return }
     rsvp(myId, !imGoing)
     pushToast(!imGoing ? "You're in! See you on court 🏸" : 'Removed your RSVP', !imGoing ? 'success' : 'info')
+    if (!imGoing) { firePuffConfetti(); playPop() } // only celebrate opting IN, not backing out
   }, 'Sign in as a member to RSVP 🔒')
 
   const trackMatch = (m) => requireAuth(() => {

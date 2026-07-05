@@ -15,6 +15,7 @@ import App from './App.jsx'
 import { AppProvider } from './context/AppContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { initAnalytics } from './lib/analytics.js'
+import './i18n/config.js'
 import './styles/global.css'
 
 initAnalytics()

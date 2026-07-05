@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import Reveal from './Reveal.jsx'
 import CourtLines from './CourtLines.jsx'
 import AnimatedShuttlecock from './AnimatedShuttlecock.jsx'
@@ -9,24 +10,26 @@ import NavIcon from './Icons.jsx'
 const RALLY_SECONDS = 9
 
 export function SessionCard({ icon, title, time, note, side, onJoin }) {
+  const { t } = useTranslation()
   return (
     <div className={`glass session-card session-${side} halftone`} style={{ animationDuration: `${RALLY_SECONDS}s` }}>
       <span className="session-ico" aria-hidden="true"><NavIcon name={icon} size={30} /></span>
       <h3 className="display session-title">{title}</h3>
       <div className="session-time mono">{time}</div>
       <div className="session-meta">
-        <span><NavIcon name="pin" size={13} /> Green Badminton Club</span>
-        <span><NavIcon name="shuffle" size={13} /> Random doubles</span>
+        <span><NavIcon name="pin" size={13} /> {t('sessions.venue')}</span>
+        <span><NavIcon name="shuffle" size={13} /> {t('sessions.format')}</span>
       </div>
       <p className="session-note">{note}</p>
       {onJoin && (
-        <button className="btn btn-gold btn-sm session-join" onClick={onJoin}>Join this session</button>
+        <button className="btn btn-gold btn-sm session-join" onClick={onJoin}>{t('sessions.joinSession')}</button>
       )}
     </div>
   )
 }
 
 export default function SessionsShowcase({ onJoin }) {
+  const { t } = useTranslation()
   return (
     <Reveal>
       <div className="sessions-stage">
@@ -36,17 +39,17 @@ export default function SessionsShowcase({ onJoin }) {
           <SessionCard
             side="a"
             icon="moon"
-            title="Wednesday Night Doubles"
-            time="8–10 PM"
-            note="Mid-week rally under the lights — shake off the workday and get on court."
+            title={t('sessions.wedTitle')}
+            time={t('sessions.wedTime')}
+            note={t('sessions.wedNote')}
             onJoin={onJoin}
           />
           <SessionCard
             side="b"
             icon="sunrise"
-            title="Saturday Morning Doubles"
-            time="8–10 AM"
-            note="Weekend energy — fresh pairs, fast rallies and breakfast-earned bragging rights."
+            title={t('sessions.satTitle')}
+            time={t('sessions.satTime')}
+            note={t('sessions.satNote')}
             onJoin={onJoin}
           />
         </div>

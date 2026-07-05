@@ -1928,6 +1928,21 @@ html { scroll-behavior: smooth; }
 @media (max-width: 900px) { .milestones-strip { grid-template-columns: repeat(2, 1fr); } .milestone-card img { height: 200px; } }
 @media (max-width: 560px) { .milestones-strip { grid-template-columns: 1fr 1fr; gap: 10px; } .milestone-card img { height: 150px; } .milestone-card figcaption { font-size: 11.5px; } }
 
+/* ── Milestones: pinned horizontal scroll reel (MilestonesReel.jsx) ──
+   The `.reel-active` class is added by JS only once GSAP ScrollTrigger has
+   actually wired up the scroll-driven tween — this CSS must never engage on
+   its own (via a bare media query), or a failed/slow gsap load would leave
+   the strip clipped by overflow:hidden with no way to reach the later
+   photos. Below 1024px, reduced motion, or if gsap never loads, the class
+   is never added and the plain responsive grid above is what renders. */
+.milestones-pin-wrap.reel-active { overflow: hidden; }
+.milestones-pin-wrap.reel-active .milestones-strip {
+  display: flex; flex-wrap: nowrap; gap: 20px; width: max-content;
+  padding: 4px 2px; will-change: transform;
+}
+.milestones-pin-wrap.reel-active .milestone-card { flex: 0 0 360px; }
+.milestones-pin-wrap.reel-active .milestone-card img { height: 280px; }
+
 /* Member voices (testimonials — renders only when real quotes exist) */
 .voices-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .voice-card { margin: 0; position: relative; }
@@ -2237,3 +2252,74 @@ html { scroll-behavior: smooth; }
   -webkit-mask-image: radial-gradient(closest-side at 72% 28%, #000, transparent);
   mask-image: radial-gradient(closest-side at 72% 28%, #000, transparent);
 }
+
+/* ===================================================================
+   RECHARTS THEMING — dark glass tooltip + wrapper chrome to match the
+   app's card language (charts: MonthlyActivityChart, PointsBarChart,
+   MonthlyWinsChart)
+   =================================================================== */
+.rc-wrap { position: relative; width: 100%; }
+.rc-wrap :focus { outline: none; }
+.chart-tooltip {
+  background: var(--panel-solid); border: 1px solid var(--stroke-strong);
+  border-radius: 10px; padding: 8px 12px; box-shadow: var(--shadow);
+  font-size: 12.5px; color: var(--text);
+}
+.chart-tooltip-label { font-weight: 700; margin-bottom: 3px; color: var(--text-dim); font-size: 11px; }
+.chart-tooltip-row { display: flex; align-items: center; gap: 7px; font-weight: 700; }
+.chart-tooltip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold-bright); flex: 0 0 auto; }
+.rc-empty {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  color: var(--text-faint); font-size: 12.5px; font-weight: 600; pointer-events: none;
+}
+
+/* Chart cards get the same glass surface as everything else, without the
+   card-pad's fixed padding fighting Recharts' own margins. */
+.chart-card { padding: 16px 14px 10px; }
+
+/* ===================================================================
+   3D INTERACTIVE HERO — react-three-fiber shuttlecock accent
+   (Hero3D.jsx gates on WebGL/width/reduced-motion before this ever
+   mounts; Hero3DScene.jsx is the lazy-loaded three.js chunk)
+   =================================================================== */
+.hero-3d-stage {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  opacity: 0; animation: hero3dIn 1.1s ease 0.3s forwards;
+}
+@keyframes hero3dIn { to { opacity: 1; } }
+.hero-3d-canvas { position: absolute !important; inset: 0; width: 100% !important; height: 100% !important; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-3d-stage { animation: none; opacity: 1; }
+}
+
+/* ===================================================================
+   LANGUAGE SWITCHER (LanguageSwitcher.jsx) — EN / සිංහල / தமிழ்
+   =================================================================== */
+.lang-switch {
+  display: inline-flex; gap: 2px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--stroke-strong);
+  border-radius: 999px; padding: 3px;
+}
+.lang-switch-btn {
+  border: 0; background: transparent; color: var(--text-faint);
+  padding: 6px 11px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.2px;
+  transition: color 0.2s, background 0.2s;
+}
+.lang-switch-btn:hover:not(.active) { color: var(--text); }
+.lang-switch-btn.active {
+  color: #ffffff; background-image: var(--fill);
+  box-shadow: 0 3px 10px rgba(226,59,59,0.32);
+}
+.mobile-menu .lang-switch { align-self: center; margin-top: 4px; }
+@media (max-width: 680px) {
+  .public-nav .lang-switch { display: none; } /* lives in the mobile menu instead */
+}
+
+/* ===================================================================
+   PUSH NOTIFICATION OPT-IN (PushOptIn.jsx) — only rendered at all when
+   VITE_ONESIGNAL_APP_ID is configured (see PUSH_NOTIFICATIONS_SETUP.md)
+   =================================================================== */
+.push-optin { margin-top: 16px; text-align: center; }
+.push-optin-title { font-size: 22px; margin: 6px 0 4px; }
+.push-optin-desc { color: var(--text-dim); font-size: 13.5px; max-width: 420px; margin: 0 auto 14px; line-height: 1.6; }

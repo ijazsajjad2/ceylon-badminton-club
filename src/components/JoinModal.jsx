@@ -1,71 +1,83 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import Modal from './Modal.jsx'
 import { whatsappJoin } from '../lib/contact.js'
 import { track } from '../lib/analytics.js'
+import { firePuffConfetti } from '../lib/confetti.ts'
 
-const LEVELS = ['Beginner', 'Improver', 'Intermediate', 'Advanced']
-const DAYS = ['Wednesday night (8–10 PM)', 'Saturday morning (8–10 AM)', 'Either works']
+// Stable keys (language-independent) for state/analytics — display labels are
+// looked up via t() so the <select> options and the composed WhatsApp message
+// both follow the site's current language.
+const LEVEL_KEYS = ['beginner', 'improver', 'intermediate', 'advanced']
+const DAY_KEYS = ['wed', 'sat', 'either']
 
 // Lightweight "request to join" form. It doesn't post anywhere — it composes a
 // friendly, pre-filled WhatsApp message so a new player can reach the club in
 // one tap, which matches how the club already recruits.
 export default function JoinModal({ onClose }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
-  const [level, setLevel] = useState(LEVELS[0])
-  const [day, setDay] = useState(DAYS[2])
+  const [level, setLevel] = useState(LEVEL_KEYS[0])
+  const [day, setDay] = useState(DAY_KEYS[2])
+
+  const levelLabel = (key) => t(`joinModal.level${key.charAt(0).toUpperCase()}${key.slice(1)}`)
+  const dayLabel = (key) => t(`joinModal.day${key.charAt(0).toUpperCase()}${key.slice(1)}`)
 
   const message = useMemo(() => {
-    const who = name.trim() ? `I'm ${name.trim()}. ` : ''
-    return `🏸 Hi! ${who}I'd love to join the Ceylon Badminton Club in Riyadh.\n• Level: ${level}\n• Prefer: ${day}\nWhen's the next session?`
-  }, [name, level, day])
+    const trimmed = name.trim()
+    const key = trimmed ? 'messageWithName' : 'messageNoName'
+    return t(`joinModal.${key}`, { name: trimmed, level: levelLabel(level), day: dayLabel(day) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, level, day, t])
 
   const send = (e) => {
     e.preventDefault()
     track('Join WhatsApp sent', { level, day })
+    firePuffConfetti()
     whatsappJoin(message)
     onClose()
   }
 
   return (
-    <Modal title="🏸 Ask to join the club" onClose={onClose}>
+    <Modal title={t('joinModal.title')} onClose={onClose}>
       <form className="join-form" onSubmit={send}>
         <label className="join-field">
-          <span>Your name <span className="join-opt">(optional)</span></span>
+          <span>{t('joinModal.nameLabel')} <span className="join-opt">{t('joinModal.nameOptional')}</span></span>
           <input
             className="input"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Nuwan"
+            placeholder={t('joinModal.namePlaceholder')}
             autoFocus
           />
         </label>
 
         <label className="join-field">
-          <span>Your level</span>
+          <span>{t('joinModal.levelLabel')}</span>
           <select className="select" value={level} onChange={(e) => setLevel(e.target.value)}>
-            {LEVELS.map((l) => (
-              <option key={l} value={l}>{l}</option>
+            {LEVEL_KEYS.map((k) => (
+              <option key={k} value={k}>{levelLabel(k)}</option>
             ))}
           </select>
         </label>
 
         <label className="join-field">
-          <span>Which session suits you?</span>
+          <span>{t('joinModal.dayLabel')}</span>
           <select className="select" value={day} onChange={(e) => setDay(e.target.value)}>
-            {DAYS.map((d) => (
-              <option key={d} value={d}>{d}</option>
+            {DAY_KEYS.map((k) => (
+              <option key={k} value={k}>{dayLabel(k)}</option>
             ))}
           </select>
         </label>
 
         <div className="join-preview" aria-label="Message preview">
-          <span className="join-preview-label">We'll send:</span>
+          <span className="join-preview-label">{t('joinModal.previewLabel')}</span>
           {message}
         </div>
 
         <div className="row wrap" style={{ gap: 10, marginTop: 4 }}>
-          <button type="submit" className="btn btn-wa">📲 Open WhatsApp</button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button type="submit" className="btn btn-wa">📲 {t('joinModal.send')}</button>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>{t('joinModal.cancel')}</button>
         </div>
       </form>
     </Modal>
