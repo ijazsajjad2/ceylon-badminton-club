@@ -8,16 +8,12 @@
 //                        Server-side only — never exposed to the client.
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 
-const MESSAGES: Record<string, { en: string; si: string; ta: string }> = {
+const MESSAGES: Record<string, { en: string }> = {
   wed: {
     en: '🏸 Wednesday Night Doubles starts in 1 hour — Green Badminton Club, 8 PM. See you on court!',
-    si: '🏸 බදාදා රාත්‍රී යුගල තරගය පැයකින් ආරම්භ වේ — Green Badminton Club, රාත්‍රි 8. කෝට්ටයේදී හමුවෙමු!',
-    ta: '🏸 புதன்கிழமை இரவு ஜோடி போட்டி 1 மணி நேரத்தில் தொடங்குகிறது — Green Badminton Club, இரவு 8. கோர்ட்டில் சந்திப்போம்!',
   },
   sat: {
     en: '🏸 Saturday Morning Doubles starts in 1 hour — Green Badminton Club, 8 AM. See you on court!',
-    si: '🏸 සෙනසුරාදා උදෑසන යුගල තරගය පැයකින් ආරම්භ වේ — Green Badminton Club, උදේ 8. කෝට්ටයේදී හමුවෙමු!',
-    ta: '🏸 சனிக்கிழமை காலை ஜோடி போட்டி 1 மணி நேரத்தில் தொடங்குகிறது — Green Badminton Club, காலை 8. கோர்ட்டில் சந்திப்போம்!',
   },
 }
 

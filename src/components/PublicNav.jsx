@@ -3,7 +3,6 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import BrandLockup from './BrandLockup.jsx'
 import NavIcon from './Icons.jsx'
-import LanguageSwitcher from './LanguageSwitcher.jsx'
 
 // Public site navbar: transparent over the hero, glass once scrolled; desktop
 // links with animated underline + active section; animated hamburger + smooth
@@ -43,7 +42,6 @@ export default function PublicNav({ nav, active, onLogin }) {
         ))}
       </nav>
 
-      <LanguageSwitcher />
       <button className="btn btn-gold btn-sm public-login" onClick={onLogin}><NavIcon name="key" size={14} /> {t('nav.memberLogin')}</button>
 
       <button
@@ -78,7 +76,6 @@ export default function PublicNav({ nav, active, onLogin }) {
                 {label}
               </motion.a>
             ))}
-            <LanguageSwitcher className="mobile-menu-lang" />
             <button className="btn btn-gold mobile-menu-login" onClick={() => { setOpen(false); onLogin() }}>
               <NavIcon name="key" size={15} /> {t('nav.memberLogin')}
             </button>

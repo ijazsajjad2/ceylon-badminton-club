@@ -2293,30 +2293,6 @@ html { scroll-behavior: smooth; }
 }
 
 /* ===================================================================
-   LANGUAGE SWITCHER (LanguageSwitcher.jsx) — EN / සිංහල / தமிழ்
-   =================================================================== */
-.lang-switch {
-  display: inline-flex; gap: 2px;
-  background: rgba(255,255,255,0.04); border: 1px solid var(--stroke-strong);
-  border-radius: 999px; padding: 3px;
-}
-.lang-switch-btn {
-  border: 0; background: transparent; color: var(--text-faint);
-  padding: 6px 11px; border-radius: 999px;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.2px;
-  transition: color 0.2s, background 0.2s;
-}
-.lang-switch-btn:hover:not(.active) { color: var(--text); }
-.lang-switch-btn.active {
-  color: #ffffff; background-image: var(--fill);
-  box-shadow: 0 3px 10px rgba(226,59,59,0.32);
-}
-.mobile-menu .lang-switch { align-self: center; margin-top: 4px; }
-@media (max-width: 680px) {
-  .public-nav .lang-switch { display: none; } /* lives in the mobile menu instead */
-}
-
-/* ===================================================================
    PUSH NOTIFICATION OPT-IN (PushOptIn.jsx) — only rendered at all when
    VITE_ONESIGNAL_APP_ID is configured (see PUSH_NOTIFICATIONS_SETUP.md)
    =================================================================== */
