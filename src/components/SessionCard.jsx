@@ -1,6 +1,7 @@
 import Reveal from './Reveal.jsx'
 import CourtLines from './CourtLines.jsx'
 import AnimatedShuttlecock from './AnimatedShuttlecock.jsx'
+import NavIcon from './Icons.jsx'
 
 // The two weekly practice sessions, shown as premium cards on a court-line
 // backdrop with a shuttlecock rallying between them. The cards pulse softly on
@@ -9,13 +10,13 @@ const RALLY_SECONDS = 9
 
 export function SessionCard({ icon, title, time, note, side, onJoin }) {
   return (
-    <div className={`glass session-card session-${side}`} style={{ animationDuration: `${RALLY_SECONDS}s` }}>
-      <span className="session-ico" aria-hidden="true">{icon}</span>
+    <div className={`glass session-card session-${side} halftone`} style={{ animationDuration: `${RALLY_SECONDS}s` }}>
+      <span className="session-ico" aria-hidden="true"><NavIcon name={icon} size={30} /></span>
       <h3 className="display session-title">{title}</h3>
       <div className="session-time mono">{time}</div>
       <div className="session-meta">
-        <span>📍 Green Badminton Club</span>
-        <span>🔀 Random doubles</span>
+        <span><NavIcon name="pin" size={13} /> Green Badminton Club</span>
+        <span><NavIcon name="shuffle" size={13} /> Random doubles</span>
       </div>
       <p className="session-note">{note}</p>
       {onJoin && (
@@ -34,7 +35,7 @@ export default function SessionsShowcase({ onJoin }) {
         <div className="sessions-grid">
           <SessionCard
             side="a"
-            icon="🌙"
+            icon="moon"
             title="Wednesday Night Doubles"
             time="8–10 PM"
             note="Mid-week rally under the lights — shake off the workday and get on court."
@@ -42,7 +43,7 @@ export default function SessionsShowcase({ onJoin }) {
           />
           <SessionCard
             side="b"
-            icon="🌅"
+            icon="sunrise"
             title="Saturday Morning Doubles"
             time="8–10 AM"
             note="Weekend energy — fresh pairs, fast rallies and breakfast-earned bragging rights."
