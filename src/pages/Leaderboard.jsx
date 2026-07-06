@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 import Avatar from '../components/Avatar.jsx'
 import PlayerSheet from '../components/PlayerSheet.jsx'
+import PointsBarChart from '../components/charts/PointsBarChart.tsx'
 import { computeStats, filterByPeriod } from '../lib/stats.js'
 import { TODAY_SESSION } from '../data/seed.js'
 
@@ -19,6 +21,7 @@ function RankDelta({ delta }) {
 
 export default function Leaderboard() {
   const { matches, sessions, playerById } = useApp()
+  const { user } = useAuth()
   const [period, setPeriod] = useState('month')
   const [query, setQuery] = useState('')
   const [openId, setOpenId] = useState(null)
@@ -111,8 +114,18 @@ export default function Leaderboard() {
         </div>
       )}
 
+      {/* Points comparison */}
+      {ranked.length > 1 && (
+        <>
+          <h2 className="section-title" style={{ fontSize: 20, marginTop: 26 }}>Points <span className="accent">Comparison</span></h2>
+          <div className="glass card-pad chart-card">
+            <PointsBarChart players={ranked.slice(0, 8)} meId={user?.playerId} />
+          </div>
+        </>
+      )}
+
       {/* Table */}
-      <div style={{ overflowX: 'auto' }}>
+      <div style={{ overflowX: 'auto', marginTop: ranked.length > 1 ? 24 : 0 }}>
         <table className="lb-table">
           <thead>
             <tr>

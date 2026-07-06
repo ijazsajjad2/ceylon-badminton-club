@@ -11,6 +11,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# test artifacts
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
 # editor / OS
 .DS_Store
 *.local

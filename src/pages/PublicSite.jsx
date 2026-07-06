@@ -1,5 +1,6 @@
 import { Suspense, lazy, useMemo, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import { Trans, useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import Avatar from '../components/Avatar.jsx'
@@ -13,6 +14,7 @@ import SectionHeading from '../components/SectionHeading.jsx'
 import GlassCard from '../components/GlassCard.jsx'
 import StatTile from '../components/StatTile.jsx'
 import SessionsShowcase from '../components/SessionCard.jsx'
+import SessionCountdown from '../components/SessionCountdown.jsx'
 import MemberCard from '../components/MemberCard.jsx'
 import EventCard from '../components/EventCard.jsx'
 import CTASection from '../components/CTASection.jsx'
@@ -20,6 +22,10 @@ import JoinModal from '../components/JoinModal.jsx'
 import AnimatedShuttlecock from '../components/AnimatedShuttlecock.jsx'
 import CourtLines from '../components/CourtLines.jsx'
 import ShuttleParticles from '../components/ShuttleParticles.jsx'
+import Hero3D from '../components/Hero3D.jsx'
+import ScrollTiltIn from '../components/ScrollTiltIn.jsx'
+import MilestonesReel from '../components/MilestonesReel.jsx'
+import PushOptIn from '../components/PushOptIn.jsx'
 import useScrollSpy from '../hooks/useScrollSpy.js'
 import RotatingGreeting from '../components/RotatingGreeting.jsx'
 import { computeStats, setsWon } from '../lib/stats.js'
@@ -28,7 +34,9 @@ import { playSmash } from '../lib/sfx.js'
 import SoundToggle from '../components/SoundToggle.jsx'
 import { TODAY_SESSION } from '../data/seed.js'
 import { fmtFullDate, fmtDate, dayName } from '../lib/format.js'
-import { HERO_PHOTO, MILESTONES } from '../data/gallery.js'
+import { HERO_SLIDES, MILESTONES, FACTS_PHOTO } from '../data/gallery.js'
+import NavIcon from '../components/Icons.jsx'
+import HeroBackdrop from '../components/HeroBackdrop.jsx'
 import { TESTIMONIALS } from '../data/testimonials.js'
 import {
   whatsappJoin, MAP_EMBED_URL, MAP_DIRECTIONS_URL, MAP_SHARE_URL, INSTAGRAM_URL,
@@ -38,29 +46,13 @@ import {
 // so the landing page paints without it.
 const AdvancedGallery = lazy(() => import('../components/AdvancedGallery.jsx'))
 
-const NAV = [
-  ['about', 'About'], ['sessions', 'Sessions'], ['gallery', 'Gallery'],
-  ['results', 'Results'], ['members', 'Members'], ['faq', 'FAQ'],
-]
-
-const FEATURES = [
-  { icon: '🔀', title: 'Random doubles', text: 'No fixed partners, no permanent teams. Every session we shuffle fresh pairs, so you share a court with someone new each time.' },
-  { icon: '🗓', title: 'Twice every week', text: 'We hit the courts every Wednesday night (8–10 PM) and Saturday morning (8–10 AM) at Green Badminton Club, Riyadh.' },
-  { icon: '🤝', title: 'Everyone plays', text: 'Beginners to advanced, all welcome. A fair sit-out rotation means nobody is benched for long.' },
-  { icon: '🏆', title: 'Friendly stakes', text: 'Every match is tracked on a personal leaderboard — bragging rights, MVPs and highlight reels included.' },
-]
-
-const FAQ = [
-  { q: 'Do I need to be Sri Lankan to join?', a: 'It started as a Sri Lankan community, but everyone is welcome — bring a friend along.' },
-  { q: 'What if I’m a beginner?', a: 'Perfect. Random doubles means you always get a mix of partners, and the regulars are happy to help you find your feet.' },
-  { q: 'How much does it cost?', a: 'Your first session is on us. After that, members chip in for court costs — message us for the current rate.' },
-  { q: 'What should I bring?', a: 'Just sports shoes and water. We can lend you a racket and shuttles for your first game.' },
-  { q: 'When and where do you play?', a: 'Wednesday nights (8–10 PM) and Saturday mornings (8–10 AM) at Green Badminton Club, Riyadh.' },
-]
+const NAV_IDS = ['about', 'sessions', 'gallery', 'results', 'members', 'faq']
+const FEATURE_ICONS = ['shuffle', 'calendar', 'users', 'trophy']
+const FAQ_IDS = ['q1', 'q2', 'q3', 'q4', 'q5']
 
 const first = (name) => (name || '?').replace(/ .*/, '')
 
-function buildResult(m, playerById) {
+function buildResult(m, playerById, t) {
   const a = m.teamA.map((id) => first(playerById[id]?.name)).join(' & ')
   const b = m.teamB.map((id) => first(playerById[id]?.name)).join(' & ')
   const { a: sa, b: sb } = setsWon(m)
@@ -70,7 +62,7 @@ function buildResult(m, playerById) {
     win: m.winner === 'A' ? a : b,
     lose: m.winner === 'A' ? b : a,
     score: `${sample[0]}–${sample[1]}`,
-    sets: m.sets.length > 1 ? `${Math.max(sa, sb)}–${Math.min(sa, sb)} sets` : 'straight sets',
+    sets: m.sets.length > 1 ? `${Math.max(sa, sb)}–${Math.min(sa, sb)} ${t('results.sets')}` : t('results.straightSets'),
     type: m.type,
     date: m.date,
     confirmed: (m.confirmedBy || []).length > 0,
@@ -78,11 +70,18 @@ function buildResult(m, playerById) {
 }
 
 export default function PublicSite() {
+  const { t } = useTranslation()
   const { openLogin } = useAuth()
   const { players, sessions, matches, playerById } = useApp()
-  const active = useScrollSpy(NAV.map((n) => n[0]))
+  const active = useScrollSpy(NAV_IDS)
   const reduce = useReducedMotion()
   const [joinOpen, setJoinOpen] = useState(false)
+
+  const NAV = NAV_IDS.map((id) => [id, t(`nav.${id}`)])
+  const FEATURES = FEATURE_ICONS.map((icon, i) => ({
+    icon, title: t(`play.f${i + 1}Title`), text: t(`play.f${i + 1}Text`),
+  }))
+  const FAQ = FAQ_IDS.map((id, i) => ({ id, q: t(`faq.q${i + 1}`), a: t(`faq.a${i + 1}`) }))
 
   const memberCount = players.length
   const matchesPlayed = matches.length
@@ -99,8 +98,8 @@ export default function PublicSite() {
     return map
   }, [matches])
   const recentResults = useMemo(
-    () => matches.filter((m) => !m.live && m.winner).slice(0, 5).map((m) => buildResult(m, playerById)),
-    [matches, playerById]
+    () => matches.filter((m) => !m.live && m.winner).slice(0, 5).map((m) => buildResult(m, playerById, t)),
+    [matches, playerById, t]
   )
   const leaders = useMemo(
     () => computeStats(matches).filter((r) => r.played > 0).slice(0, 3),
@@ -124,90 +123,102 @@ export default function PublicSite() {
 
       {/* ─────────── Hero ─────────── */}
       <section className="public-hero" id="top">
-        <div className="public-hero-bg" style={{ backgroundImage: `url(${HERO_PHOTO})` }} />
+        <HeroBackdrop photos={HERO_SLIDES} />
         <div className="hero-net" aria-hidden="true" />
         <CourtLines className="hero-court" opacity={0.12} parallax={34} />
         <ShuttleParticles />
         <AnimatedShuttlecock mode="hero" size={46} duration={13} className="hero-shuttle" />
+        <Hero3D />
 
         <motion.div className="public-hero-inner" variants={stagger} initial="hidden" animate="show">
-          <motion.div className="hero-badges" variants={item}>
-            <span className="hero-badge">📍 Riyadh, Saudi Arabia</span>
-            <span className="hero-badge hero-badge-gold">Est. 2024</span>
-            <span className="hero-badge">{memberCount} Members</span>
-          </motion.div>
-          <motion.h1 className="public-hero-title" variants={item}>
-            <span className="l1">Ceylon</span>
-            <span className="l2">Badminton Club</span>
-          </motion.h1>
-          <motion.p className="hero-tagline" variants={item}>
-            <RotatingGreeting /> — Sri Lankan badminton community in Riyadh
-          </motion.p>
-          <motion.p className="public-hero-sub" variants={item}>
-            Random doubles every <b>Wednesday night</b> and <b>Saturday morning</b> at Green
-            Badminton Club. Show up, get matched — <b>smash it together.</b>
-          </motion.p>
-          <motion.div className="public-hero-cta" variants={item}>
-            <button className="btn btn-gold btn-lg btn-smash" onClick={openJoin}>
+          <div className="hero-main">
+            <motion.div className="hero-badges" variants={item}>
+              <span className="hero-badge"><NavIcon name="pin" size={13} /> {t('hero.location')}</span>
+              <span className="hero-badge hero-badge-gold">{t('hero.est')}</span>
+              <span className="hero-badge"><NavIcon name="users" size={13} /> {t('hero.members', { count: memberCount })}</span>
+            </motion.div>
+            <motion.h1 className="public-hero-title" variants={item}>
+              <span className="l1">{t('hero.title1')}</span>
+              <span className="l2">{t('hero.title2')}</span>
+            </motion.h1>
+            <motion.p className="hero-tagline" variants={item}>
+              <RotatingGreeting /> — {t('hero.taglineSuffix')}
+            </motion.p>
+            <motion.p className="public-hero-sub" variants={item}>
+              <Trans i18nKey="hero.sub" components={[<b key="0" />, <b key="1" />, <b key="2" />]} />
+            </motion.p>
+            <motion.div className="public-hero-cta" variants={item}>
+              <button className="btn btn-gold btn-lg btn-smash" onClick={openJoin}>
+                <span className="smash-trail" aria-hidden="true" />
+                <NavIcon name="shuttle" size={17} /> {t('hero.ctaJoin')}
+              </button>
+              <a className="btn btn-ghost" href="#members">{t('hero.ctaMembers')}</a>
+              <a className="btn btn-ghost" href="#sessions">{t('hero.ctaSessions')}</a>
+            </motion.div>
+            <motion.div className="public-hero-stats" variants={item}>
+              <div className="phs-item"><b><CountUp value={memberCount} /></b><span>{t('hero.statMembers')}</span></div>
+              <span className="phs-div" />
+              <div className="phs-item"><b>2×</b><span>{t('hero.statPerWeek')}</span></div>
+              <span className="phs-div" />
+              <div className="phs-item"><b>2024</b><span>{t('hero.statEstablished')}</span></div>
+              <span className="phs-div" />
+              {matchesPlayed > 0 ? (
+                <div className="phs-item"><b><CountUp value={matchesPlayed} suffix="+" /></b><span>{t('hero.statMatches')}</span></div>
+              ) : (
+                <div className="phs-item"><b>2</b><span>{t('hero.statCourts')}</span></div>
+              )}
+            </motion.div>
+          </div>
+          {/* Desktop-only session ticket: puts the next session (with a live
+              countdown) in the hero's otherwise-empty right half. */}
+          <motion.aside className="hero-session-card glass halftone" variants={item} aria-label={t('hero.nextSession')}>
+            <span className="eyebrow">{t('hero.nextSession')}</span>
+            <div className="display hero-session-day">{fmtFullDate(nextSession.date)}</div>
+            <div className="hero-session-meta mono">{nextSession.time} · {nextSession.courts} {t('results.courts')} · {nextSession.venue}</div>
+            <SessionCountdown dateIso={nextSession.date} time={nextSession.time.split('–')[0]} />
+            <button className="btn btn-gold btn-sm btn-smash" onClick={openJoin}>
               <span className="smash-trail" aria-hidden="true" />
-              🏸 Join the Club
+              {t('hero.playThisOne')}
             </button>
-            <a className="btn btn-ghost" href="#members">View Members</a>
-            <a className="btn btn-ghost" href="#sessions">Weekly Sessions</a>
-          </motion.div>
-          <motion.div className="public-hero-stats" variants={item}>
-            <div className="phs-item"><b><CountUp value={memberCount} /></b><span>Members</span></div>
-            <span className="phs-div" />
-            <div className="phs-item"><b>2×</b><span>Per week</span></div>
-            <span className="phs-div" />
-            <div className="phs-item"><b>2024</b><span>Established</span></div>
-            <span className="phs-div" />
-            {matchesPlayed > 0 ? (
-              <div className="phs-item"><b><CountUp value={matchesPlayed} suffix="+" /></b><span>Matches</span></div>
-            ) : (
-              <div className="phs-item"><b>2</b><span>Courts</span></div>
-            )}
-          </motion.div>
+          </motion.aside>
         </motion.div>
-        <a className="hero-scroll" href="#about" aria-label="Scroll to learn more"><span>Scroll</span><i>↓</i></a>
+        <a className="hero-scroll" href="#about" aria-label="Scroll to learn more"><span>{t('hero.scroll')}</span><i>↓</i></a>
       </section>
 
       {/* ─────────── About ─────────── */}
       <section id="about" className="band">
         <div className="public-section about-grid2">
           <Reveal className="glass card-pad about-card">
-            <span className="eyebrow">Who we are</span>
-            <h2 className="display about-headline">A home for Sri Lankan badminton in Riyadh</h2>
+            <span className="eyebrow">{t('about.eyebrow')}</span>
+            <h2 className="display about-headline">{t('about.headline')}</h2>
+            <p className="about-text">{t('about.p1')}</p>
             <p className="about-text">
-              Ceylon Badminton Club brings together Sri Lankans across Riyadh who share one thing —
-              a love for badminton. What started as a few friends booking a court has grown into a
-              tight community built around fitness, friendship, discipline and competition.
-            </p>
-            <p className="about-text">
-              There are no fixed partners and no permanent teams here. Every session we shuffle fresh
-              random pairs, so you always play with — and against — someone new. It keeps the games
-              friendly, the rallies sharp, and the whole club close-knit.
+              {t('about.p2')}
             </p>
             <ul className="about-points">
-              <li><span className="ap-ico">🔀</span><span>Random doubles every session — nobody has a fixed partner</span></li>
-              <li><span className="ap-ico">🇱🇰</span><span>A proudly Sri Lankan community, all skill levels welcome</span></li>
-              <li><span className="ap-ico">🏆</span><span>Personal leaderboard, match history &amp; video highlights</span></li>
+              <li><span className="ap-ico"><NavIcon name="shuffle" size={17} /></span><span>{t('about.point1')}</span></li>
+              <li><span className="ap-ico"><NavIcon name="flag" size={17} /></span><span>{t('about.point2')}</span></li>
+              <li><span className="ap-ico"><NavIcon name="trophy" size={17} /></span><span>{t('about.point3')}</span></li>
             </ul>
             <button className="btn btn-gold btn-smash" style={{ marginTop: 18 }} onClick={openJoin}>
               <span className="smash-trail" aria-hidden="true" />
-              Come play with us
+              {t('about.cta')}
             </button>
           </Reveal>
-          <Reveal delay={0.1} className="glass card-pad facts-card">
-            <AnimatedShuttlecock mode="float" size={64} className="facts-shuttle" />
-            <span className="eyebrow">Quick facts</span>
-            <div className="fact-row"><span className="fact-k">📅 Established</span><span className="fact-v">2024</span></div>
-            <div className="fact-row"><span className="fact-k">📍 Venue</span><span className="fact-v">Green Badminton Club</span></div>
-            <div className="fact-row"><span className="fact-k">🗓 Plays</span><span className="fact-v">Wed &amp; Sat</span></div>
-            <div className="fact-row"><span className="fact-k">🕓 Hours</span><span className="fact-v">8–10 PM / 8–10 AM</span></div>
-            <div className="fact-row"><span className="fact-k">👥 Members</span><span className="fact-v">{memberCount}</span></div>
-            <div className="fact-row"><span className="fact-k">🏸 Format</span><span className="fact-v">Random doubles</span></div>
-            <button className="btn btn-wa" style={{ width: '100%', justifyContent: 'center', marginTop: 14 }} onClick={sayHello}>📲 Ask on WhatsApp</button>
+          <Reveal delay={0.1} className="glass card-pad facts-card halftone">
+            <figure className="facts-photo">
+              <img src={FACTS_PHOTO.src} alt={`Ceylon Badminton Club — ${FACTS_PHOTO.cap}`} loading="lazy" decoding="async" />
+            </figure>
+            <span className="eyebrow">{t('about.factsEyebrow')}</span>
+            <div className="fact-rows">
+              <div className="fact-row"><span className="fact-k"><NavIcon name="flag" size={15} /> {t('about.factsEstablished')}</span><span className="fact-v">2024</span></div>
+              <div className="fact-row"><span className="fact-k"><NavIcon name="pin" size={15} /> {t('about.factsVenue')}</span><span className="fact-v">{t('about.factsVenueValue')}</span></div>
+              <div className="fact-row"><span className="fact-k"><NavIcon name="calendar" size={15} /> {t('about.factsPlays')}</span><span className="fact-v">{t('about.factsPlaysValue')}</span></div>
+              <div className="fact-row"><span className="fact-k"><NavIcon name="clock" size={15} /> {t('about.factsHours')}</span><span className="fact-v">{t('about.factsHoursValue')}</span></div>
+              <div className="fact-row"><span className="fact-k"><NavIcon name="users" size={15} /> {t('about.factsMembers')}</span><span className="fact-v">{memberCount}</span></div>
+              <div className="fact-row"><span className="fact-k"><NavIcon name="shuttle" size={15} /> {t('about.factsFormat')}</span><span className="fact-v">{t('about.factsFormatValue')}</span></div>
+            </div>
+            <button className="btn btn-wa facts-cta" onClick={sayHello}><NavIcon name="chat" size={16} /> {t('about.factsCta')}</button>
           </Reveal>
         </div>
       </section>
@@ -216,18 +227,18 @@ export default function PublicSite() {
       <section id="sessions" className="band tint">
         <div className="public-section">
           <SectionHeading
-            eyebrow="Every single week"
-            title="Weekly"
-            accent="Sessions"
-            lead="Two nights on court, one club. The shuttle doesn’t stop — and neither do we."
+            eyebrow={t('sessions.eyebrow')}
+            title={t('sessions.title')}
+            accent={t('sessions.accent')}
+            lead={t('sessions.lead')}
           />
           <SessionsShowcase onJoin={openJoin} />
           <Reveal delay={0.15}>
             <div className="next-session-strip glass">
-              <span className="eyebrow">Next session</span>
+              <span className="eyebrow">{t('sessions.nextSession')}</span>
               <span className="display next-strip-date">{fmtFullDate(nextSession.date)}</span>
-              <span className="next-strip-meta mono">{nextSession.time} · {nextSession.courts} courts</span>
-              <a className="btn btn-ghost btn-sm" href={MAP_DIRECTIONS_URL} target="_blank" rel="noopener noreferrer">🧭 Directions</a>
+              <span className="next-strip-meta mono">{nextSession.time} · {nextSession.courts} {t('results.courts')}</span>
+              <a className="btn btn-ghost btn-sm" href={MAP_DIRECTIONS_URL} target="_blank" rel="noopener noreferrer"><NavIcon name="compass" size={15} /> {t('sessions.directions')}</a>
             </div>
           </Reveal>
         </div>
@@ -237,16 +248,17 @@ export default function PublicSite() {
       <section id="play" className="band">
         <div className="public-section">
           <SectionHeading
-            eyebrow="The Ceylon Way"
-            title="How We"
-            accent="Play"
-            lead="Simple, social and fair — the format that keeps everyone coming back."
+            eyebrow={t('play.eyebrow')}
+            title={t('play.title')}
+            accent={t('play.accent')}
+            lead={t('play.lead')}
           />
           <div className="feature-grid">
             {FEATURES.map((f, i) => (
-              <Reveal key={f.title} delay={i * 0.08}>
+              <Reveal key={f.icon} delay={i * 0.08}>
                 <GlassCard className="feature-card">
-                  <span className="feature-ico">{f.icon}</span>
+                  <span className="feature-num display" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="feature-ico"><NavIcon name={f.icon} size={26} /></span>
                   <h3 className="feature-title">{f.title}</h3>
                   <p className="feature-text">{f.text}</p>
                 </GlassCard>
@@ -260,18 +272,18 @@ export default function PublicSite() {
       <section id="stats" className="band tint stats-band">
         <CourtLines opacity={0.06} parallax={20} />
         <div className="public-section">
-          <SectionHeading eyebrow="The club in numbers" title="Club" accent="Stats" />
-          <div className="stats-grid">
-            <StatTile icon="📅" text="2024" label="Established" delay={0} />
-            <StatTile icon="👥" value={memberCount} label="Members" delay={0.06} />
-            <StatTile icon="🗓" text="Wed & Sat" label="Sessions weekly" delay={0.12} />
+          <SectionHeading eyebrow={t('stats.eyebrow')} title={t('stats.title')} accent={t('stats.accent')} />
+          <ScrollTiltIn className="stats-grid">
+            <StatTile icon={<NavIcon name="flag" size={24} />} text="2024" label={t('stats.established')} delay={0} />
+            <StatTile icon={<NavIcon name="users" size={24} />} value={memberCount} label={t('stats.members')} delay={0.06} />
+            <StatTile icon={<NavIcon name="calendar" size={24} />} text={t('stats.wedSat')} label={t('stats.sessionsWeekly')} delay={0.12} />
             {matchesPlayed > 0 ? (
-              <StatTile icon="⚔️" value={matchesPlayed} suffix="+" label="Matches tracked" delay={0.18} />
+              <StatTile icon={<NavIcon name="shuttle" size={24} />} value={matchesPlayed} suffix="+" label={t('stats.matchesTracked')} delay={0.18} />
             ) : (
-              <StatTile icon="🏟" text="2 courts" label="Every session" delay={0.18} />
+              <StatTile icon={<NavIcon name="court" size={24} />} text={t('stats.courts2')} label={t('stats.everySession')} delay={0.18} />
             )}
-            <StatTile icon="🔀" text="Doubles" label="Random format" delay={0.24} />
-          </div>
+            <StatTile icon={<NavIcon name="shuffle" size={24} />} text={t('stats.doubles')} label={t('stats.randomFormat')} delay={0.24} />
+          </ScrollTiltIn>
         </div>
       </section>
 
@@ -279,13 +291,13 @@ export default function PublicSite() {
       <section id="gallery" className="band">
         <div className="public-section">
           <SectionHeading
-            eyebrow="In action"
-            title="Life at the"
-            accent="Club"
-            lead="Real moments from our sessions, tournaments and trophy nights — tap any photo to view full screen."
+            eyebrow={t('gallery.eyebrow')}
+            title={t('gallery.title')}
+            accent={t('gallery.accent')}
+            lead={t('gallery.lead')}
           />
           <Reveal>
-            <Suspense fallback={<div className="gallery-loading">Loading photos…</div>}>
+            <Suspense fallback={<div className="gallery-loading">{t('gallery.loading')}</div>}>
               <AdvancedGallery />
             </Suspense>
           </Reveal>
@@ -296,38 +308,48 @@ export default function PublicSite() {
       <section id="results" className="band tint">
         <div className="public-section">
           <SectionHeading
-            eyebrow="On the scoreboard"
-            title="Results &"
-            accent="Events"
-            lead="The latest scores straight from the courts, and what’s coming up next."
+            eyebrow={t('results.eyebrow')}
+            title={t('results.title')}
+            accent={t('results.accent')}
+            lead={t('results.lead')}
           />
           <div className="events-cols">
             <div className="events-col">
-              <h3 className="events-col-h display">Recent results</h3>
+              <h3 className="events-col-h display">{t('results.recentResults')}</h3>
               {recentResults.map((r, i) => (
                 <EventCard
                   key={r.id}
                   dateBadge={fmtDate(r.date)}
-                  title={<><b className="gold">{r.win}</b> beat {r.lose}</>}
-                  meta={[`${r.score} · ${r.sets}`, r.type === 'doubles' ? 'Doubles' : 'Singles', r.confirmed ? '✅ Confirmed' : '⏳ Pending']}
+                  title={<><b className="gold">{r.win}</b> {t('results.beat')} {r.lose}</>}
+                  meta={[
+                    `${r.score} · ${r.sets}`,
+                    r.type === 'doubles' ? t('results.doubles') : t('results.singles'),
+                    r.confirmed
+                      ? <><NavIcon name="check" size={12} /> {t('results.confirmed')}</>
+                      : <><NavIcon name="hourglass" size={12} /> {t('results.pending')}</>,
+                  ]}
                   status={r.score}
                   tone="result"
                   delay={i * 0.05}
                 />
               ))}
               {recentResults.length === 0 && (
-                <GlassCard className="dim center">Scores will appear here after the next session.</GlassCard>
+                <GlassCard className="dim center">{t('results.emptyResults')}</GlassCard>
               )}
             </div>
             <div className="events-col">
-              <h3 className="events-col-h display">Upcoming sessions</h3>
+              <h3 className="events-col-h display">{t('results.upcomingSessions')}</h3>
               {upcoming.map((s, i) => (
                 <EventCard
                   key={s.id}
                   dateBadge={fmtDate(s.date)}
-                  title={`${dayName(s.date) === 'Wed' ? 'Wednesday Night' : 'Saturday Morning'} Doubles`}
-                  meta={[`🕓 ${s.time}`, `📍 ${s.venue}`, `🏟 ${s.courts} courts`]}
-                  status="Open"
+                  title={dayName(s.date) === 'Wed' ? t('results.wedNightDoubles') : t('results.satMorningDoubles')}
+                  meta={[
+                    <><NavIcon name="clock" size={12} /> {s.time}</>,
+                    <><NavIcon name="pin" size={12} /> {s.venue}</>,
+                    <><NavIcon name="court" size={12} /> {s.courts} {t('results.courts')}</>,
+                  ]}
+                  status={t('results.open')}
                   tone="upcoming"
                   delay={i * 0.05}
                 />
@@ -335,7 +357,7 @@ export default function PublicSite() {
               <Reveal delay={0.15}>
                 <button className="btn btn-gold btn-smash" style={{ width: '100%', justifyContent: 'center' }} onClick={openJoin}>
                   <span className="smash-trail" aria-hidden="true" />
-                  Play in the next one →
+                  {t('results.playNext')}
                 </button>
               </Reveal>
             </div>
@@ -348,10 +370,10 @@ export default function PublicSite() {
         <section id="leaders" className="band">
           <div className="public-section">
             <SectionHeading
-              eyebrow="On the leaderboard"
-              title="Club"
-              accent="Leaders"
-              lead="Our top players by points — every win, partner and point is tracked across the season."
+              eyebrow={t('leaders.eyebrow')}
+              title={t('leaders.title')}
+              accent={t('leaders.accent')}
+              lead={t('leaders.lead')}
             />
             <div className="leaders-grid">
               {leaders.map((p, i) => (
@@ -360,12 +382,12 @@ export default function PublicSite() {
                     <div className="leader-medal">{['🥇', '🥈', '🥉'][i] || `#${p.rank}`}</div>
                     <Avatar player={p} size={64} ring />
                     <div className="leader-name">{p.name}</div>
-                    <div className="leader-points mono">{p.points}<span> pts</span></div>
-                    <div className="leader-meta">{p.won}W · {p.lost}L · {p.winPct}% win</div>
+                    <div className="leader-points mono">{p.points}<span> {t('leaders.pts')}</span></div>
+                    <div className="leader-meta">{p.won}W · {p.lost}L · {p.winPct}% {t('leaders.win')}</div>
                     {p.form.length > 0 && (
                       <div className="leader-form" aria-label="Recent form">
                         {p.form.map((r, idx) => (
-                          <span key={idx} className={`form-dot form-${r}`} title={r === 'W' ? 'Win' : 'Loss'}>{r}</span>
+                          <span key={idx} className={`form-dot form-${r}`} title={r === 'W' ? t('leaders.win') : t('leaders.loss')}>{r}</span>
                         ))}
                       </div>
                     )}
@@ -378,27 +400,28 @@ export default function PublicSite() {
       )}
 
       {/* ─────────── Milestones (real trophy moments) ─────────── */}
-      <section id="milestones" className="band tint">
+      <section id="milestones" className="band band-trophy">
         <div className="public-section">
           <SectionHeading
-            eyebrow="Trophy cabinet"
-            title="Club"
-            accent="Milestones"
-            lead="Tournament days, trophy nights and podium moments — straight from the club’s own camera roll."
+            eyebrow={t('milestones.eyebrow')}
+            title={t('milestones.title')}
+            accent={t('milestones.accent')}
+            lead={t('milestones.lead')}
           />
-          <div className="milestones-strip" role="list">
-            {MILESTONES.map((m, i) => (
+          <MilestonesReel
+            items={MILESTONES}
+            renderItem={(m, i) => (
               <Reveal key={m.src} delay={i * 0.06}>
                 <figure className="milestone-card glass" role="listitem">
                   <img src={m.src} alt={`Ceylon Badminton Club — ${m.title}`} width={m.width} height={m.height} loading="lazy" decoding="async" />
                   <figcaption>
-                    <span className="milestone-ico" aria-hidden="true">🏆</span>
+                    <span className="milestone-ico" aria-hidden="true"><NavIcon name="trophy" size={15} /></span>
                     {m.title}
                   </figcaption>
                 </figure>
               </Reveal>
-            ))}
-          </div>
+            )}
+          />
         </div>
       </section>
 
@@ -407,16 +430,16 @@ export default function PublicSite() {
         <section id="voices" className="band">
           <div className="public-section">
             <SectionHeading
-              eyebrow="From the members"
-              title="Why We"
-              accent="Play"
+              eyebrow={t('voices.eyebrow')}
+              title={t('voices.title')}
+              accent={t('voices.accent')}
             />
             <div className="voices-grid">
-              {TESTIMONIALS.map((t, i) => (
-                <Reveal key={t.name + i} delay={i * 0.08}>
+              {TESTIMONIALS.map((quote, i) => (
+                <Reveal key={quote.name + i} delay={i * 0.08}>
                   <blockquote className="glass card-pad voice-card">
-                    <p>“{t.quote}”</p>
-                    <footer><b>{t.name}</b>{t.role && <span> · {t.role}</span>}</footer>
+                    <p>“{quote.quote}”</p>
+                    <footer><b>{quote.name}</b>{quote.role && <span> · {quote.role}</span>}</footer>
                   </blockquote>
                 </Reveal>
               ))}
@@ -429,10 +452,10 @@ export default function PublicSite() {
       <section id="members" className="band tint">
         <div className="public-section">
           <SectionHeading
-            eyebrow="The squad"
-            title="Our"
-            accent="Members"
-            lead={`${memberCount} players make up the club — partners rotate every session, so everyone plays with everyone.`}
+            eyebrow={t('members.eyebrow')}
+            title={t('members.title')}
+            accent={t('members.accent')}
+            lead={t('members.lead', { count: memberCount })}
           />
           <motion.div
             className="members-grid"
@@ -449,39 +472,40 @@ export default function PublicSite() {
       </section>
 
       {/* ─────────── Visit / map ─────────── */}
-      <section id="visit" className="band">
+      <section id="visit" className="band band-blue">
         <div className="public-section">
           <div className="visit-grid">
-            <Reveal className="glass card-pad visit-card">
-              <span className="eyebrow">When &amp; where</span>
-              <h2 className="display about-headline">Come play with us</h2>
+            <Reveal className="glass card-pad visit-card halftone">
+              <span className="eyebrow">{t('visit.eyebrow')}</span>
+              <h2 className="display about-headline">{t('visit.title')}</h2>
               <div className="row wrap" style={{ gap: 10, marginTop: 4 }}>
-                <span className="hero-pill">🌙 Wed 8–10 PM</span>
-                <span className="hero-pill">🌅 Sat 8–10 AM</span>
-                <span className="hero-pill">📍 {nextSession.venue}, Riyadh</span>
+                <span className="hero-pill"><NavIcon name="moon" size={14} /> {t('visit.wedPill')}</span>
+                <span className="hero-pill"><NavIcon name="sunrise" size={14} /> {t('visit.satPill')}</span>
+                <span className="hero-pill"><NavIcon name="pin" size={14} /> {nextSession.venue}, {t('visit.riyadh')}</span>
               </div>
               <div className="next-session">
-                <span className="eyebrow">Next session</span>
+                <span className="eyebrow">{t('visit.nextSession')}</span>
                 <div className="display next-date">{fmtFullDate(nextSession.date)}</div>
-                <div className="faint" style={{ fontSize: 13 }}>{nextSession.time} · {nextSession.courts} courts · random doubles</div>
+                <div className="faint" style={{ fontSize: 13 }}>{nextSession.time} · {nextSession.courts} {t('results.courts')} · {t('visit.randomDoublesSuffix')}</div>
               </div>
               <div className="row wrap" style={{ gap: 10, marginTop: 18 }}>
-                <button className="btn btn-wa" onClick={sayHello}>📲 Ask to join on WhatsApp</button>
-                <a className="btn btn-ghost" href={MAP_DIRECTIONS_URL} target="_blank" rel="noopener noreferrer">🧭 Directions</a>
+                <button className="btn btn-wa" onClick={sayHello}><NavIcon name="chat" size={16} /> {t('visit.waCta')}</button>
+                <a className="btn btn-ghost" href={MAP_DIRECTIONS_URL} target="_blank" rel="noopener noreferrer"><NavIcon name="compass" size={16} /> {t('visit.directions')}</a>
               </div>
             </Reveal>
             <Reveal delay={0.1} className="glass map-card">
               <iframe
-                title="Green Badminton Club location"
+                title={t('visit.mapTitle')}
                 className="venue-map"
                 src={MAP_EMBED_URL}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 allowFullScreen
               />
-              <a className="map-open" href={MAP_SHARE_URL} target="_blank" rel="noopener noreferrer">📍 Open in Google Maps ↗</a>
+              <a className="map-open" href={MAP_SHARE_URL} target="_blank" rel="noopener noreferrer"><NavIcon name="pin" size={14} /> {t('visit.openMaps')}</a>
             </Reveal>
           </div>
+          <PushOptIn />
         </div>
       </section>
 
@@ -489,14 +513,14 @@ export default function PublicSite() {
       <section id="faq" className="band tint">
         <div className="public-section">
           <SectionHeading
-            eyebrow="Good to know"
-            title="Frequently"
-            accent="Asked"
-            lead="New to the club? Here’s what most people want to know."
+            eyebrow={t('faq.eyebrow')}
+            title={t('faq.title')}
+            accent={t('faq.accent')}
+            lead={t('faq.lead')}
           />
           <Reveal className="faq-list">
             {FAQ.map((item2) => (
-              <details className="faq-item glass" key={item2.q}>
+              <details className="faq-item glass" key={item2.id}>
                 <summary>{item2.q}<span className="faq-plus">+</span></summary>
                 <p>{item2.a}</p>
               </details>
@@ -514,28 +538,28 @@ export default function PublicSite() {
         <div className="public-footer-grid">
           <div className="footer-brand">
             <BrandLockup size="sm" sub="Riyadh · Est. 2024" />
-            <p className="footer-tag">Smash It Together 🏸🇱🇰 — a Sri Lankan badminton community in Riyadh.</p>
+            <p className="footer-tag">{t('footer.tagline')}</p>
             <div className="footer-socials">
-              <button className="footer-social" onClick={sayHello} aria-label="Contact us on WhatsApp">📲 WhatsApp</button>
-              {INSTAGRAM_URL && <a className="footer-social" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">📸 Instagram</a>}
-              <a className="footer-social" href={MAP_SHARE_URL} target="_blank" rel="noopener noreferrer">📍 Map</a>
+              <button className="footer-social" onClick={sayHello} aria-label="Contact us on WhatsApp"><NavIcon name="chat" size={14} /> {t('footer.whatsapp')}</button>
+              {INSTAGRAM_URL && <a className="footer-social" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"><NavIcon name="camera" size={14} /> {t('footer.instagram')}</a>}
+              <a className="footer-social" href={MAP_SHARE_URL} target="_blank" rel="noopener noreferrer"><NavIcon name="pin" size={14} /> {t('footer.map')}</a>
             </div>
           </div>
           <div className="footer-col">
-            <span className="footer-h">Explore</span>
+            <span className="footer-h">{t('footer.explore')}</span>
             {NAV.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
           </div>
           <div className="footer-col">
-            <span className="footer-h">Play with us</span>
-            <span className="footer-line">🗓 Wed 8–10 PM · Sat 8–10 AM</span>
-            <span className="footer-line">📍 Green Badminton Club, Riyadh</span>
-            <a href={MAP_DIRECTIONS_URL} target="_blank" rel="noopener noreferrer">🧭 Get directions</a>
-            <button className="footer-portal" onClick={handleLogin}>🔑 Members portal →</button>
+            <span className="footer-h">{t('footer.playWithUs')}</span>
+            <span className="footer-line"><NavIcon name="calendar" size={14} /> {t('footer.schedule')}</span>
+            <span className="footer-line"><NavIcon name="pin" size={14} /> {t('footer.venue')}</span>
+            <a href={MAP_DIRECTIONS_URL} target="_blank" rel="noopener noreferrer"><NavIcon name="compass" size={14} /> {t('footer.getDirections')}</a>
+            <button className="footer-portal" onClick={handleLogin}><NavIcon name="key" size={14} /> {t('footer.portal')}</button>
           </div>
         </div>
         <div className="public-footer-base">
-          <span>© {year} Ceylon Badminton Club · Riyadh</span>
-          <span className="faint">Made with 🏸 in Riyadh, KSA</span>
+          <span>{t('footer.copyright', { year })}</span>
+          <span className="faint">{t('footer.madeWith')}</span>
         </div>
       </footer>
 

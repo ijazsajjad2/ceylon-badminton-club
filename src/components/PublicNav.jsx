@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import BrandLockup from './BrandLockup.jsx'
+import NavIcon from './Icons.jsx'
 
 // Public site navbar: transparent over the hero, glass once scrolled; desktop
 // links with animated underline + active section; animated hamburger + smooth
 // slide-down panel on mobile.
 export default function PublicNav({ nav, active, onLogin }) {
+  const { t } = useTranslation()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const reduce = useReducedMotion()
@@ -39,7 +42,7 @@ export default function PublicNav({ nav, active, onLogin }) {
         ))}
       </nav>
 
-      <button className="btn btn-gold btn-sm public-login" onClick={onLogin}>🔑 Member Login</button>
+      <button className="btn btn-gold btn-sm public-login" onClick={onLogin}><NavIcon name="key" size={14} /> {t('nav.memberLogin')}</button>
 
       <button
         className={`nav-burger ${open ? 'open' : ''}`}
@@ -74,7 +77,7 @@ export default function PublicNav({ nav, active, onLogin }) {
               </motion.a>
             ))}
             <button className="btn btn-gold mobile-menu-login" onClick={() => { setOpen(false); onLogin() }}>
-              🔑 Member Login
+              <NavIcon name="key" size={15} /> {t('nav.memberLogin')}
             </button>
           </motion.nav>
         )}

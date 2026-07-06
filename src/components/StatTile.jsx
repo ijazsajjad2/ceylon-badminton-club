@@ -8,7 +8,7 @@ export default function StatTile({ icon, value, suffix = '', text, label, delay 
     <Reveal delay={delay}>
       <div className="glass stat-tile">
         <span className="stat-tile-ico" aria-hidden="true">{icon}</span>
-        <div className="stat-tile-value display">
+        <div className={`stat-tile-value display${typeof value === 'number' ? '' : ' stat-tile-text'}`}>
           {typeof value === 'number' ? <CountUp value={value} suffix={suffix} /> : text}
         </div>
         <div className="stat-tile-label">{label}</div>

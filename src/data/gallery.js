@@ -68,3 +68,13 @@ export const HERO_PHOTO = src(8)
 // WebP variant of the hero used via CSS image-set() (the JPEG above stays the
 // universal fallback for the ~3% of browsers without WebP support).
 export const HERO_WEBP = '/gallery/club-08.webp'
+
+// Hero slideshow (Ken Burns crossfade). First entry = the preloaded hero
+// photo; the others are landscape on-court shots loaded after first paint.
+export const HERO_SLIDES = [src(8), src(21), src(19)]
+
+// Duotone team-photo backdrop for the closing CTA band (wide crop).
+export const CTA_PHOTO = src(13)
+
+// Wide team shot used as the quick-facts card header in the About section.
+export const FACTS_PHOTO = { src: smSrc(11), full: src(11), cap: 'Team Ceylon' }

@@ -3,6 +3,8 @@ import Modal from './Modal.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { validateSet } from '../lib/format.js'
 import { TODAY } from '../data/seed.js'
+import { fireWinConfetti } from '../lib/confetti.ts'
+import { playWin } from '../lib/sfx.js'
 
 function ToggleSwitch({ value, onChange }) {
   const isDoubles = value === 'doubles'
@@ -108,6 +110,8 @@ export default function RecordMatchModal({ onClose, prefill }) {
     const aNames = match.teamA.map((id) => players.find((p) => p.id === id)?.name).join(' & ')
     const bNames = match.teamB.map((id) => players.find((p) => p.id === id)?.name).join(' & ')
     pushToast(`Saved: ${winner === 'A' ? aNames : bNames} won ${Math.max(setsA, setsB)}–${Math.min(setsA, setsB)} 🏸`, 'success')
+    fireWinConfetti()
+    playWin()
     onClose()
   }
 

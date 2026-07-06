@@ -1,6 +1,16 @@
 export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 export const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+/** The last `n` calendar months as 'YYYY-MM' keys, oldest first, ending this month. */
+export function lastNMonths(n, now = new Date()) {
+  const out = []
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
+  return out
+}
+
 export function fmtDate(iso) {
   const [y, m, d] = iso.split('-').map(Number)
   return `${MONTHS[m - 1]} ${d}`
