@@ -13,13 +13,13 @@ export default function useFocusTrap(containerRef, active = true) {
     if (!container) return
 
     const previouslyFocused = document.activeElement
-    const shell = document.querySelector('.app-shell')
+    const shell = document.querySelector('.app-shell, .public-site')
     if (shell) shell.setAttribute('inert', '')
 
     // focus first focusable inside the container
     const focusables = () => Array.from(container.querySelectorAll(FOCUSABLE)).filter((el) => el.offsetParent !== null)
     const first = focusables()[0]
-    if (first) setTimeout(() => first.focus(), 40)
+    const focusTimer = first ? setTimeout(() => first.focus(), 40) : null
 
     const onKey = (e) => {
       if (e.key !== 'Tab') return
@@ -39,6 +39,7 @@ export default function useFocusTrap(containerRef, active = true) {
 
     return () => {
       document.removeEventListener('keydown', onKey)
+      clearTimeout(focusTimer)
       if (shell) shell.removeAttribute('inert')
       if (previouslyFocused && previouslyFocused.focus) previouslyFocused.focus()
     }

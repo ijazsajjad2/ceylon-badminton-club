@@ -2,7 +2,7 @@
 // Stale-while-revalidate for same-origin GETs; failed navigations fall back to
 // the cached app shell, then the branded offline page. Bump CACHE to evict old
 // entries when the caching strategy changes.
-const CACHE = 'cbc-v2'
+const CACHE = 'cbc-v4-operations'
 const OFFLINE_URL = '/offline.html'
 
 self.addEventListener('install', (e) => {
@@ -40,7 +40,13 @@ self.addEventListener('fetch', (e) => {
           }
           return Response.error()
         })
-      return cached || network
+      return isNav ? network : cached || network
     })
   )
 })
+self.addEventListener('push',event=>{
+ let data={title:'Ceylon Badminton Club',body:'You have a club update.'}
+ try{data={...data,...event.data.json()}}catch{}
+ event.waitUntil(self.registration.showNotification(data.title,{body:data.body,icon:'/icon-192.png',tag:data.id||'cbc-update',data:{url:'/'}}))
+})
+self.addEventListener('notificationclick',event=>{event.notification.close();event.waitUntil(self.clients.matchAll({type:'window'}).then(windows=>{const open=windows.find(w=>w.url.startsWith(self.location.origin));return open?open.focus():self.clients.openWindow('/')}))})

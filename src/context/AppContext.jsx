@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState, useCallback } from 'react'
 import { PLAYERS } from '../data/players.js'
 import { MATCHES, SESSIONS, TODAY_SESSION, VIDEO_SEED } from '../data/seed.js'
-import { SCOREKEEPER_USERNAME } from '../data/credentials.js'
 import { load, save } from '../lib/storage.js'
 import { getSupabase, hasSupabase } from '../lib/supabase.js'
 import { useAuth } from './AuthContext.jsx'
+import { buildSessions } from '../lib/sessions.js'
 
 const AppContext = createContext(null)
 export const useApp = () => useContext(AppContext)
@@ -43,12 +43,14 @@ function matchToRow(m) {
     live: !!m.live,
     recorded_by: m.recordedBy || null,
     confirmed_by: m.confirmedBy || [],
+    ...(m.editReason ? { edit_reason: m.editReason, edit_base_version: m.revision || 1 } : {}),
     updated_at: new Date().toISOString(),
   }
 }
 function rowToMatch(r) {
   return {
     id: r.id,
+    revision: r.revision || 1,
     sessionId: r.session_id,
     date: r.date,
     time: r.time,
@@ -60,7 +62,7 @@ function rowToMatch(r) {
     winner: r.winner,
     live: !!r.live,
     recordedBy: r.recorded_by,
-    confirmedBy: r.confirmed_by || [],
+    confirmedBy: [...new Set([...(r.confirmed_by || []), ...(r.match_confirmations || []).map((c) => c.username)])],
   }
 }
 
@@ -82,7 +84,7 @@ function initState() {
     // Sessions are always derived fresh from the seed so the schedule
     // auto-rolls to the real upcoming Wed/Sat (never frozen in localStorage).
     sessions: SESSIONS,
-    going: load('going', Object.fromEntries(TODAY_SESSION.attendees.map((id) => [id, true]))),
+    going: load('going-' + TODAY_SESSION.date, {}),
     lastSessionPairs: load('lastSessionPairs', seedLastPairs(matches)),
     videos: load('videos', VIDEO_SEED),
     draw: load('draw', null),
@@ -99,6 +101,8 @@ function reducer(state, action) {
         : [action.match, ...state.matches]
       return { ...state, matches }
     }
+    case 'REPLACE_PLAYERS': return { ...state, players: action.players }
+    case 'REPLACE_VIDEOS': return { ...state, videos: action.videos }
     case 'REPLACE_MATCHES':
       return { ...state, matches: action.matches }
     case 'CONFIRM_MATCH': {
@@ -155,173 +159,198 @@ export function AppProvider({ children }) {
   const [toasts, setToasts] = useState([])
   const toastId = useRef(0)
   const { user: authUser, isScorekeeper } = useAuth()
+  const [outbox, setOutbox] = useState(() => load('sync-outbox-v1', []))
+  const outboxRef = useRef(outbox)
+  const busyRef = useRef(false)
+  const [online, setOnline] = useState(() => navigator.onLine)
+  const [readStatus, setReadStatus] = useState(hasSupabase ? 'loading' : 'unconfigured')
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [sessionSettings,setSessionSettings]=useState([])
+  const [clock, setClock] = useState(() => Date.now())
+  const sessions = useMemo(() => buildSessions(new Date(clock)).map(s=>({...s,...sessionSettings.find(row=>row.date===s.date)})).filter(s=>!s.cancelled), [clock,sessionSettings])
+  const currentSession = sessions.find((s) => s.status !== 'past') || TODAY_SESSION
+  const sessionDate = currentSession.date
 
-  // Persist slices (sessions intentionally NOT persisted — derived from seed)
+  useEffect(() => {
+    const timer = setInterval(() => setClock(Date.now()), 60000)
+    const onOnline = () => { setOnline(true); setRefreshKey((key) => key + 1) }
+    const onOffline = () => setOnline(false)
+    window.addEventListener('online', onOnline)
+    window.addEventListener('offline', onOffline)
+    return () => { clearInterval(timer); window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline) }
+  }, [])
+  useEffect(() => { dispatch({ type: 'REPLACE_GOING', going: load('going-' + sessionDate, {}) }) }, [sessionDate])
   useEffect(() => save('players', state.players), [state.players])
   useEffect(() => save('matches', state.matches), [state.matches])
-  useEffect(() => save('going', state.going), [state.going])
+  // Keep attendance scoped to its session; never carry an RSVP into next week.
+  const attendanceDateRef = useRef(sessionDate)
+  useEffect(() => {
+    if (attendanceDateRef.current === sessionDate) save('going-' + sessionDate, state.going)
+    attendanceDateRef.current = sessionDate
+  }, [state.going, sessionDate])
   useEffect(() => save('lastSessionPairs', state.lastSessionPairs), [state.lastSessionPairs])
   useEffect(() => save('videos', state.videos), [state.videos])
   useEffect(() => save('draw', state.draw), [state.draw])
 
   const pushToast = useCallback((message, kind = 'info') => {
     const id = ++toastId.current
-    setToasts((t) => [...t, { id, message, kind }])
-    setTimeout(() => {
-      setToasts((t) => t.filter((x) => x.id !== id))
-    }, 3400)
+    setToasts((items) => [...items, { id, message, kind }])
+    setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), 5000)
   }, [])
-
-  const dismissToast = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), [])
-
-  // RSVP for a player. Updates local state immediately (optimistic), and — when
-  // a Supabase project is configured — writes to the shared roster so every
-  // device sees it. Any backend error is swallowed so the app stays usable.
-  const rsvp = useCallback(async (playerId, value) => {
-    dispatch({ type: 'SET_GOING', id: playerId, value })
-    if (!hasSupabase) return
+  const dismissToast = useCallback((id) => setToasts((items) => items.filter((item) => item.id !== id)), [])
+  const updateOutbox = useCallback((update) => {
+    const next = update(outboxRef.current)
+    // Persist before acknowledging a local save, so a storage failure is visible.
+    localStorage.setItem('cbc.v4.sync-outbox-v1', JSON.stringify(next))
+    outboxRef.current = next
+    setOutbox(next)
+  }, [])
+  const enqueue = useCallback((kind, payload) => {
+    if (!authUser || !hasSupabase) return false
     try {
-      const sb = await getSupabase()
-      if (!sb) return
-      await sb.from('attendance').upsert(
-        { session_date: TODAY_SESSION.date, player_id: playerId, going: value, updated_at: new Date().toISOString() },
-        { onConflict: 'session_date,player_id' }
-      )
-    } catch { /* stay local on any backend error */ }
-  }, [])
+      updateOutbox((items) => [...items, { id: crypto.randomUUID(), actor: authUser.id, kind, payload, status: 'pending' }])
+      return true
+    } catch { pushToast('Could not save on this device. Free some browser storage and try again.', 'error'); return false }
+  }, [authUser, updateOutbox, pushToast])
 
-  // Record a match score. Client-side gated to the scorekeeper account only
-  // (SCOREKEEPER_USERNAME) — this is a convenience gate like the rest of the
-  // login system, not server-enforced security. Writes locally, and syncs to
-  // Supabase (if configured) so every member's device can see and confirm it.
+  const rsvp = useCallback(async (playerId, value) => {
+    if (!authUser || authUser.playerId !== playerId) { pushToast('You can only change your own RSVP.', 'error'); return { ok: false } }
+    const payload = { session_date: sessionDate, player_id: playerId, going: value, updated_at: new Date().toISOString() }
+    if (!enqueue('attendance', payload)) return { ok: false }
+    return { ok: true, pending: true }
+  }, [authUser, sessionDate, enqueue, pushToast])
+
   const recordMatch = useCallback(async (match) => {
-    if (!authUser || authUser.username !== SCOREKEEPER_USERNAME) {
-      pushToast('Only the club scorekeeper can record match scores.', 'error')
-      return { ok: false }
-    }
+    if (!isScorekeeper || !authUser) { pushToast('Only the club scorekeeper can record scores.', 'error'); return { ok: false } }
     const full = { ...match, confirmedBy: [], recordedBy: authUser.username }
+    if (!enqueue('match', matchToRow(full))) return { ok: false }
     dispatch({ type: 'SET_MATCH', match: full })
-    if (hasSupabase) {
-      try {
-        const sb = await getSupabase()
-        if (sb) await sb.from('matches').upsert(matchToRow(full))
-      } catch { /* stay local on any backend error */ }
-    }
-    return { ok: true }
-  }, [authUser, pushToast])
+    return { ok: true, pending: true }
+  }, [authUser, isScorekeeper, enqueue, pushToast])
 
-  // Any signed-in member can confirm a recorded result actually happened as
-  // scored. The ranking always includes every match regardless of
-  // confirmation — this only marks the match itself as confirmed.
   const confirmMatch = useCallback(async (matchId) => {
     if (!authUser) return
-    const who = authUser.username
-    dispatch({ type: 'CONFIRM_MATCH', matchId, who })
-    if (!hasSupabase) return
-    try {
-      const sb = await getSupabase()
-      if (!sb) return
-      const { data } = await sb.from('matches').select('confirmed_by').eq('id', matchId).maybeSingle()
-      const current = (data && data.confirmed_by) || []
-      if (!current.includes(who)) {
-        await sb.from('matches').update({ confirmed_by: [...current, who], updated_at: new Date().toISOString() }).eq('id', matchId)
-      }
-    } catch { /* stay local on any backend error */ }
-  }, [authUser])
+    const payload = { match_id: matchId, user_id: authUser.id, username: authUser.username }
+    if (!enqueue('confirmation', payload)) return
+    dispatch({ type: 'CONFIRM_MATCH', matchId, who: authUser.username })
+  }, [authUser, enqueue])
 
-  // When a shared backend is configured, load the live roster for today's
-  // session and subscribe to realtime changes. No-op otherwise.
   useEffect(() => {
-    if (!hasSupabase) return
-    let channel = null
-    let alive = true
+    if (!online || !authUser || busyRef.current || !outbox.some((item) => item.actor === authUser.id && item.status === 'pending')) return
+    const actor = authUser.id
+    busyRef.current = true
     ;(async () => {
       try {
         const sb = await getSupabase()
-        if (!sb || !alive) return
-        const { data } = await sb
-          .from('attendance')
-          .select('player_id, going')
-          .eq('session_date', TODAY_SESSION.date)
-        if (data && alive) {
-          const map = {}
-          for (const row of data) if (row.going) map[row.player_id] = true
-          dispatch({ type: 'REPLACE_GOING', going: map })
+        if (!sb) throw new Error('Sign-in service unavailable')
+        const { data: { user }, error } = await sb.auth.getUser()
+        if (error || user?.id !== actor) throw new Error('Please sign in again before retrying')
+        // Writes are ordered; confirmation cannot overtake its match insert.
+        for (const item of outboxRef.current.filter((entry) => entry.actor === actor && entry.status === 'pending')) {
+          try {
+            let result
+            if (item.kind === 'attendance') result = await sb.functions.invoke('cbc-club-ops', { body: { action: 'book', date: item.payload.session_date, going: item.payload.going } })
+            else if (item.kind === 'match') result = await sb.from('matches').upsert(item.payload)
+            else result = await sb.from('match_confirmations').upsert(item.payload, { onConflict: 'match_id,user_id' })
+            if (result.error || result.data?.error) throw result.error || new Error(result.data.error)
+            updateOutbox((items) => items.filter((entry) => entry.id !== item.id))
+          } catch (error) {
+            updateOutbox((items) => items.map((entry) => entry.id === item.id ? { ...entry, status: 'failed', error: error.message || 'Could not save' } : entry))
+          }
         }
-        channel = sb
-          .channel('attendance-' + TODAY_SESSION.date)
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'attendance', filter: `session_date=eq.${TODAY_SESSION.date}` },
-            (payload) => {
-              const row = payload.new && payload.new.player_id ? payload.new : payload.old
-              if (!row) return
-              const value = payload.eventType !== 'DELETE' && !!(payload.new && payload.new.going)
-              dispatch({ type: 'SET_GOING', id: row.player_id, value })
-            }
-          )
-          .subscribe()
-      } catch { /* stay local */ }
+      } catch {
+        updateOutbox((items) => items.map((entry) => entry.actor === actor ? { ...entry, status: 'failed' } : entry))
+      } finally { busyRef.current = false; setRefreshKey((key) => key + 1) }
     })()
-    return () => {
-      alive = false
-      try { channel && channel.unsubscribe() } catch { /* ignore */ }
-    }
-  }, [])
+  }, [outbox, online, authUser, updateOutbox, refreshKey])
 
-  // Same pattern for the shared match ledger: initial load + realtime upserts.
+  // Load the shared ledger and merge only this member's unsynced changes.
   useEffect(() => {
-    if (!hasSupabase) return
-    let channel = null
+    if (!hasSupabase || !online) return
     let alive = true
-    ;(async () => {
+    let channel
+    let timer
+    let generation = 0
+    const read = async () => {
+      const request = ++generation
       try {
         const sb = await getSupabase()
-        if (!sb || !alive) return
-        const { data } = await sb.from('matches').select('*').order('date', { ascending: false })
-        if (data && alive) {
-          dispatch({ type: 'REPLACE_MATCHES', matches: data.map(rowToMatch) })
+        if (!sb) throw new Error('Unavailable')
+        const [attendance, ledger] = await Promise.all([
+          sb.from('attendance').select('player_id,going').eq('session_date', sessionDate),
+          sb.from('matches').select('*,match_confirmations(username)').order('date', { ascending: false }).order('time', { ascending: false }),
+        ])
+        if (!alive || request !== generation) return
+        if (attendance.error || ledger.error) throw new Error('Could not refresh')
+        const going = Object.fromEntries(attendance.data.filter((row) => row.going).map((row) => [row.player_id, true]))
+        const matches = new Map(ledger.data.map((row) => [row.id, rowToMatch(row)]))
+        for (const item of outboxRef.current.filter((entry) => entry.actor === authUser?.id)) {
+          if (item.kind === 'match' && !(item.status === 'failed' && item.payload.edit_reason)) matches.set(item.payload.id, rowToMatch(item.payload))
+          if (item.kind === 'confirmation') {
+            const match = matches.get(item.payload.match_id)
+            if (match) match.confirmedBy = [...new Set([...match.confirmedBy, item.payload.username])]
+          }
         }
-        channel = sb
-          .channel('matches-all')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'matches' },
-            (payload) => {
-              if (payload.eventType === 'DELETE') return
-              dispatch({ type: 'SET_MATCH', match: rowToMatch(payload.new) })
-            }
-          )
-          .subscribe()
-      } catch { /* stay local */ }
-    })()
-    return () => {
-      alive = false
-      try { channel && channel.unsubscribe() } catch { /* ignore */ }
+        dispatch({ type: 'REPLACE_GOING', going })
+        dispatch({ type: 'REPLACE_MATCHES', matches: [...matches.values()].sort((a,b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`)) })
+        setReadStatus('ready')
+      } catch { if (alive && request === generation) setReadStatus('failed') }
     }
-  }, [])
+    read()
+    getSupabase().then((sb) => {
+      if (!alive || !sb) return
+      const refresh = () => { clearTimeout(timer); timer = setTimeout(read, 150) }
+      channel = sb.channel('club-shared-' + sessionDate)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance', filter: `session_date=eq.${sessionDate}` }, refresh)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, refresh)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'match_confirmations' }, refresh)
+        .subscribe((status) => { if (alive && (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT')) setReadStatus('failed') })
+    })
+    return () => { alive = false; clearTimeout(timer); channel?.unsubscribe() }
+  }, [authUser?.id, online, sessionDate, refreshKey])
 
-  const playerById = useMemo(() => {
-    const map = {}
-    for (const p of state.players) map[p.id] = p
-    return map
-  }, [state.players])
-
+  const retrySync = useCallback(() => {
+    try { updateOutbox((items) => items.map((entry) => entry.actor === authUser?.id ? { ...entry, status: 'pending' } : entry)) }
+    catch { pushToast('Browser storage is unavailable. Please free space and retry.', 'error') }
+    setRefreshKey((key) => key + 1)
+  }, [authUser, updateOutbox, pushToast])
+  const mine = outbox.filter((item) => item.actor === authUser?.id)
+  const syncStatus = !online ? 'offline' : mine.some((item) => item.status === 'failed') ? 'failed' : mine.length ? 'pending' : readStatus
+  const playerById = useMemo(() => Object.fromEntries(state.players.map((player) => [player.id, player])), [state.players])
   const goingIds = useMemo(() => Object.keys(state.going).filter((id) => state.going[id]), [state.going])
-
   const videosByMatch = useMemo(() => {
-    const m = {}
-    for (const v of state.videos) if (v.matchId) (m[v.matchId] ||= []).push(v)
-    return m
+    const groups = {}
+    for (const video of state.videos) if (video.matchId) (groups[video.matchId] ||= []).push(video)
+    return groups
   }, [state.videos])
-
-  const value = useMemo(
-    () => ({
-      ...state, dispatch, rsvp, recordMatch, confirmMatch, isScorekeeper,
-      sharedRoster: hasSupabase, toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch,
-    }),
-    [state, rsvp, recordMatch, confirmMatch, isScorekeeper, toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch]
-  )
-
+  const sharedDispatch = async (action) => {
+    const shared = ['ADD_PLAYER','UPDATE_PLAYER','ADD_VIDEO','DELETE_VIDEO'].includes(action.type)
+    if (!shared) { dispatch(action); return true }
+    try {
+      const sb = await getSupabase(); if (!sb || !authUser) throw new Error('Sign in to save shared club data')
+      let result
+      if (action.type === 'ADD_PLAYER') { const p=action.player; result=await sb.from('club_players').insert({id:p.id,name:p.name,level:p.level,join_date:p.joinDate,gradient:p.gradient,photo:p.photo||null}) }
+      if (action.type === 'UPDATE_PLAYER') result=await sb.from('club_players').update(action.updates).eq('id',action.id)
+      if (action.type === 'ADD_VIDEO') result=await sb.from('club_highlights').insert({id:action.video.id,owner_id:authUser.id,data:action.video})
+      if (action.type === 'DELETE_VIDEO') result=await sb.from('club_highlights').delete().eq('id',action.id)
+      if (result.error) throw result.error
+      dispatch(action); setRefreshKey(key=>key+1); return true
+    } catch(error) { pushToast(error.message || 'Could not save shared data','error'); return false }
+  }
+  useEffect(() => {
+    let alive=true
+    const readShared=async()=>{
+      const sb=await getSupabase(); if(!sb)return
+      const settings=await sb.from('club_sessions').select('*');if(alive&&!settings.error)setSessionSettings(settings.data||[])
+      const roster=await sb.from('club_players').select('*')
+      if(alive&&!roster.error&&roster.data?.length)dispatch({type:'REPLACE_PLAYERS',players:roster.data.map(p=>({...p,joinDate:p.join_date}))})
+      if(authUser){const highlights=await sb.from('club_highlights').select('*');if(alive&&!highlights.error)dispatch({type:'REPLACE_VIDEOS',videos:(highlights.data||[]).map(h=>({...h.data,ownerId:h.owner_id}))})}
+    }
+    readShared().catch(()=>{});const timer=setInterval(()=>readShared().catch(()=>{}),15000)
+    return()=>{alive=false;clearInterval(timer)}
+  },[authUser?.id,refreshKey])
+  const value = { ...state, sessions, currentSession, dispatch: sharedDispatch, rsvp, recordMatch, confirmMatch, isScorekeeper,
+    sharedRoster: hasSupabase && readStatus === 'ready', syncStatus, pendingCount: mine.length, syncError: mine.find(item=>item.error)?.error, discardFailed: () => {updateOutbox(items=>items.filter(item=>item.actor!==authUser?.id||item.status!=='failed'));setRefreshKey(key=>key+1)}, retrySync,
+    toasts, pushToast, dismissToast, playerById, goingIds, videosByMatch }
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }

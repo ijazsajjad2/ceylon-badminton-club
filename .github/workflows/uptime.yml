@@ -1,0 +1,17 @@
+name: Production uptime
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check public site
+        run: curl --fail --silent --show-error --retry 2 --max-time 30 https://ceylonbadminton.com/ -o /dev/null
+      - name: Check club database
+        run: >-
+          curl --fail --silent --show-error --retry 2 --max-time 30
+          -H 'apikey: sb_publishable_GmNoqD_wZvZ4BgPMgp9m1A_vYVQxv2-'
+          'https://bxlfkdroglotfueigczh.supabase.co/rest/v1/club_sessions?select=date&limit=1'
+          -o /dev/null

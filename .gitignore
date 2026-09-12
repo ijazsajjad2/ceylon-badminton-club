@@ -41,3 +41,10 @@ android/.idea/
 android/captures/
 android/.cxx/
 
+
+# Local browser review artifacts
+.playwright-cli/
+output/playwright/
+.env
+.env.*
+!.env.example

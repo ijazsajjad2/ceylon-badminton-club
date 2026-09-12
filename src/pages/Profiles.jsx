@@ -14,7 +14,7 @@ const GRADS = [['#e23b3b', '#8b0e1a'], ['#2f7bf0', '#13357a'], ['#e0303f', '#2f6
 function AddMemberModal({ onClose }) {
   const { dispatch, pushToast, players } = useApp()
   const [form, setForm] = useState({ name: '', level: 'Intermediate', joinDate: '2026-06-14' })
-  const save = () => {
+  const save = async () => {
     if (!form.name.trim()) { pushToast('Enter a name', 'error'); return }
     const player = {
       id: 'p' + Date.now(),
@@ -23,7 +23,7 @@ function AddMemberModal({ onClose }) {
       joinDate: form.joinDate,
       gradient: GRADS[players.length % GRADS.length],
     }
-    dispatch({ type: 'ADD_PLAYER', player })
+    if (!await dispatch({ type: 'ADD_PLAYER', player })) return
     pushToast(`${player.name} joined the club 🏸`, 'success')
     onClose()
   }
@@ -44,7 +44,7 @@ function AddMemberModal({ onClose }) {
 export default function Profiles() {
   const { players, matches } = useApp()
   const { user } = useAuth()
-  const isAdmin = user?.username === 'admin'
+  const isAdmin = user?.role === 'scorekeeper'
   const [query, setQuery] = useState('')
   const [level, setLevel] = useState('All')
   const [openId, setOpenId] = useState(null)
@@ -70,7 +70,8 @@ export default function Profiles() {
         <div className="members-hero-inner">
           <div>
             <span className="eyebrow">Ceylon Badminton Club · Riyadh, KSA</span>
-            <h1 className="display" style={{ fontSize: 34, marginTop: 6, marginBottom: 6 }}>
+            <p className="faint" style={{ fontSize: 12 }}>Profile edits are saved on this device only.</p>
+          <h1 className="display" style={{ fontSize: 34, marginTop: 6, marginBottom: 6 }}>
               Our Club <span className="accent">Members</span> 👥
             </h1>
             <p className="section-sub" style={{ marginBottom: 0 }}>

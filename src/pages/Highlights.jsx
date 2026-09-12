@@ -34,11 +34,11 @@ export default function Highlights() {
 
   const revealRef = useReveal([filtered.length])
 
-  const remove = (e, v) => {
+  const remove = async (e, v) => {
     e.stopPropagation()
     if (!user) { pushToast('Sign in as a member to manage highlights 🔒', 'info'); return openLogin() }
     if (confirm(`Remove "${v.title}" from highlights?`)) {
-      dispatch({ type: 'DELETE_VIDEO', id: v.id })
+      if (!await dispatch({ type: 'DELETE_VIDEO', id: v.id })) return
       pushToast('Highlight removed', 'info')
     }
   }
@@ -47,6 +47,7 @@ export default function Highlights() {
     <div className="page-wrap" ref={revealRef}>
       <div className="row spread wrap">
         <div>
+          <p className="faint" style={{ fontSize: 12 }}>Highlights added here are saved on this device only. Share the video link to send a clip to other members.</p>
           <h1 className="section-title" style={{ fontSize: 34, marginTop: 6 }}>Highlights 🎬</h1>
           <p className="section-sub">Match clips straight from the club's Google Drive — relive the rallies in-app.</p>
         </div>

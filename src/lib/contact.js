@@ -3,8 +3,11 @@
 //    digits only, no +) e.g. '9665XXXXXXXX', or paste a group invite link into
 //    WHATSAPP_GROUP_URL. Until then the buttons open a WhatsApp compose.
 
-export const WHATSAPP_NUMBER = '' // e.g. '9665XXXXXXXX'
-export const WHATSAPP_GROUP_URL = '' // e.g. 'https://chat.whatsapp.com/XXXXXXXX'
+export const WHATSAPP_NUMBER = (import.meta.env.VITE_WHATSAPP_NUMBER || '').replace(/\D/g, '')
+const groupUrl = import.meta.env.VITE_WHATSAPP_GROUP_URL || ''
+export const WHATSAPP_GROUP_URL = /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]+$/.test(groupUrl) ? groupUrl : ''
+export const HAS_CLUB_CONTACT = !!(WHATSAPP_NUMBER || WHATSAPP_GROUP_URL)
+export const SESSION_FEE = import.meta.env.VITE_SESSION_FEE || ''
 export const INSTAGRAM_URL = '' // e.g. 'https://instagram.com/ceylonbadmintonclub'
 
 // Green Badminton Club, Riyadh (from the club's Google Maps pin)
@@ -23,5 +26,5 @@ export function whatsappJoin(message = JOIN_MESSAGE) {
   if (WHATSAPP_GROUP_URL) url = WHATSAPP_GROUP_URL
   else if (WHATSAPP_NUMBER) url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
   else url = `https://wa.me/?text=${encodeURIComponent(message)}`
-  window.open(url, '_blank', 'noopener')
+  window.open(url, '_blank', 'noopener,noreferrer')
 }

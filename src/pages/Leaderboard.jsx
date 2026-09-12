@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import {getSupabase} from '../lib/supabase.js'
 import Avatar from '../components/Avatar.jsx'
 import PlayerSheet from '../components/PlayerSheet.jsx'
 import PointsBarChart from '../components/charts/PointsBarChart.tsx'
@@ -20,20 +21,23 @@ function RankDelta({ delta }) {
 }
 
 export default function Leaderboard() {
-  const { matches, sessions, playerById } = useApp()
+  const { matches, sessions, playerById, players } = useApp()
   const { user } = useAuth()
+  const [seasons,setSeasons]=useState([])
+  const [seasonId,setSeasonId]=useState('')
+  useEffect(()=>{getSupabase().then(async sb=>{if(!sb)return;const r=await sb.from('club_seasons').select('*').order('start_date',{ascending:false});if(!r.error){setSeasons(r.data);setSeasonId(r.data[0]?.id||'')}}).catch(()=>{})},[])
   const [period, setPeriod] = useState('month')
   const [query, setQuery] = useState('')
   const [openId, setOpenId] = useState(null)
 
-  const periodMatches = useMemo(() => filterByPeriod(matches, period), [matches, period])
-  const stats = useMemo(() => computeStats(periodMatches), [periodMatches])
+  const periodMatches = useMemo(() => {const season=seasons.find(s=>s.id===seasonId);return period==='season'&&season?matches.filter(m=>m.date>=season.start_date&&m.date<=season.end_date):filterByPeriod(matches,period)}, [matches, period, seasons, seasonId])
+  const stats = useMemo(() => computeStats(periodMatches,players), [periodMatches,players])
 
   // Rank change: compare vs ranking BEFORE today's session.
   const prevRank = useMemo(() => {
     const before = periodMatches.filter((m) => m.sessionId !== TODAY_SESSION.id)
     const map = {}
-    computeStats(before).forEach((p) => (map[p.id] = p.rank))
+    computeStats(before,players).forEach((p) => (map[p.id] = p.rank))
     return map
   }, [periodMatches])
 
@@ -48,7 +52,7 @@ export default function Leaderboard() {
 
   // Season awards — computed live from real data, locked until it exists.
   const awards = useMemo(() => {
-    const all = computeStats(matches).filter((p) => p.played > 0)
+    const all = computeStats(periodMatches,players).filter((p) => p.played > 0)
     const golden = [...all].sort((x, y) => y.points - x.points)[0] || null
     const attend = {}
     sessions.forEach((s) => (s.attendees || []).forEach((id) => { attend[id] = (attend[id] || 0) + 1 }))
@@ -80,6 +84,7 @@ export default function Leaderboard() {
         <input className="input" style={{ maxWidth: 220 }} placeholder="🔍 Search player…" value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
 
+      {period==='season'&&<label>Season<select className="select" value={seasonId} onChange={e=>setSeasonId(e.target.value)}>{seasons.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>}
       {/* Most varied partnerships */}
       {mostVaried && mostVaried.partnerCount > 0 && (
         <div className="glass card-pad" style={{ marginTop: 16, borderColor: 'rgba(226,59,59,0.3)' }}>

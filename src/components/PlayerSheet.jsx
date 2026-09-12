@@ -12,7 +12,7 @@ import MonthlyWinsChart from './charts/MonthlyWinsChart.tsx'
 export default function PlayerSheet({ playerId, onClose }) {
   const { matches, playerById, dispatch } = useApp()
   const { user } = useAuth()
-  const isAdmin = user?.username === 'admin'
+  const isAdmin = user?.role === 'scorekeeper'
   const sheetRef = useRef(null)
   useFocusTrap(sheetRef)
   const stats = useMemo(() => computeStats(matches), [matches])

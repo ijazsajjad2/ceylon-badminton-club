@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import {arabic} from '../i18n/arabic.js'
 import BrandLockup from './BrandLockup.jsx'
 import NavIcon from './Icons.jsx'
 
@@ -8,7 +9,8 @@ import NavIcon from './Icons.jsx'
 // links with animated underline + active section; animated hamburger + smooth
 // slide-down panel on mobile.
 export default function PublicNav({ nav, active, onLogin }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const tr=text=>i18n.language==='ar' ? arabic[text]||text : text
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const reduce = useReducedMotion()
@@ -24,8 +26,10 @@ export default function PublicNav({ nav, active, onLogin }) {
   useEffect(() => {
     if (!open) return
     const onResize = () => window.innerWidth > 680 && setOpen(false)
+    const onKey = (event) => { if (event.key === 'Escape') { setOpen(false); document.querySelector('.nav-burger')?.focus() } }
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    window.addEventListener('keydown', onKey)
+    return () => { window.removeEventListener('resize', onResize); window.removeEventListener('keydown', onKey) }
   }, [open])
 
   return (
@@ -37,17 +41,19 @@ export default function PublicNav({ nav, active, onLogin }) {
       <nav className="public-links" aria-label="Sections">
         {nav.map(([id, label]) => (
           <a key={id} href={`#${id}`} className={active === id ? 'is-active' : ''} aria-current={active === id ? 'true' : undefined}>
-            {label}
+            {tr(label)}
           </a>
         ))}
       </nav>
 
+      <button className="btn btn-ghost btn-sm" aria-label="Change language" onClick={()=>i18n.changeLanguage(i18n.language==='ar'?'en':'ar')}>{i18n.language==='ar'?'English':'العربية'}</button>
       <button className="btn btn-gold btn-sm public-login" onClick={onLogin}><NavIcon name="key" size={14} /> {t('nav.memberLogin')}</button>
 
       <button
         className={`nav-burger ${open ? 'open' : ''}`}
         aria-label={open ? 'Close menu' : 'Open menu'}
         aria-expanded={open}
+        aria-controls="mobile-navigation"
         onClick={() => setOpen((v) => !v)}
       >
         <span /><span /><span />
@@ -57,6 +63,7 @@ export default function PublicNav({ nav, active, onLogin }) {
         {open && (
           <motion.nav
             className="mobile-menu"
+            id="mobile-navigation"
             aria-label="Sections"
             initial={reduce ? { opacity: 0 } : { opacity: 0, y: -14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -73,7 +80,7 @@ export default function PublicNav({ nav, active, onLogin }) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05 + i * 0.045, duration: 0.25 }}
               >
-                {label}
+                {tr(label)}
               </motion.a>
             ))}
             <button className="btn btn-gold mobile-menu-login" onClick={() => { setOpen(false); onLogin() }}>

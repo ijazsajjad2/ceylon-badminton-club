@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import RecordMatchModal from './RecordMatchModal.jsx'
+import {getSupabase} from '../lib/supabase.js'
 import Avatar from './Avatar.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -62,6 +64,9 @@ function MatchConfirm({ match }) {
 
 export default function MatchCard({ match, expandable = true, onPlayClip }) {
   const [open, setOpen] = useState(false)
+  const [audit,setAudit]=useState(null)
+  const [editing,setEditing]=useState(false)
+  const {isScorekeeper}=useAuth()
   const [activeClip, setActiveClip] = useState(null)
   const { playerById, videosByMatch, pushToast } = useApp()
   const clips = videosByMatch?.[match.id] || []
@@ -79,6 +84,10 @@ export default function MatchCard({ match, expandable = true, onPlayClip }) {
       onKeyDown={(e) => expandable && (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setOpen((o) => !o))}
       aria-expanded={expandable ? open : undefined}
     >
+      {!match.live&&<button className="btn btn-sm btn-ghost" onClick={async e=>{e.stopPropagation();if(audit){setAudit(null);return}const sb=await getSupabase();const r=await sb.from('club_match_audit').select('*').eq('match_id',match.id).order('created_at',{ascending:false});if(r.error)pushToast('Could not load correction history','error');else setAudit(r.data)}}>Correction history</button>}
+      {audit&&<div onClick={e=>e.stopPropagation()}>{audit.length?audit.map(a=><p key={a.id}>{new Date(a.created_at).toLocaleString()} · {a.reason} · {a.old_result.sets.map(s=>s.join('–')).join(' / ')} → {a.new_result.sets.map(s=>s.join('–')).join(' / ')}</p>):<p>No corrections recorded.</p>}</div>}
+      {isScorekeeper && <button className="btn btn-sm btn-ghost" onClick={e=>{e.stopPropagation();setEditing(true)}}>Correct result · v{match.revision||1}</button>}
+      {editing && <div onClick={e=>e.stopPropagation()} onKeyDown={e=>e.stopPropagation()}><RecordMatchModal prefill={match} onClose={()=>setEditing(false)}/></div>}
       <div className={isDoubles ? 'match-doubles' : 'match-singles'}>
         <Team ids={match.teamA} side="left" isWinner={match.winner === 'A'} />
 

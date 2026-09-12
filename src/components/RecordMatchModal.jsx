@@ -1,204 +1,71 @@
-import { useMemo, useState } from 'react'
+import { useRef, useState } from 'react'
 import Modal from './Modal.jsx'
 import { useApp } from '../context/AppContext.jsx'
-import { validateSet } from '../lib/format.js'
-import { TODAY } from '../data/seed.js'
-import { fireWinConfetti } from '../lib/confetti.ts'
-import { playWin } from '../lib/sfx.js'
-
-function ToggleSwitch({ value, onChange }) {
-  const isDoubles = value === 'doubles'
-  return (
-    <div className="toggle-switch" role="tablist" aria-label="Match type">
-      <span className="toggle-knob" style={{ left: isDoubles ? 4 : '50%', width: 'calc(50% - 4px)' }} />
-      <button role="tab" aria-selected={isDoubles} className={isDoubles ? 'on' : ''} onClick={() => onChange('doubles')}>DOUBLES</button>
-      <button role="tab" aria-selected={!isDoubles} className={!isDoubles ? 'on' : ''} onClick={() => onChange('singles')}>SINGLES</button>
-    </div>
-  )
-}
+import { validateMatchSets } from '../lib/matchValidation.js'
+import { riyadhDate } from '../lib/sessions.js'
 
 export default function RecordMatchModal({ onClose, prefill }) {
-  const { players, recordMatch, pushToast } = useApp()
+  const { players, recordMatch, pushToast, sessions, currentSession } = useApp()
+  const today = riyadhDate()
+  const activeSession = sessions.filter((session) => session.date <= today).at(-1) || currentSession
   const [type, setType] = useState(prefill?.type || 'doubles')
-  const [sel, setSel] = useState(
-    prefill?.players || { a1: '', a2: '', b1: '', b2: '' }
-  )
-  const [sets, setSets] = useState([
-    { a: '', b: '' },
-    { a: '', b: '' },
-    { a: '', b: '' },
-  ])
-  const [date, setDate] = useState(prefill?.date || TODAY)
-  const [time, setTime] = useState(prefill?.time || '17:00')
+  const [format, setFormat] = useState(prefill?.sets?.length > 1 ? 'best3' : 'single')
+  const [editReason,setEditReason]=useState('')
+  const [sel, setSel] = useState(prefill?.players || { a1: prefill?.teamA?.[0] || '', a2: prefill?.teamA?.[1] || '', b1: prefill?.teamB?.[0] || '', b2: prefill?.teamB?.[1] || '' })
+  const [sets, setSets] = useState([0,1,2].map(i=>({a:prefill?.sets?.[i]?.[0] ?? '',b:prefill?.sets?.[i]?.[1] ?? ''})))
+  const [history, setHistory] = useState([])
+  const [date, setDate] = useState(prefill?.date || activeSession.date)
+  const [time, setTime] = useState(prefill?.time || activeSession.time.split('–')[0])
   const [court, setCourt] = useState(prefill?.court || 1)
-  const [showErr, setShowErr] = useState(false)
-
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const savingRef = useRef(false)
+  const matchId = useRef(prefill?.id || crypto.randomUUID())
   const selected = type === 'doubles' ? [sel.a1, sel.a2, sel.b1, sel.b2] : [sel.a1, sel.b1]
-  const chosen = selected.filter(Boolean)
-  const allDifferent = new Set(chosen).size === chosen.length
-  const playersComplete = type === 'doubles' ? chosen.length === 4 : chosen.length === 2
-
-  // Validate sets and compute winner
-  const { validSets, setsA, setsB, setError } = useMemo(() => {
-    let sA = 0, sB = 0
-    const valid = []
-    let err = null
-    for (let i = 0; i < sets.length; i++) {
-      const s = sets[i]
-      const empty = s.a === '' && s.b === ''
-      if (empty) {
-        if (i === 2) continue // 3rd set optional
-        if (i < 2) { err = err || `Set ${i + 1} is required`; continue }
-      }
-      const v = validateSet(s.a, s.b)
-      if (!v.valid) {
-        if (!v.empty) err = err || `Set ${i + 1}: ${v.reason || 'invalid score'}`
-        continue
-      }
-      valid.push([Number(s.a), Number(s.b)])
-      if (Number(s.a) > Number(s.b)) sA++
-      else sB++
-    }
-    return { validSets: valid, setsA: sA, setsB: sB, setError: err }
-  }, [sets])
-
-  const winner = setsA > setsB ? 'A' : setsB > setsA ? 'B' : null
-  const decided = (setsA === 2 || setsB === 2) && validSets.length >= 2
-  const canSave = playersComplete && allDifferent && decided && !setError && winner
-
-  const dropdown = (key, label, exclude) => (
-    <div className="field">
-      <label>{label}</label>
-      <select
-        className="select"
-        value={sel[key]}
-        onChange={(e) => setSel((s) => ({ ...s, [key]: e.target.value }))}
-      >
-        <option value="">— select —</option>
-        {players.map((p) => (
-          <option key={p.id} value={p.id} disabled={exclude.includes(p.id) && sel[key] !== p.id}>
-            {p.name} · {p.level}
-          </option>
-        ))}
-      </select>
-    </div>
-  )
-
-  const usedExcept = (selfKey) => Object.entries(sel).filter(([k]) => k !== selfKey).map(([, v]) => v).filter(Boolean)
-
-  const save = async () => {
-    setShowErr(true)
-    if (!canSave) {
-      pushToast(setError || 'Please complete all required fields', 'error')
-      return
-    }
-    const match = {
-      id: 'm' + Date.now(),
-      sessionId: null,
-      date,
-      time,
-      court: Number(court),
-      type,
-      teamA: type === 'doubles' ? [sel.a1, sel.a2] : [sel.a1],
-      teamB: type === 'doubles' ? [sel.b1, sel.b2] : [sel.b1],
-      sets: validSets,
-      winner,
-      live: false,
-    }
-    const res = await recordMatch(match)
-    if (!res.ok) return // recordMatch already surfaced the reason via a toast
-    const aNames = match.teamA.map((id) => players.find((p) => p.id === id)?.name).join(' & ')
-    const bNames = match.teamB.map((id) => players.find((p) => p.id === id)?.name).join(' & ')
-    pushToast(`Saved: ${winner === 'A' ? aNames : bNames} won ${Math.max(setsA, setsB)}–${Math.min(setsA, setsB)} 🏸`, 'success')
-    fireWinConfetti()
-    playWin()
-    onClose()
+  const validation = validateMatchSets(sets, format)
+  const updateScore = (index, team, value) => {
+    setHistory((previous) => [...previous.slice(-49), sets.map((set) => ({ ...set }))])
+    setSets((previous) => previous.map((set, i) => i === index ? { ...set, [team]: value } : set))
   }
-
-  return (
-    <Modal
-      title="Record Match"
-      onClose={onClose}
-      footer={
-        <>
-          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-gold" onClick={save} disabled={false}>Save Match</button>
-        </>
-      }
-    >
-      <div className="field row spread">
-        <ToggleSwitch value={type} onChange={(t) => { setType(t); }} />
-        {winner && decided && (
-          <span className="badge badge-doubles">Winner: Team {winner} ({setsA}–{setsB})</span>
-        )}
-      </div>
-
-      {type === 'doubles' ? (
-        <>
-          <div className="eyebrow" style={{ marginTop: 6 }}>Team A</div>
-          <div className="field-row">
-            {dropdown('a1', 'Player 1', usedExcept('a1'))}
-            {dropdown('a2', 'Player 2', usedExcept('a2'))}
-          </div>
-          <div className="eyebrow">Team B</div>
-          <div className="field-row">
-            {dropdown('b1', 'Player 3', usedExcept('b1'))}
-            {dropdown('b2', 'Player 4', usedExcept('b2'))}
-          </div>
-        </>
-      ) : (
-        <div className="field-row">
-          {dropdown('a1', 'Player A', usedExcept('a1'))}
-          {dropdown('b1', 'Player B', usedExcept('b1'))}
-        </div>
-      )}
-      {showErr && !allDifferent && <div className="err-text">All players must be different.</div>}
-
-      <div className="eyebrow" style={{ marginTop: 14 }}>Set Scores · first to 21, win by 2, max 30</div>
-      {sets.map((s, i) => {
-        const v = validateSet(s.a, s.b)
-        const showSetErr = showErr && !v.valid && !v.empty
-        return (
-          <div key={i}>
-            <div className="score-row">
-              <input
-                className={`input mono ${showSetErr ? 'err' : ''}`}
-                inputMode="numeric" placeholder="A" value={s.a}
-                onChange={(e) => setSets((p) => p.map((x, j) => (j === i ? { ...x, a: e.target.value.replace(/\D/g, '').slice(0, 2) } : x)))}
-                aria-label={`Set ${i + 1} Team A score`}
-              />
-              <span className="faint mono">SET {i + 1}{i === 2 ? ' (opt)' : ''}</span>
-              <input
-                className={`input mono ${showSetErr ? 'err' : ''}`}
-                inputMode="numeric" placeholder="B" value={s.b}
-                onChange={(e) => setSets((p) => p.map((x, j) => (j === i ? { ...x, b: e.target.value.replace(/\D/g, '').slice(0, 2) } : x)))}
-                aria-label={`Set ${i + 1} Team B score`}
-              />
-              <span style={{ width: 18 }}>{s.a !== '' && s.b !== '' && v.valid ? (Number(s.a) > Number(s.b) ? '🅐' : '🅑') : ''}</span>
-            </div>
-            {showSetErr && <div className="err-text">{v.reason}</div>}
-          </div>
-        )
-      })}
-      {showErr && setError && <div className="err-text">{setError}</div>}
-
-      <div className="field-row" style={{ marginTop: 12 }}>
-        <div className="field">
-          <label>Date</label>
-          <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        </div>
-        <div className="field">
-          <label>Time</label>
-          <input className="input" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-        </div>
-      </div>
-      <div className="field">
-        <label>Court</label>
-        <select className="select" value={court} onChange={(e) => setCourt(e.target.value)}>
-          <option value={1}>Court 1</option>
-          <option value={2}>Court 2</option>
-        </select>
-      </div>
-    </Modal>
-  )
+  const undo = () => {
+    if (!history.length) return
+    setSets(history[history.length - 1])
+    setHistory((previous) => previous.slice(0, -1))
+  }
+  const names = (team) => (team === 'A' ? selected.slice(0, type === 'doubles' ? 2 : 1) : selected.slice(type === 'doubles' ? 2 : 1)).map((id) => players.find((p) => p.id === id)?.name.split(' ')[0]).filter(Boolean).join(' & ')
+  const save = async () => {
+    if (savingRef.current) return
+    if (selected.some((id) => !id) || new Set(selected).size !== selected.length) { setError('Choose a different player for each position.'); return }
+    if (!validation.valid) { setError(validation.error); return }
+    if (!date || !time || date > today) { setError('Recorded matches need a date today or earlier and a start time.'); return }
+    if(prefill?.id && editReason.trim().length<4){setError('Explain the correction in at least four characters.');return}
+    savingRef.current = true; setSaving(true); setError('')
+    try {
+      const result = await recordMatch({ id: matchId.current, sessionId: sessions.find((s) => s.date === date)?.id || null,
+        ...(prefill?.id ? {editReason:editReason.trim(),revision:prefill.revision||1}:{}), date, time, court: Number(court), type, teamA: type === 'doubles' ? [sel.a1, sel.a2] : [sel.a1],
+        teamB: type === 'doubles' ? [sel.b1, sel.b2] : [sel.b1], sets: validation.sets, winner: validation.winner, live: false })
+      if (!result.ok) { setError('The result was not saved. Please try again.'); return }
+      pushToast('Result saved on this device. Check the sync status for confirmation.', 'info')
+      onClose()
+    } catch { setError('Could not save. Your scores are still here; please try again.') }
+    finally { savingRef.current = false; setSaving(false) }
+  }
+  const selectPlayer = (key, label) => <div className="field" key={key}><label htmlFor={`player-${key}`}>{label}</label><select id={`player-${key}`} className="select" value={sel[key]} onChange={(e) => setSel((previous) => ({ ...previous, [key]: e.target.value }))}><option value="">Select player</option>{players.map((player) => <option key={player.id} value={player.id} disabled={selected.includes(player.id) && sel[key] !== player.id}>{player.name}</option>)}</select></div>
+  return <Modal title={prefill?.id ? "Correct result" : "Record a result"} onClose={saving ? () => {} : onClose} footer={<><button className="btn btn-ghost" disabled={saving} onClick={onClose}>Cancel</button><button className="btn btn-gold" disabled={saving} onClick={save}>{saving ? 'Saving…' : 'Save result'}</button></>}>
+    <fieldset disabled={saving} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+      <div className="field-row"><div className="field"><label htmlFor="match-type">Players</label><select id="match-type" className="select" value={type} onChange={(e) => setType(e.target.value)}><option value="doubles">Doubles</option><option value="singles">Singles</option></select></div><div className="field"><label htmlFor="match-format">Format</label><select id="match-format" className="select" value={format} onChange={(e) => { setFormat(e.target.value); setError('') }}><option value="single">One set · club game</option><option value="best3">Best of three</option></select></div></div>
+      <p className="eyebrow">Team A</p><div className="field-row">{selectPlayer('a1', 'Team A · player 1')}{type === 'doubles' && selectPlayer('a2', 'Team A · player 2')}</div>
+      <p className="eyebrow">Team B</p><div className="field-row">{selectPlayer('b1', 'Team B · player 1')}{type === 'doubles' && selectPlayer('b2', 'Team B · player 2')}</div>
+      <p className="join-explainer">First to 21, win by two, capped at 30. Type the final score or use the large + / − buttons.</p>
+      {sets.slice(0, format === 'single' ? 1 : 3).map((set, i) => <div className="score-entry" key={i}>
+        <div className="score-entry-heading"><b>Set {i + 1}</b>{i === 2 && <small className="faint">Only if tied 1–1</small>}</div>
+        <div className="score-entry-teams">{['a', 'b'].map((team) => <div className="score-entry-team" key={team}><span>Team {team.toUpperCase()}</span><div className="score-stepper"><button type="button" aria-label={`Subtract Team ${team.toUpperCase()} set ${i + 1}`} disabled={!Number(set[team])} onClick={() => updateScore(i, team, String(Math.max(0, Number(set[team] || 0) - 1)))}>−</button><input className="input mono" aria-label={`Set ${i + 1} Team ${team.toUpperCase()} score`} inputMode="numeric" value={set[team]} placeholder="0" onChange={(e) => updateScore(i, team, e.target.value.replace(/\D/g, '').slice(0, 2))} /><button type="button" aria-label={`Add Team ${team.toUpperCase()} set ${i + 1}`} disabled={Number(set[team]) >= 30} onClick={() => updateScore(i, team, String(Math.min(30, Number(set[team] || 0) + 1)))}>+</button></div></div>)}</div>
+      </div>)}
+      <div className="score-actions"><button type="button" className="btn btn-ghost btn-sm" onClick={undo} disabled={!history.length}>Undo score change</button></div>
+      {validation.valid && <div className="score-review" role="status"><b>{names(validation.winner) || `Team ${validation.winner}`} wins</b><br />{validation.sets.map((set) => set.join('–')).join(' / ')} · Court {court}</div>}
+      <details><summary style={{ padding: '14px 0', cursor: 'pointer' }}>Session details · {date} · Court {court}</summary><div className="field-row"><div className="field"><label htmlFor="match-date">Date</label><input id="match-date" className="input" type="date" max={today} value={date} onChange={(e) => setDate(e.target.value)} /></div><div className="field"><label htmlFor="match-time">Time (Riyadh)</label><input id="match-time" className="input" type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div></div><div className="field"><label htmlFor="match-court">Court</label><select id="match-court" className="select" value={court} onChange={(e) => setCourt(e.target.value)}><option value="1">Court 1</option><option value="2">Court 2</option></select></div></details>
+      {prefill?.id && <label className="field">Reason for correction<input className="input" value={editReason} onChange={e=>setEditReason(e.target.value)} minLength={4} maxLength={300}/><small>Changes are audited and previous confirmations are cleared.</small></label>}
+      {error && <p className="login-err" role="alert">{error}</p>}
+    </fieldset>
+  </Modal>
 }

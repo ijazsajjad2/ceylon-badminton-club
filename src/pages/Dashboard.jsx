@@ -8,7 +8,6 @@ import RecordMatchModal from '../components/RecordMatchModal.jsx'
 import { ShuttleDeco } from '../components/Shuttle.jsx'
 import MonthlyActivityChart from '../components/charts/MonthlyActivityChart.tsx'
 import { computeStats, setsWon } from '../lib/stats.js'
-import { TODAY, TODAY_SESSION, TODAY_SESSION_START } from '../data/seed.js'
 import { fmtFullDate } from '../lib/format.js'
 import useCountdown from '../hooks/useCountdown.js'
 
@@ -28,10 +27,11 @@ function resultLine(match, playerById) {
 const RANK_MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 export default function Dashboard({ navigate }) {
-  const { matches, players, sessions, playerById, goingIds, pushToast } = useApp()
+  const { matches, players, sessions, playerById, goingIds, pushToast, currentSession: TODAY_SESSION } = useApp()
   const { user, openLogin, isScorekeeper } = useAuth()
   const [showRecord, setShowRecord] = useState(false)
-  const cd = useCountdown(TODAY_SESSION.date, TODAY_SESSION_START)
+  const TODAY = TODAY_SESSION.date
+  const cd = useCountdown(TODAY_SESSION.date, TODAY_SESSION.time.split('–')[0])
 
   const tryRecord = () => {
     if (!user) { pushToast('Sign in as a member to record a score 🔒', 'info'); return openLogin() }

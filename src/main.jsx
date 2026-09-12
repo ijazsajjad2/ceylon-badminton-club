@@ -12,11 +12,13 @@ import '@fontsource/inter/800.css'
 import '@fontsource/jetbrains-mono/500.css'
 import '@fontsource/jetbrains-mono/700.css'
 import App from './App.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AppProvider } from './context/AppContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { initAnalytics } from './lib/analytics.js'
 import './i18n/config.js'
 import './styles/global.css'
+import './styles/improvements.css'
 
 initAnalytics()
 
@@ -24,7 +26,7 @@ createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
       <AppProvider>
-        <App />
+        <ErrorBoundary><App /></ErrorBoundary>
       </AppProvider>
     </AuthProvider>
   </React.StrictMode>

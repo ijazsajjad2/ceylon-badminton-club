@@ -8,8 +8,8 @@
 // The client library is dynamically imported, so it's only fetched when a
 // project is actually configured — no bundle cost otherwise.
 
-export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '' // e.g. 'https://xxxx.supabase.co'
-export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '' // public anon key
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://bxlfkdroglotfueigczh.supabase.co' // e.g. 'https://xxxx.supabase.co'
+export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_GmNoqD_wZvZ4BgPMgp9m1A_vYVQxv2-'
 
 export const hasSupabase = !!(SUPABASE_URL && SUPABASE_ANON_KEY)
 
@@ -22,11 +22,11 @@ export function getSupabase() {
     clientPromise = import('@supabase/supabase-js')
       .then(({ createClient }) =>
         createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-          auth: { persistSession: false },
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
           realtime: { params: { eventsPerSecond: 2 } },
         })
       )
-      .catch(() => null)
+      .catch(() => { clientPromise = null; return null })
   }
   return clientPromise
 }

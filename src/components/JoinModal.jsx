@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Modal from './Modal.jsx'
-import { whatsappJoin } from '../lib/contact.js'
+import { whatsappJoin, HAS_CLUB_CONTACT } from '../lib/contact.js'
 import { track } from '../lib/analytics.js'
-import { firePuffConfetti } from '../lib/confetti.ts'
 
 // Stable keys (language-independent) for state/analytics — display labels are
 // looked up via t() so the <select> options and the composed WhatsApp message
@@ -32,8 +31,7 @@ export default function JoinModal({ onClose }) {
 
   const send = (e) => {
     e.preventDefault()
-    track('Join WhatsApp sent', { level, day })
-    firePuffConfetti()
+    track('Join WhatsApp opened', { level, day })
     whatsappJoin(message)
     onClose()
   }
@@ -41,6 +39,8 @@ export default function JoinModal({ onClose }) {
   return (
     <Modal title={t('joinModal.title')} onClose={onClose}>
       <form className="join-form" onSubmit={send}>
+        <p className="join-explainer">Choose your day and introduce yourself. Opening WhatsApp does not book a place; wait for the club to confirm.</p>
+        {!HAS_CLUB_CONTACT && <p className="join-contact-note" role="status">Direct club messaging is not available yet. You can share this message with a club organiser you already know on WhatsApp.</p>}
         <label className="join-field">
           <span>{t('joinModal.nameLabel')} <span className="join-opt">{t('joinModal.nameOptional')}</span></span>
           <input
@@ -76,7 +76,7 @@ export default function JoinModal({ onClose }) {
         </div>
 
         <div className="row wrap" style={{ gap: 10, marginTop: 4 }}>
-          <button type="submit" className="btn btn-wa">📲 {t('joinModal.send')}</button>
+          <button type="submit" className="btn btn-wa">{HAS_CLUB_CONTACT ? 'Continue to WhatsApp ↗' : 'Share message on WhatsApp ↗'}</button>
           <button type="button" className="btn btn-ghost" onClick={onClose}>{t('joinModal.cancel')}</button>
         </div>
       </form>

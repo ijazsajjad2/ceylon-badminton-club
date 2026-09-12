@@ -46,9 +46,9 @@ export function setsWon(match) {
   return { a, b }
 }
 
-export function computeStats(matches) {
+export function computeStats(matches, players = PLAYERS) {
   const table = {}
-  for (const p of PLAYERS) {
+  for (const p of players) {
     table[p.id] = {
       id: p.id,
       name: p.name,

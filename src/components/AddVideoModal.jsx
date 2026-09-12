@@ -35,7 +35,7 @@ export default function AddVideoModal({ onClose, presetMatchId = null }) {
 
   const canSave = parsed.ok && title.trim() && uploaderId
 
-  const save = () => {
+  const save = async () => {
     setShowErr(true)
     if (!parsed.ok) {
       pushToast(parsed.error, 'error')
@@ -57,7 +57,7 @@ export default function AddVideoModal({ onClose, presetMatchId = null }) {
       sessionId: m ? m.sessionId : null,
       createdAt: Date.now(),
     }
-    dispatch({ type: 'ADD_VIDEO', video })
+    if (!await dispatch({ type: 'ADD_VIDEO', video })) return
     pushToast('Highlight added 🎬', 'success')
     onClose()
   }
