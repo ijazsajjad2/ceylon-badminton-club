@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PublicNav from '../components/PublicNav.jsx';
 import BrandLockup from '../components/BrandLockup.jsx';
@@ -17,7 +17,8 @@ import ClubGallery from '../components/ClubGallery.jsx';
 import VisitChecklist from '../components/VisitChecklist.jsx';
 import InstallClubApp from '../components/InstallClubApp.jsx';
 import '../styles/club-experience.css';
-const NAV = [['sessions', 'Sessions'], ['first-visit', 'First visit'], ['gallery', 'Gallery'], ['visit', 'Find us'], ['faq', 'FAQ']];
+const ResultsHub = lazy(() => import('../components/ResultsHub.jsx'));
+const NAV = [['sessions', 'Sessions'], ['results', 'Results'], ['first-visit', 'First visit'], ['gallery', 'Gallery'], ['visit', 'Find us'], ['faq', 'FAQ']];
 const NAV_IDS = NAV.map(([id]) => id);
 export default function PublicSite() {
     const { t } = useTranslation();
@@ -67,6 +68,7 @@ export default function PublicSite() {
           <div className="club-section-heading"><div><p className="eyebrow">{"MAKE IT A WEEKLY THING"}</p><h2>{"Two sessions."}<br /><span>{"One good routine."}</span></h2></div><p>{"Random partners, friendly rallies, and room to improve. All times are local to Riyadh."}</p></div>
           <SessionBrowser sessions={sessions} onJoin={openJoin}/>
         </section>
+        <section id="results" className="club-section"><div className="club-section-heading"><div><p className="eyebrow">THE GAMES. THE SCORES. THE STANDINGS.</p><h2>Every rally.<br/><span>Part of our story.</span></h2></div><p>Look back at previous games, see who led each playing day, and follow the full club leaderboard.</p></div><Suspense fallback={<p role="status">Loading the club scoreboard…</p>}><ResultsHub onSignIn={openLogin}/></Suspense></section>
         <section id="first-visit" className="club-section first-visit-section">
           <div className="club-section-heading"><div><p className="eyebrow">{"NEW HERE? YOU BELONG."}</p><h2>{"Your first session,"}<br /><span>{"made simple."}</span></h2></div><p>{"You don’t need a partner or tournament experience. Come for a game and get to know the club."}</p></div>
           <div className="first-visit-grid">

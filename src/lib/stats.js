@@ -36,6 +36,15 @@ function closestMargin(match) {
   return m
 }
 
+// One source of truth for the scorecard breakdown and every leaderboard.
+export function matchPoints(match, side) {
+  if (match.live || !['A', 'B'].includes(match.winner)) return { win: 0, scored: 0, closeLoss: 0, total: 0 }
+  const win = match.winner === side ? 10 : 0
+  const scored = pointsScoredBy(match, side) * 0.5
+  const closeLoss = !win && closestMargin(match) <= 3 ? 2 : 0
+  return { win, scored, closeLoss, total: win + scored + closeLoss }
+}
+
 export function setsWon(match) {
   let a = 0,
     b = 0
@@ -61,6 +70,10 @@ export function computeStats(matches, players = PLAYERS) {
       lost: 0,
       points: 0,
       pointsScored: 0,
+      pointsAgainst: 0,
+      winPoints: 0,
+      scorePoints: 0,
+      closeLossPoints: 0,
       partners: {}, // partnerId -> { w, l }
       rivals: {}, // oppId -> { w, l, count } (from this player's perspective)
       results: [], // chronological 'W'/'L'
@@ -70,7 +83,7 @@ export function computeStats(matches, players = PLAYERS) {
 
   // chronological (oldest first) for streak/form
   const ordered = [...matches]
-    .filter((m) => !m.live && m.winner)
+    .filter((m) => !m.live && ['A', 'B'].includes(m.winner))
     .sort((a, b) => (a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date)))
 
   for (const m of ordered) {
@@ -78,6 +91,7 @@ export function computeStats(matches, players = PLAYERS) {
       const team = teamOf(m, side)
       const isWin = m.winner === side
       const scored = pointsScoredBy(m, side)
+      const awarded = matchPoints(m, side)
       const month = m.date.slice(0, 7)
       for (const pid of team) {
         const s = table[pid]
@@ -86,16 +100,18 @@ export function computeStats(matches, players = PLAYERS) {
         if (m.type === 'doubles') s.doubles++
         else s.singles++
         s.pointsScored += scored
-        s.points += scored * 0.5
+        s.pointsAgainst += pointsScoredBy(m, side === 'A' ? 'B' : 'A')
+        s.points += awarded.total
+        s.winPoints += awarded.win
+        s.scorePoints += awarded.scored
+        s.closeLossPoints += awarded.closeLoss
         if (isWin) {
           s.won++
-          s.points += 10
           s.results.push('W')
           s.monthly[month] = (s.monthly[month] || 0) + 1
         } else {
           s.lost++
           s.results.push('L')
-          if (closestMargin(m) <= 3) s.points += 2 // close loss bonus
         }
         // partners (doubles only)
         if (m.type === 'doubles') {
@@ -120,6 +136,7 @@ export function computeStats(matches, players = PLAYERS) {
 
   const rows = Object.values(table).map((s) => {
     s.points = Math.round(s.points * 10) / 10
+    s.pointDifference = s.pointsScored - s.pointsAgainst
     s.winPct = s.played ? Math.round((s.won / s.played) * 100) : 0
     s.partnerCount = Object.keys(s.partners).length
     s.form = s.results.slice(-5)
@@ -127,7 +144,7 @@ export function computeStats(matches, players = PLAYERS) {
     return s
   })
 
-  rows.sort((a, b) => b.points - a.points || b.won - a.won || b.winPct - a.winPct)
+  rows.sort((a, b) => b.points - a.points || b.won - a.won || b.winPct - a.winPct || a.name.localeCompare(b.name))
   rows.forEach((r, i) => (r.rank = i + 1))
   return rows
 }

@@ -5,6 +5,7 @@ import { load, save } from '../lib/storage.js'
 import { getSupabase, hasSupabase } from '../lib/supabase.js'
 import { useAuth } from './AuthContext.jsx'
 import { buildSessions } from '../lib/sessions.js'
+import { readMatchLedger } from '../lib/results.js'
 
 const AppContext = createContext(null)
 export const useApp = () => useContext(AppContext)
@@ -278,12 +279,12 @@ export function AppProvider({ children }) {
         if (!sb) throw new Error('Unavailable')
         const [attendance, ledger] = await Promise.all([
           sb.from('attendance').select('player_id,going').eq('session_date', sessionDate),
-          sb.from('matches').select('*,match_confirmations(username)').order('date', { ascending: false }).order('time', { ascending: false }),
+          readMatchLedger(sb),
         ])
         if (!alive || request !== generation) return
-        if (attendance.error || ledger.error) throw new Error('Could not refresh')
+        if (attendance.error) throw new Error('Could not refresh')
         const going = Object.fromEntries(attendance.data.filter((row) => row.going).map((row) => [row.player_id, true]))
-        const matches = new Map(ledger.data.map((row) => [row.id, rowToMatch(row)]))
+        const matches = new Map(ledger.map((row) => [row.id, rowToMatch(row)]))
         for (const item of outboxRef.current.filter((entry) => entry.actor === authUser?.id)) {
           if (item.kind === 'match' && !(item.status === 'failed' && item.payload.edit_reason)) matches.set(item.payload.id, rowToMatch(item.payload))
           if (item.kind === 'confirmation') {

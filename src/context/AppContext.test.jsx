@@ -9,7 +9,7 @@ vi.mock('../lib/supabase.js', () => {
     functions: { invoke: (name, {body}) => mocks.upsert(name, body) },
     auth: { getUser: async () => ({ data: { user: { id: 'verified-id' } }, error: null }) },
     from: (table) => {
-      const query = { select: () => query, eq: () => query, order: () => query, then: (resolve) => resolve({ data: [], error: null }), upsert: (payload) => mocks.upsert(table, payload) }
+      const query = { select: () => query, eq: () => query, order: () => query, range: () => query, then: (resolve) => resolve({ data: [], error: null }), upsert: (payload) => mocks.upsert(table, payload) }
       return query
     },
     channel: () => { const channel = { on: () => channel, subscribe: () => channel, unsubscribe: vi.fn() }; return channel },
