@@ -18,14 +18,20 @@ const toSlide = (p) => ({
 
 export default function AdvancedGallery({ photos = GALLERY_PHOTOS }) {
   const [index, setIndex] = useState(-1)
+  const [category, setCategory] = useState('All')
+  const [query, setQuery] = useState('')
+  const categories = ['All', ...new Set(photos.map(photo => photo.tag).filter(Boolean))]
+  const filtered = photos.filter(photo => (category === 'All' || photo.tag === category) && `${photo.caption} ${photo.tag}`.toLowerCase().includes(query.trim().toLowerCase()))
   // Derive slides from the SAME array the grid renders, so the clicked index
   // always lines up with the lightbox slide.
-  const slides = photos.map(toSlide)
+  const slides = filtered.map(toSlide)
 
   return (
     <div className="rpa-gallery">
+      <div className="gallery-tools"><div className="session-filters" role="group" aria-label="Photo categories">{categories.map(tag => <button key={tag} aria-pressed={category === tag} onClick={() => { setCategory(tag); setIndex(-1) }}>{tag}</button>)}</div><label className="gallery-search">Search club photos<input type="search" placeholder="Try team or trophy…" value={query} onChange={event => { setQuery(event.target.value); setIndex(-1) }}/></label></div>
+      <p className="gallery-results" role="status">{filtered.length} of {photos.length} club moments</p>
       <MasonryPhotoAlbum
-        photos={photos}
+        photos={filtered}
         spacing={12}
         columns={(w) => (w < 480 ? 2 : w < 900 ? 3 : 4)}
         componentsProps={{ image: { loading: 'lazy', decoding: 'async' } }}
@@ -39,6 +45,7 @@ export default function AdvancedGallery({ photos = GALLERY_PHOTOS }) {
           ),
         }}
       />
+      {!filtered.length && <div className="session-empty"><h3>No photos found</h3><p>Try another category or search.</p><button className="btn btn-ghost" onClick={() => { setCategory('All'); setQuery('') }}>Show all photos</button></div>}
       {index >= 0 && (
         <Suspense fallback={null}>
           <GalleryLightbox open={index >= 0} close={() => setIndex(-1)} index={index} slides={slides} />

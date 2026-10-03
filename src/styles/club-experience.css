@@ -1,0 +1,56 @@
+/* Public club experience: scoped to keep the member portal independent. */
+.club-refresh .session-browser-toolbar { gap: 16px; flex-wrap: wrap; }
+.saved-plans-button { display:flex; align-items:center; gap:8px; border:1px solid #465069; border-radius:30px; background:transparent; color:#e6ebf5; padding:11px 16px; cursor:pointer; }
+.saved-plans-button[aria-pressed=true] { background:#eef3ff; color:#13213e; }
+.saved-plans-button span { font-size:12px; border-radius:20px; padding:2px 7px; background:#d0293f; color:white; }
+.session-browser-caption { display:flex; justify-content:space-between; gap:16px; color:#9daac0; font-size:12px; margin:22px 0 14px; }
+.club-refresh .session-option { position:relative; border-radius:20px; transition:border-color .2s, transform .2s; }
+.club-refresh .session-option:hover { border-color:#64708a; transform:translateY(-3px); }
+.club-refresh .session-option.is-saved { border-color:#c65768; }
+.session-save { width:42px; height:42px; border:1px solid #45506a; border-radius:50%; color:#fff; font-size:25px; background:#18243b; cursor:pointer; }
+.session-save[aria-pressed=true] { color:#ff8b9b; background:#422536; border-color:#bc5166; }
+.session-secondary-actions { display:flex; justify-content:space-between; gap:12px; }
+.session-secondary-actions button { flex:1; }
+.club-refresh .session-option-actions { flex-direction:column; }
+.session-load-more { display:block; margin:24px auto 0; }
+.session-share-status:empty, .app-install-status:empty { display:none; }
+.session-share-status { color:#b6edda; }
+.shared-session-notice { padding:16px; border:1px solid #51668b; border-radius:12px; background:#172640; margin-top:20px; }
+.share-link-field { display:grid; gap:8px; }
+.share-link-field input, .gallery-search input { width:100%; min-width:0; border:1px solid #46546e; border-radius:10px; background:#121e33; color:#fff; padding:12px 14px; font:inherit; }
+.visit-checklist { display:grid; grid-template-columns:1fr 1.4fr; gap:36px; padding:30px; margin-top:34px; border:1px solid #c7c9c5; border-radius:20px; background:#f8f7f3; }
+.checklist-intro h3 { font-family:var(--font-display); font-size:36px; line-height:1.08; margin:14px 0; color:#172238; }
+.checklist-intro p { font-size:14px; color:#526070; line-height:1.6; }
+.checklist-progress { display:grid; gap:8px; margin:20px 0 8px; font-size:12px; color:#394a5e; }
+.checklist-progress progress { width:100%; height:6px; accent-color:#a72e42; }
+.checklist-items { display:grid; gap:10px; }
+.checklist-items label { display:flex; align-items:flex-start; gap:14px; cursor:pointer; padding:15px; border:1px solid #d4d7d4; border-radius:12px; background:white; color:#172238; }
+.checklist-items input { margin-top:4px; width:19px; height:19px; flex-shrink:0; accent-color:#a92d43; }
+.checklist-items b { display:block; font-size:14px; }
+.checklist-items small { display:block; margin-top:5px; color:#536174; line-height:1.5; }
+.checklist-items .is-done { background:#e9efe8; border-color:#a7bba5; }
+.club-mosaic { display:grid; grid-template-columns:1.25fr 1fr 1fr; grid-template-rows:230px 230px; gap:14px; }
+.mosaic-photo { position:relative; padding:0; overflow:hidden; border:1px solid #38445b; border-radius:18px; background:#121a28; cursor:pointer; text-align:left; color:white; }
+.mosaic-photo-0 { grid-row:span 2; }
+.mosaic-photo-1 { grid-column:span 2; }
+.mosaic-photo img { width:100%; height:100%; object-fit:cover; transition:transform .5s; }
+.mosaic-photo:hover img { transform:scale(1.035); }
+.mosaic-caption { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end; padding:24px; background:linear-gradient(transparent 38%,rgba(6,14,28,.92)); }
+.mosaic-caption small { font-size:9px; letter-spacing:1.6px; color:#e4d9df; }
+.mosaic-caption strong { font-family:var(--font-display); font-size:30px; font-weight:400; margin-top:7px; padding-right:24px; }
+.mosaic-caption > span { position:absolute; bottom:25px; right:22px; font-size:23px; }
+.mosaic-photo-0 .mosaic-caption strong { font-size:44px; }
+.gallery-tools { display:flex; align-items:end; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+.gallery-search { display:grid; gap:7px; color:#aab6ca; font-size:12px; min-width:240px; }
+.gallery-results { color:#acb8cd; font-size:12px; margin:20px 0; }
+.club-app-banner { max-width:1180px; margin:24px auto 0; padding:34px; border:1px solid #465774; border-radius:24px; display:grid; grid-template-columns:auto 1fr auto; gap:28px; align-items:center; background:radial-gradient(ellipse at 0% 0%,#344766,transparent 65%),#142038; }
+.app-monogram { width:102px; height:108px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:23px; border:1px solid #788198; background:#0d1729; box-shadow:0 10px 30px #060c2044; font-family:var(--font-display); font-size:48px; color:#fff; transform:rotate(-5deg); }
+.app-monogram span { font-family:var(--font-body, sans-serif); font-size:8px; letter-spacing:2px; color:#d595a0; }
+.club-app-banner h2 { font-family:var(--font-display); font-size:34px; margin:6px 0; color:#fff; font-weight:400; }
+.club-app-banner p:not(.eyebrow) { color:#bcc9df; font-size:14px; line-height:1.65; margin:6px 0 0; }
+.install-guide h3 { margin:22px 0 8px; }
+.install-guide p { line-height:1.7; }
+@media(max-width:900px) { .club-mosaic { grid-template-columns:1fr 1fr; grid-template-rows:300px 220px; } .mosaic-photo-0 { grid-row:auto; } .mosaic-photo-1 { grid-column:auto; } .club-app-banner { margin:24px 20px 0; grid-template-columns:auto 1fr; } .club-app-banner > button { grid-column:2; justify-self:start; } }
+@media(max-width:600px) { .visit-checklist { grid-template-columns:1fr; padding:20px; gap:20px; } .club-mosaic { grid-template-rows:310px 190px 190px; gap:10px; } .mosaic-photo-0, .mosaic-photo-1 { grid-column:span 2; } .mosaic-caption { padding:16px; } .mosaic-caption strong { font-size:24px; } .mosaic-caption small { font-size:8px; letter-spacing:.7px; } .mosaic-caption > span { right:12px; bottom:18px; } .mosaic-photo-0 .mosaic-caption strong { font-size:36px; } .gallery-search { width:100%; } .club-app-banner { padding:24px; gap:20px; } .app-monogram { width:66px; height:76px; font-size:34px; border-radius:15px; } .app-monogram span { font-size:6px; letter-spacing:1px; } .club-app-banner h2 { font-size:28px; } .club-app-banner > button { grid-column:1 / -1; width:100%; } }
+@media(prefers-reduced-motion:reduce) { .club-refresh .session-option, .mosaic-photo img { transition:none; } }
+.mosaic-photo-2 img, .mosaic-photo-3 img { object-position:center 30%; }
