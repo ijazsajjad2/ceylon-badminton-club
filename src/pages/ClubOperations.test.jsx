@@ -12,8 +12,8 @@ it('shows a full session as a waiting-list booking and sends only the member act
  await waitFor(()=>expect(mocks.invoke).toHaveBeenCalledWith('cbc-club-ops',{body:{action:'book',date:'2099-01-01',going:true}}))
  expect(screen.queryByText('Session settings')).not.toBeInTheDocument()
 })
-it('offers Arabic with RTL and keeps booking state visible',async()=>{
- render(<ClubOperations/>);await screen.findByRole('button',{name:'Join waiting list'});fireEvent.click(screen.getByText('العربية'))
- expect(screen.getByText('ناديك، بكل سهولة.').closest('section')).toHaveAttribute('dir','rtl')
- expect(screen.getByRole('button',{name:'الانضمام للانتظار'})).toBeInTheDocument()
+it('uses English without a language switch',async()=>{
+ render(<ClubOperations/>);await screen.findByRole('button',{name:'Join waiting list'})
+ expect(screen.getByText('Your club, organised.').closest('section')).toHaveAttribute('dir','ltr')
+ expect(screen.queryByRole('button',{name:'العربية'})).not.toBeInTheDocument()
 })

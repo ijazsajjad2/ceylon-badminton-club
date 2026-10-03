@@ -139,7 +139,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .club-intro .club-actions > a { display: none; }
   .club-proof { gap: 7px 12px; font-size: 10px; }
 }
-html[dir=rtl] .public-site{font-family:Tahoma,Arial,sans-serif}html[dir=rtl] .public-site h1,html[dir=rtl] .public-site h2,html[dir=rtl] .public-site h3{font-family:Tahoma,Arial,sans-serif;letter-spacing:0;line-height:1.45}html[dir=rtl] .eyebrow{letter-spacing:0}html[dir=rtl] .club-hero h1{font-size:clamp(42px,7vw,90px)}
+
 /* Session discovery and public-page refinement. */
 .club-refresh .public-nav .brand-link { display:flex; align-items:center; gap:10px; text-decoration:none; }
 .public-brand-name { display:grid; gap:3px; font-size:12px; font-weight:750; letter-spacing:.035em; color:#f2f5fb; }
@@ -183,7 +183,7 @@ html[dir=rtl] .public-site{font-family:Tahoma,Arial,sans-serif}html[dir=rtl] .pu
 .club-refresh .first-visit-grid article { border-inline-start:1px solid #14213626; padding-inline-start:24px; }
 .club-refresh .first-visit-grid h3 { font-size:19px; }
 .club-refresh .first-visit-grid p { font-size:13px; }
-html[dir=rtl] .public-links { margin-left:0; margin-inline-start:auto; }
+
 @media(max-width:1100px) {
  .public-brand-name { display:none; }
  .session-browser-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }

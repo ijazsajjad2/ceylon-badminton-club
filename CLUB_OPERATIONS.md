@@ -36,6 +36,6 @@ This creates an in-memory PostgreSQL database, applies the schema, restores club
 
 GitHub CI runs typechecking, unit/database/component tests, a production build, and browser smoke checks. The uptime workflow checks the public site and backend every 30 minutes once present on GitHub's default branch. GitHub failure notifications depend on account notification settings.
 
-Arabic translations cover the public page and core new club tools with RTL layout. Some legacy portal, organiser form, and gallery labels remain English. Fees and the club contact method remain configurable; no fee or phone number was invented.
+The public site and member tools are English-only. Previous language preferences are reset to English. Fees and the club contact method remain configurable; no fee or phone number was invented.
 
 Local validation: 40 automated tests, three browser smoke tests, TypeScript check, production build, isolated snapshot restore. Live verification: unauthorized booking/job requests rejected with HTTP 401; authenticated scheduled push job returned HTTP 200 with zero notifications sent (there are no member accounts yet).
