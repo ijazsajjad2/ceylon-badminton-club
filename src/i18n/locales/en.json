@@ -215,9 +215,9 @@
     "dayWed": "Wednesday night (8–10 PM)",
     "daySat": "Saturday morning (8–10 AM)",
     "dayEither": "Either works",
-    "previewLabel": "We'll send:",
-    "messageWithName": "🏸 Hi! I'm {{name}}. I'd love to join the Ceylon Badminton Club in Riyadh.\n• Level: {{level}}\n• Prefer: {{day}}\nWhen's the next session?",
-    "messageNoName": "🏸 Hi! I'd love to join the Ceylon Badminton Club in Riyadh.\n• Level: {{level}}\n• Prefer: {{day}}\nWhen's the next session?",
+    "previewLabel": "Message preview",
+    "messageWithName": "🏸 Hi! I'm {{name}}. I'd love to join the Ceylon Badminton Club in Riyadh.\n• Level: {{level}}\n• Prefer: {{day}}\nCould you confirm my place and the session fee?",
+    "messageNoName": "🏸 Hi! I'd love to join the Ceylon Badminton Club in Riyadh.\n• Level: {{level}}\n• Prefer: {{day}}\nCould you confirm my place and the session fee?",
     "send": "Open WhatsApp",
     "cancel": "Cancel"
   },

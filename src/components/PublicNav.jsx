@@ -35,7 +35,7 @@ export default function PublicNav({ nav, active, onLogin }) {
   return (
     <header className={`public-nav ${scrolled ? 'is-scrolled' : 'is-top'}`}>
       <a href="#top" className="brand-link" aria-label="Ceylon Badminton Club — home">
-        <BrandLockup size="md" sub="Riyadh · Smash It Together" />
+        <BrandLockup size="md" sub="Riyadh · Smash It Together" /><span className="public-brand-name">CEYLON BADMINTON<small>RIYADH · EST. 2024</small></span>
       </a>
 
       <nav className="public-links" aria-label="Sections">
