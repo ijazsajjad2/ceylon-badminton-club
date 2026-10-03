@@ -28,7 +28,7 @@ export default function JoinModal({ onClose, preferredSession }) {
   const message = useMemo(() => {
     const trimmed = name.trim()
     const key = trimmed ? 'messageWithName' : 'messageNoName'
-    const chosenDate = preferredSession && day === (preferredSession.day === 'Wed' ? 'wed' : 'sat') ? ` (${preferredSession.date}, ${preferredSession.time})` : ''
+    const chosenDate = preferredSession && day === (preferredSession.day === 'Wed' ? 'wed' : 'sat') ? ` (\u2066${preferredSession.date}, ${preferredSession.time}\u2069)` : ''
     return t(`joinModal.${key}`, { name: trimmed, level: levelLabel(level), day: dayLabel(day) + chosenDate })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, level, day, t, preferredSession])

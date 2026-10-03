@@ -204,3 +204,5 @@ html[dir=rtl] .public-links { margin-left:0; margin-inline-start:auto; }
  .club-refresh .first-visit-grid article { border-bottom:0; }
  .club-refresh .club-hero-shade { background:linear-gradient(0deg,#0a1020 15%,rgba(10,16,32,.75)); }
 }
+.join-preview { white-space:pre-line; font-size:13px; line-height:1.8; padding:16px; background:#0b1424; border:1px solid #ffffff20; border-radius:10px; margin-block:18px; font-weight:400; }
+.join-preview-label { display:block; color:#aebbd0; font-size:11px; font-weight:600; margin-bottom:8px; }
