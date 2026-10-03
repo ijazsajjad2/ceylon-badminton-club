@@ -35,7 +35,7 @@ export default function Dashboard({ navigate }) {
 
   const tryRecord = () => {
     if (!user) { pushToast('Sign in as a member to record a score 🔒', 'info'); return openLogin() }
-    if (!isScorekeeper) { pushToast('Only Ijaz (the club scorekeeper) can record match scores. 🏸', 'info'); return }
+    if (!isScorekeeper) { pushToast('Only club scorekeepers can record match scores. 🏸', 'info'); return }
     setShowRecord(true)
   }
 

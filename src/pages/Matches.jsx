@@ -40,7 +40,7 @@ export default function Matches({ prefillMatch, clearPrefill }) {
 
   const tryRecord = () => {
     if (!user) { pushToast('Sign in as a member to record a match 🔒', 'info'); return openLogin() }
-    if (!isScorekeeper) { pushToast('Only Ijaz (the club scorekeeper) can record match scores. 🏸', 'info'); return }
+    if (!isScorekeeper) { pushToast('Only club scorekeepers can record match scores. 🏸', 'info'); return }
     setShowRecord(true)
   }
 
@@ -48,7 +48,7 @@ export default function Matches({ prefillMatch, clearPrefill }) {
   // (scorekeeper only — a prefill from a non-scorekeeper session is dropped).
   useEffect(() => {
     if (prefillMatch && isScorekeeper) setShowRecord(true)
-    else if (prefillMatch) { pushToast('Only Ijaz (the club scorekeeper) can record match scores. 🏸', 'info'); clearPrefill?.() }
+    else if (prefillMatch) { pushToast('Only club scorekeepers can record match scores. 🏸', 'info'); clearPrefill?.() }
   }, [prefillMatch, isScorekeeper, clearPrefill, pushToast])
 
   const filtered = useMemo(() => {

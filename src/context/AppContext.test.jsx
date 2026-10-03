@@ -18,6 +18,7 @@ vi.mock('../lib/supabase.js', () => {
 })
 function Probe() {
   const app = useApp()
+  if (localStorage.getItem('reset-probe')) return <output data-testid="reset-state">{app.matches.length}:{app.pendingCount}</output>
   return <><output data-testid="status">{app.syncStatus}:{app.pendingCount}</output><output data-testid="attendance">{String(!!app.going.p1)}</output><button onClick={() => app.rsvp('p1', true)}>RSVP</button><button onClick={app.retrySync}>Retry</button><button onClick={() => app.rsvp('p2', true)}>Other member</button></>
 }
 beforeEach(() => {
@@ -25,12 +26,25 @@ beforeEach(() => {
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
 })
 describe('reliable RSVP saves', () => {
+  it('discards pre-reset cached scores and score writes while keeping queued attendance', () => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false })
+    localStorage.setItem('reset-probe', 'true')
+    localStorage.setItem('cbc.v4.matches', JSON.stringify([{ id: 'old-result' }]))
+    localStorage.setItem('cbc.v4.sync-outbox-v1', JSON.stringify([
+      { kind: 'match', actor: 'verified-id', status: 'pending', payload: { id: 'old-result' } },
+      { kind: 'confirmation', actor: 'verified-id', status: 'pending', payload: { match_id: 'old-result' } },
+      { kind: 'attendance', actor: 'verified-id', status: 'pending', payload: {} },
+    ]))
+    render(<AppProvider><Probe /></AppProvider>)
+    expect(screen.getByTestId('reset-state').textContent).toBe('0:1')
+    expect(mocks.upsert).not.toHaveBeenCalled()
+  })
   it('keeps an offline RSVP and flushes it on reconnect', async () => {
     Object.defineProperty(navigator, 'onLine', { configurable: true, value: false })
     render(<AppProvider><Probe /></AppProvider>)
     fireEvent.click(screen.getByText('RSVP'))
     expect(screen.getByTestId('status').textContent).toBe('offline:1')
-    expect(JSON.parse(localStorage.getItem('cbc.v4.sync-outbox-v1'))).toHaveLength(1)
+    expect(JSON.parse(localStorage.getItem('cbc.v4.sync-outbox-v2'))).toHaveLength(1)
     expect(mocks.upsert).not.toHaveBeenCalled()
     Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
     fireEvent(window, new Event('online'))
@@ -49,12 +63,12 @@ describe('reliable RSVP saves', () => {
     mocks.upsert.mockResolvedValue({ error: null })
     fireEvent.click(screen.getByText('Retry'))
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('ready:0'))
-    expect(JSON.parse(localStorage.getItem('cbc.v4.sync-outbox-v1'))).toEqual([])
+    expect(JSON.parse(localStorage.getItem('cbc.v4.sync-outbox-v2'))).toEqual([])
   })
   it('does not queue another player’s attendance', () => {
     render(<AppProvider><Probe /></AppProvider>)
     fireEvent.click(screen.getByText('Other member'))
-    expect(localStorage.getItem('cbc.v4.sync-outbox-v1')).toBeNull()
+    expect(localStorage.getItem('cbc.v4.sync-outbox-v2')).toBeNull()
     expect(mocks.upsert).not.toHaveBeenCalled()
   })
 })

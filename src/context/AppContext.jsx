@@ -77,7 +77,7 @@ function initState() {
 
   // Matches start from the (empty) seed and are recorded by the scorekeeper
   // from here on — persisted locally, and synced via Supabase if configured.
-  const matches = load('matches', MATCHES)
+  const matches = load('matches-reset-20261003', MATCHES)
 
   return {
     players,
@@ -160,7 +160,7 @@ export function AppProvider({ children }) {
   const [toasts, setToasts] = useState([])
   const toastId = useRef(0)
   const { user: authUser, isScorekeeper } = useAuth()
-  const [outbox, setOutbox] = useState(() => load('sync-outbox-v1', []))
+  const [outbox, setOutbox] = useState(() => load('sync-outbox-v2', load('sync-outbox-v1', []).filter(item => item.kind === 'attendance')))
   const outboxRef = useRef(outbox)
   const busyRef = useRef(false)
   const [online, setOnline] = useState(() => navigator.onLine)
@@ -182,7 +182,7 @@ export function AppProvider({ children }) {
   }, [])
   useEffect(() => { dispatch({ type: 'REPLACE_GOING', going: load('going-' + sessionDate, {}) }) }, [sessionDate])
   useEffect(() => save('players', state.players), [state.players])
-  useEffect(() => save('matches', state.matches), [state.matches])
+  useEffect(() => save('matches-reset-20261003', state.matches), [state.matches])
   // Keep attendance scoped to its session; never carry an RSVP into next week.
   const attendanceDateRef = useRef(sessionDate)
   useEffect(() => {
@@ -202,7 +202,7 @@ export function AppProvider({ children }) {
   const updateOutbox = useCallback((update) => {
     const next = update(outboxRef.current)
     // Persist before acknowledging a local save, so a storage failure is visible.
-    localStorage.setItem('cbc.v4.sync-outbox-v1', JSON.stringify(next))
+    localStorage.setItem('cbc.v4.sync-outbox-v2', JSON.stringify(next))
     outboxRef.current = next
     setOutbox(next)
   }, [])

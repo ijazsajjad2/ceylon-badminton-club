@@ -86,8 +86,16 @@ export function AuthProvider({ children }) {
     try {
       const sb = await getSupabase()
       if (!sb) return { ok: false, error: 'Member sign-in is unavailable.' }
-      const { error } = await sb.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
-      if (error) return { ok: false, error: 'Sign-in failed. Check your member email and password.' }
+      const identity = email.trim().toLowerCase()
+      if (identity.includes('@')) {
+        const { error } = await sb.auth.signInWithPassword({ email: identity, password })
+        if (error) return { ok: false, error: 'Sign-in failed. Check your login name or email and password.' }
+      } else {
+        const { data, error } = await sb.functions.invoke('cbc-login', { body: { username: identity, password } })
+        if (error || !data?.access_token || !data?.refresh_token) return { ok: false, error: 'Sign-in failed. Check your login name and password.' }
+        const { error: sessionError } = await sb.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token })
+        if (sessionError) return { ok: false, error: 'Could not start your session. Please try again.' }
+      }
       setAuthError('')
       return { ok: true }
     } catch { return { ok: false, error: 'Connection failed. Please try again.' } }
