@@ -5,18 +5,18 @@
 :root {
   /* ── CBC "Jersey" theme: deep navy base, red + royal-blue splashes,
         white halftone accents (matches the club kit). ───────────────── */
-  --bg: #0a1020;
-  --bg-2: #101934;
-  --bg-3: #16224a;
-  --panel: rgba(18, 28, 58, 0.55);
-  --panel-solid: #111a36;
-  --stroke: rgba(255, 255, 255, 0.08);
-  --stroke-strong: rgba(255, 255, 255, 0.16);
+  --bg: #0a0f1c;
+  --bg-2: #0f1626;
+  --bg-3: #172036;
+  --panel: #111827;
+  --panel-solid: #111827;
+  --stroke: rgba(148, 163, 184, 0.16);
+  --stroke-strong: rgba(148, 163, 184, 0.32);
 
   /* Primary accent = jersey RED (kept the --gold-* names so every existing
      reference re-themes at once). --gold-bright is the bright accent used as
      TEXT on navy; solid button FILLS use --fill (deep enough for white text). */
-  --gold: #e23b3b;
+  --gold: #dc3545;
   --gold-bright: #ff6b6b;
   --maroon: #1f5fd6;
   --maroon-bright: #2f7bf0;
@@ -26,22 +26,22 @@
 
   /* Deep-red gradient for filled accents (buttons, pills, FABs) — light end
      #d62839 keeps white label text at >= 4.5:1. */
-  --fill: linear-gradient(135deg, #d62839, #9e0c1a);
-  --fill-hover: linear-gradient(135deg, #e8404e, #b3111f);
+  --fill: #d42a3a;
+  --fill-hover: #e23c4b;
   --blue-fill: linear-gradient(135deg, #2563eb, #16348c);
 
   /* Text scale — tuned for AA contrast on the dark glass panels.
      faint was #8b97ae which dipped under 4.5:1 on lighter glass cards. */
   --text: #f2f5fb;
-  --text-dim: #d4dce9;
-  --text-faint: #aab5c8;
+  --text-dim: #c5cedd;
+  --text-faint: #94a3b8;
 
-  --r-sm: 10px;
-  --r: 16px;
-  --r-lg: 22px;
-  --r-xl: 28px;
+  --r-sm: 8px;
+  --r: 10px;
+  --r-lg: 14px;
+  --r-xl: 16px;
 
-  --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 24px rgba(0, 0, 0, 0.16);
   --glow-gold: 0 0 0 1px rgba(226,59,59, 0.4), 0 8px 30px rgba(226,59,59, 0.18);
   --glow-green: 0 0 0 1px rgba(47, 174, 107, 0.5), 0 8px 30px rgba(47, 174, 107, 0.2);
 
@@ -54,7 +54,10 @@
   --pad-x: clamp(18px, 4vw, 26px);
   --sec-y: clamp(52px, 7vw, 88px);
 
-  --font-display: 'Bebas Neue', sans-serif;
+  /* One UI family (Inter) for headings and body. The condensed brand face is
+     reserved for the club wordmark on the public hero. */
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-brand: 'Bebas Neue', sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }

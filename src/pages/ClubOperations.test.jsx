@@ -14,6 +14,6 @@ it('shows a full session as a waiting-list booking and sends only the member act
 })
 it('uses English without a language switch',async()=>{
  render(<ClubOperations/>);await screen.findByRole('button',{name:'Join waiting list'})
- expect(screen.getByText('Your club, organised.').closest('section')).toHaveAttribute('dir','ltr')
+ expect(screen.getByText('Club tools').closest('section')).toHaveAttribute('dir','ltr')
  expect(screen.queryByRole('button',{name:'العربية'})).not.toBeInTheDocument()
 })

@@ -1,3 +1,4 @@
+import NavIcon from '../components/Icons.jsx'
 import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -60,15 +61,15 @@ export default function Leaderboard() {
     const iron = ironTop ? { ...playerById[ironTop[0]], n: ironTop[1] } : null
     const team = [...all].filter((p) => p.partnerCount > 0).sort((x, y) => y.partnerCount - x.partnerCount)[0] || null
     return [
-      { key: 'golden', icon: '🏆', title: 'Golden Racket', desc: 'Most points this season', p: golden, stat: golden ? `${golden.points} pts` : null },
-      { key: 'iron', icon: '🛡️', title: 'Iron Man', desc: 'Best session attendance', p: iron, stat: iron ? `${iron.n} sessions` : null },
-      { key: 'team', icon: '🤝', title: 'Team Player', desc: 'Most different partners', p: team, stat: team ? `${team.partnerCount} partners` : null },
+      { key: 'golden', icon: 'trophy', title: 'Golden Racket', desc: 'Most points this season', p: golden, stat: golden ? `${golden.points} pts` : null },
+      { key: 'iron', icon: 'calendar', title: 'Iron Man', desc: 'Best session attendance', p: iron, stat: iron ? `${iron.n} sessions` : null },
+      { key: 'team', icon: 'users', title: 'Team Player', desc: 'Most different partners', p: team, stat: team ? `${team.partnerCount} partners` : null },
     ]
   }, [periodMatches, players, sessions, playerById])
 
   return (
     <div className="page-wrap">
-      <h1 className="section-title" style={{ fontSize: 34, marginTop: 6 }}>Leaderboard 🏆</h1>
+      <h1 className="section-title" style={{ fontSize: 34, marginTop: 6 }}>Season analytics</h1>
       <p className="section-sub">
         <b className="gold">Individual Rankings</b> — partners change every session, so wins & points are credited to each player personally.
         Scores are recorded by the club scorekeeper; every match counts here whether or not it's been confirmed yet — open a match on the{' '}
@@ -81,7 +82,7 @@ export default function Leaderboard() {
             <button key={p.key} className={`chip ${period === p.key ? 'active' : ''}`} onClick={() => setPeriod(p.key)}>{p.label}</button>
           ))}
         </div>
-        <input className="input" style={{ maxWidth: 220 }} placeholder="🔍 Search player…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input className="input" style={{ maxWidth: 220 }} placeholder="Search player…" value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
 
       {period==='season'&&<label>Season<select className="select" value={seasonId} onChange={e=>setSeasonId(e.target.value)}>{seasons.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>}
@@ -89,7 +90,7 @@ export default function Leaderboard() {
       {mostVaried && mostVaried.partnerCount > 0 && (
         <div className="glass card-pad" style={{ marginTop: 16, borderColor: 'rgba(226,59,59,0.3)' }}>
           <div className="row" style={{ gap: 12 }}>
-            <span style={{ fontSize: 28 }}>🤝</span>
+            <span className="feature-icon" aria-hidden="true"><NavIcon name="users" size={20} /></span>
             <div>
               <div className="eyebrow">Most Varied Partnerships</div>
               <div style={{ fontWeight: 700, marginTop: 2 }}>
@@ -107,8 +108,7 @@ export default function Leaderboard() {
             const place = p.rank
             return (
               <div key={p.id} className={`glass podium-card podium-anim podium-${place}`} onClick={() => setOpenId(p.id)} style={{ cursor: 'pointer', animationDelay: `${place * 0.1}s` }}>
-                {place === 1 && <span className="podium-crown" aria-hidden="true">👑</span>}
-                <div className="medal">{place === 1 ? '🥇' : place === 2 ? '🥈' : '🥉'}</div>
+                <div className={`rank-badge rank-badge-lg rank-${place}`}>{place}</div>
                 <Avatar player={p} size={place === 1 ? 64 : 50} ring={place === 1} />
                 <div className="podium-name">{p.name}</div>
                 <div className="podium-pts mono">{p.points} pts</div>
@@ -122,7 +122,7 @@ export default function Leaderboard() {
       {/* Points comparison */}
       {ranked.length > 1 && (
         <>
-          <h2 className="section-title" style={{ fontSize: 20, marginTop: 26 }}>Points <span className="accent">Comparison</span></h2>
+          <h2 className="section-title" style={{ fontSize: 20, marginTop: 26 }}>Points comparison</h2>
           <div className="glass card-pad chart-card">
             <PointsBarChart players={ranked.slice(0, 8)} meId={user?.playerId} />
           </div>
@@ -179,19 +179,19 @@ export default function Leaderboard() {
         {filtered.length === 0 && (
           <div className="glass card-pad dim center">
             {ranked.length === 0
-              ? 'No ranked players yet — rankings begin with the first recorded match. 🏸'
+              ? 'No ranked players yet — rankings begin with the first recorded match.'
               : `No players match "${query}".`}
           </div>
         )}
       </div>
 
       {/* Season awards */}
-      <h2 className="section-title" style={{ marginTop: 34 }}>Season <span className="accent">Awards</span> 🎖️</h2>
+      <h2 className="section-title" style={{ marginTop: 34 }}>Season awards</h2>
       <p className="section-sub">Earned automatically as the season's matches and attendance build up.</p>
       <div className="awards-grid">
         {awards.map((a) => (
           <div key={a.key} className={`glass card-pad award-card ${a.p ? '' : 'award-locked'}`}>
-            <span className="award-icon" aria-hidden="true">{a.icon}</span>
+            <span className="award-icon" aria-hidden="true"><NavIcon name={a.icon} size={20} /></span>
             <div className="award-title display">{a.title}</div>
             <div className="faint" style={{ fontSize: 11.5 }}>{a.desc}</div>
             {a.p ? (
@@ -201,7 +201,7 @@ export default function Leaderboard() {
                 <span className="num gold" style={{ fontSize: 12 }}>{a.stat}</span>
               </div>
             ) : (
-              <div className="dim" style={{ fontSize: 12, marginTop: 10 }}>🔒 Unlocks as the season progresses</div>
+              <div className="dim" style={{ fontSize: 12, marginTop: 10 }}>Unlocks as the season progresses</div>
             )}
           </div>
         ))}

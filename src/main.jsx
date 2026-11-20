@@ -19,6 +19,7 @@ import { initAnalytics } from './lib/analytics.js'
 import './i18n/config.js'
 import './styles/global.css'
 import './styles/improvements.css'
+import './styles/professional.css'
 
 initAnalytics()
 

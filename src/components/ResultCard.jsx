@@ -114,7 +114,7 @@ export default function ResultCardButton({ match, playerById, pushToast }) {
         a.download = 'cbc-match-result.png'
         a.click()
         URL.revokeObjectURL(a.href)
-        pushToast?.('Result card downloaded — share it to the group 📲', 'success')
+        pushToast?.('Result card downloaded — share it to the group.', 'success')
       }
     } catch (err) {
       if (err?.name !== 'AbortError') pushToast?.('Could not create the result card.', 'error')
@@ -125,7 +125,7 @@ export default function ResultCardButton({ match, playerById, pushToast }) {
 
   return (
     <button type="button" className="btn btn-sm btn-ghost" onClick={share} disabled={busy}>
-      {busy ? 'Preparing…' : '📤 Share result card'}
+      {busy ? 'Preparing…' : 'Share result card'}
     </button>
   )
 }

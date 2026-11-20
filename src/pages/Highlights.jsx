@@ -19,7 +19,7 @@ export default function Highlights() {
   const [showAdd, setShowAdd] = useState(false)
 
   const tryAdd = () => {
-    if (!user) { pushToast('Sign in as a member to add a highlight 🔒', 'info'); return openLogin() }
+    if (!user) { pushToast('Sign in as a member to add a highlight.', 'info'); return openLogin() }
     setShowAdd(true)
   }
 
@@ -36,7 +36,7 @@ export default function Highlights() {
 
   const remove = async (e, v) => {
     e.stopPropagation()
-    if (!user) { pushToast('Sign in as a member to manage highlights 🔒', 'info'); return openLogin() }
+    if (!user) { pushToast('Sign in as a member to manage highlights.', 'info'); return openLogin() }
     if (confirm(`Remove "${v.title}" from highlights?`)) {
       if (!await dispatch({ type: 'DELETE_VIDEO', id: v.id })) return
       pushToast('Highlight removed', 'info')
@@ -48,7 +48,7 @@ export default function Highlights() {
       <div className="row spread wrap">
         <div>
           <p className="faint" style={{ fontSize: 12 }}>Highlights added here are saved on this device only. Share the video link to send a clip to other members.</p>
-          <h1 className="section-title" style={{ fontSize: 34, marginTop: 6 }}>Highlights 🎬</h1>
+          <h1 className="section-title" style={{ fontSize: 34, marginTop: 6 }}>Highlights</h1>
           <p className="section-sub">Match clips straight from the club's Google Drive — relive the rallies in-app.</p>
         </div>
         <button className="btn btn-gold" onClick={tryAdd}>＋ Add Highlight</button>
@@ -86,7 +86,7 @@ export default function Highlights() {
                     </span>
                     <button className="video-del" aria-label="Remove highlight" onClick={(e) => remove(e, v)}>✕</button>
                   </div>
-                  {v.matchId && <span className="badge badge-doubles" style={{ marginTop: 8, display: 'inline-block' }}>🎥 match clip</span>}
+                  {v.matchId && <span className="badge badge-doubles" style={{ marginTop: 8, display: 'inline-block' }}>Match clip</span>}
                 </div>
               </div>
             )
@@ -97,15 +97,12 @@ export default function Highlights() {
           <ShuttleDeco size={90} style={{ position: 'static', opacity: 0.25, margin: '0 auto 8px' }} />
           <div className="display" style={{ fontSize: 24 }}>No clips here yet</div>
           <p className="dim" style={{ fontSize: 13, margin: '6px 0 14px' }}>
-            Paste a Google Drive link to add the first highlight reel. 🏸
+            Paste a Google Drive link to add the first highlight reel.
           </p>
           <button className="btn btn-gold" onClick={tryAdd}>＋ Add Highlight</button>
         </div>
       )}
 
-      <div className="fab-stack">
-        <button className="fab fab-round" onClick={tryAdd} aria-label="Add highlight">＋</button>
-      </div>
 
       {active && <VideoLightbox video={active} onClose={() => setActive(null)} />}
       {showAdd && <AddVideoModal onClose={() => setShowAdd(false)} />}

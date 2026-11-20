@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import NavIcon from './Icons.jsx'
 
 export default function StatCounter({ value, label, icon, duration = 1200, zeroText }) {
   const [n, setN] = useState(0)
@@ -30,7 +31,7 @@ export default function StatCounter({ value, label, icon, duration = 1200, zeroT
   if (value === 0 && zeroText) {
     return (
       <div className="glass stat-card hoverable">
-        {icon && <span className="stat-icon">{icon}</span>}
+        {icon && <span className="stat-icon" aria-hidden="true"><NavIcon name={icon} size={18} /></span>}
         <div className="stat-zero">{zeroText}</div>
         <div className="stat-label">{label}</div>
       </div>
@@ -39,8 +40,8 @@ export default function StatCounter({ value, label, icon, duration = 1200, zeroT
 
   return (
     <div className="glass stat-card hoverable">
-      {icon && <span className="stat-icon">{icon}</span>}
-      <div className="stat-num mono">{n}</div>
+      {icon && <span className="stat-icon" aria-hidden="true"><NavIcon name={icon} size={18} /></span>}
+      <div className="stat-num">{n}</div>
       <div className="stat-label">{label}</div>
     </div>
   )
