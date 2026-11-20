@@ -58,7 +58,7 @@ export default function AddVideoModal({ onClose, presetMatchId = null }) {
       createdAt: Date.now(),
     }
     if (!await dispatch({ type: 'ADD_VIDEO', video })) return
-    pushToast('Highlight added 🎬', 'success')
+    pushToast('Highlight added.', 'success')
     onClose()
   }
 

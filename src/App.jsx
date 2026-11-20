@@ -88,13 +88,16 @@ function MembersApp() {
 
   return (
     <div className="app-shell">
-      <Navbar active={active} onNavigate={navigate} />
-      <div className="user-bar">
-        <span className="user-bar-name">🏸 {displayName}</span>
-        {isScorekeeper && <button className="user-bar-logout" onClick={() => setAdminOpen(true)}>Manage members</button>}
-        <button className="user-bar-logout" onClick={() => navigate('schedule')}>Club tools & account</button>
-        <button className="user-bar-logout" onClick={logout}>Sign out</button>
-      </div>
+      <Navbar
+        active={active}
+        onNavigate={navigate}
+        userName={displayName}
+        accountItems={[
+          { label: 'Club tools & account', onSelect: () => navigate('schedule') },
+          ...(isScorekeeper ? [{ label: 'Manage members', onSelect: () => setAdminOpen(true) }] : []),
+          { label: 'Sign out', onSelect: logout, danger: true },
+        ]}
+      />
       {authError && <p className="sync-banner" role="alert">{authError}</p>}
       <Toasts />
       <SyncStatus />

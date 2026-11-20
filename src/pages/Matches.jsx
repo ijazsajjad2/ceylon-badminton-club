@@ -39,8 +39,8 @@ export default function Matches({ prefillMatch, clearPrefill }) {
   const [showSingles, setShowSingles] = useState(true)
 
   const tryRecord = () => {
-    if (!user) { pushToast('Sign in as a member to record a match 🔒', 'info'); return openLogin() }
-    if (!isScorekeeper) { pushToast('Only club scorekeepers can record match scores. 🏸', 'info'); return }
+    if (!user) { pushToast('Sign in as a member to record a match.', 'info'); return openLogin() }
+    if (!isScorekeeper) { pushToast('Only club scorekeepers can record match scores.', 'info'); return }
     setShowRecord(true)
   }
 
@@ -48,7 +48,7 @@ export default function Matches({ prefillMatch, clearPrefill }) {
   // (scorekeeper only — a prefill from a non-scorekeeper session is dropped).
   useEffect(() => {
     if (prefillMatch && isScorekeeper) setShowRecord(true)
-    else if (prefillMatch) { pushToast('Only club scorekeepers can record match scores. 🏸', 'info'); clearPrefill?.() }
+    else if (prefillMatch) { pushToast('Only club scorekeepers can record match scores.', 'info'); clearPrefill?.() }
   }, [prefillMatch, isScorekeeper, clearPrefill, pushToast])
 
   const filtered = useMemo(() => {
@@ -73,7 +73,7 @@ export default function Matches({ prefillMatch, clearPrefill }) {
 
   return (
     <div className="page-wrap">
-      <h1 className="section-title" style={{ fontSize: 34, marginTop: 6 }}>Matches 🏸</h1>
+      <h1 className="section-title" style={{ fontSize: 34, marginTop: 6 }}>Matches</h1>
       <p className="section-sub">Doubles take centre court. Whoever was paired that day — random every time.</p>
 
       <div className="row wrap" style={{ gap: 8, marginBottom: 6 }}>
@@ -121,7 +121,7 @@ export default function Matches({ prefillMatch, clearPrefill }) {
       )}
 
       <div className="fab-stack">
-        <button className="fab fab-round" onClick={tryRecord} aria-label="Record match">＋</button>
+        <button className="fab" onClick={tryRecord}>Record match</button>
       </div>
 
       {showRecord && <RecordMatchModal onClose={closeRecord} prefill={prefillMatch} />}

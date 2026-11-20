@@ -33,7 +33,7 @@ export default function VideoLightbox({ video, onClose }) {
           <div style={{ lineHeight: 1.25 }}>
             <div style={{ fontWeight: 700, fontSize: 13.5 }}>{uploader ? uploader.name : 'Club'}</div>
             <div className="faint" style={{ fontSize: 11.5 }}>
-              📅 {fmtDate(video.date)}{dur ? ` · ${dur}` : ''}
+              {fmtDate(video.date)}{dur ? ` · ${dur}` : ''}
             </div>
           </div>
         </div>

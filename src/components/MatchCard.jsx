@@ -42,7 +42,7 @@ function MatchConfirm({ match }) {
   return (
     <span className="match-confirm-wrap">
       <span className={`badge ${isConfirmed ? 'badge-confirmed' : 'badge-pending'}`}>
-        {isConfirmed ? `✅ Confirmed${confirmedBy.length > 1 ? ` ×${confirmedBy.length}` : ''}` : '⏳ Pending confirmation'}
+        {isConfirmed ? `Confirmed${confirmedBy.length > 1 ? ` ×${confirmedBy.length}` : ''}` : 'Pending confirmation'}
       </span>
       {user && !iConfirmed && (
         <button
@@ -121,10 +121,10 @@ export default function MatchCard({ match, expandable = true, onPlayClip }) {
       <div className="match-meta-row">
         <span className={`badge ${isDoubles ? 'badge-doubles' : 'badge-singles'}`}>{isDoubles ? 'Doubles' : 'Singles'}</span>
         {match.live && <span className="badge badge-live"><span className="live-dot" />LIVE</span>}
-        <span>📅 {fmtDate(match.date)}</span>
-        <span>🕓 {match.time}</span>
-        <span>🏟 Court {match.court}</span>
-        {clips.length > 0 && <span className="badge badge-doubles" style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setOpen(true) }}>🎥 {clips.length} clip{clips.length > 1 ? 's' : ''}</span>}
+        <span>{fmtDate(match.date)}</span>
+        <span>{match.time}</span>
+        <span>Court {match.court}</span>
+        {clips.length > 0 && <span className="badge badge-doubles" style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setOpen(true) }}>{clips.length} clip{clips.length > 1 ? 's' : ''}</span>}
         {!match.live && match.winner && <MatchConfirm match={match} />}
         {expandable && <span className="faint">{open ? '▲ hide' : '▼ scorecard'}</span>}
       </div>
@@ -154,12 +154,12 @@ export default function MatchCard({ match, expandable = true, onPlayClip }) {
               </thead>
               <tbody>
                 <tr className={match.winner === 'A' ? 'win' : ''}>
-                  <td className="team-cell">{match.teamA.map((id) => playerById[id]?.name).join(' & ')}{match.winner === 'A' && ' 🏆'}</td>
+                  <td className="team-cell">{match.teamA.map((id) => playerById[id]?.name).join(' & ')}{match.winner === 'A' && <span className="winner-tag">Winner</span>}</td>
                   {match.sets.map((s, i) => (<td key={i}>{s[0]}</td>))}
                   <td>{a}</td>
                 </tr>
                 <tr className={match.winner === 'B' ? 'win' : ''}>
-                  <td className="team-cell">{match.teamB.map((id) => playerById[id]?.name).join(' & ')}{match.winner === 'B' && ' 🏆'}</td>
+                  <td className="team-cell">{match.teamB.map((id) => playerById[id]?.name).join(' & ')}{match.winner === 'B' && <span className="winner-tag">Winner</span>}</td>
                   {match.sets.map((s, i) => (<td key={i}>{s[1]}</td>))}
                   <td>{b}</td>
                 </tr>

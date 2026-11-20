@@ -60,7 +60,7 @@ export default function ClubOperations({ initialTab = 'bookings' }) {
     const current = rounds.find(r => r.status === 'playing');
     const prefs = data?.club_preferences[0] || { user_id: user.id, reminders: false, reminder_hours: 1, cancellations: true };
     return <section className="club-ops" dir={'ltr'}>
-  <header><div><span className="eyebrow">CBC · RIYADH</span><h1>{'Your club, organised.'}</h1></div></header>
+  <header><div><h1>{'Club tools'}</h1><p className="section-sub">{'Bookings, court rounds, contributions and your account settings.'}</p></div></header>
   <nav aria-label="Club tools">{tabs.map(([id, en]) => <button key={id} aria-pressed={tab === id} onClick={() => setTab(id)}>{en}</button>)}</nav>
   {error && <div role="alert" className="ops-error">{error} <button disabled={busy} onClick={() => run(refresh, 'Refreshed')}>Retry</button></div>}
   {notice && <p role="status">{notice}</p>}

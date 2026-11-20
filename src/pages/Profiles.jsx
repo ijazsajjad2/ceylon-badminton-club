@@ -5,7 +5,6 @@ import Avatar from '../components/Avatar.jsx'
 import Modal from '../components/Modal.jsx'
 import PlayerSheet from '../components/PlayerSheet.jsx'
 import { computeStats } from '../lib/stats.js'
-import { LEVELS } from '../data/players.js'
 import useReveal from '../hooks/useReveal.js'
 
 const LEVEL_KEYS = ['All', 'Beginner', 'Intermediate', 'Advanced', 'Expert']
@@ -24,7 +23,7 @@ function AddMemberModal({ onClose }) {
       gradient: GRADS[players.length % GRADS.length],
     }
     if (!await dispatch({ type: 'ADD_PLAYER', player })) return
-    pushToast(`${player.name} joined the club 🏸`, 'success')
+    pushToast(`${player.name} joined the club`, 'success')
     onClose()
   }
   return (
@@ -69,13 +68,11 @@ export default function Profiles() {
       <div className="members-hero glass card-pad">
         <div className="members-hero-inner">
           <div>
-            <span className="eyebrow">Ceylon Badminton Club · Riyadh, KSA</span>
-            <p className="faint" style={{ fontSize: 12 }}>Profile edits are saved on this device only.</p>
           <h1 className="display" style={{ fontSize: 34, marginTop: 6, marginBottom: 6 }}>
-              Our Club <span className="accent">Members</span> 👥
+              Club members
             </h1>
             <p className="section-sub" style={{ marginBottom: 0 }}>
-              Meet the {players.length} players who make our badminton community strong. Partners rotate every session — that's the Ceylon way.
+              Meet the {players.length} players who make our badminton community strong. Partners rotate every session. Profile edits are saved on this device only.
             </p>
           </div>
           <div className="members-stats-row">
@@ -86,17 +83,17 @@ export default function Profiles() {
             <div className="ms-divider" />
             <div className="ms-stat">
               <span className="ms-num">2×</span>
-              <span className="ms-lbl">Per Week</span>
+              <span className="ms-lbl">Sessions a week</span>
             </div>
             <div className="ms-divider" />
             <div className="ms-stat">
               <span className="ms-num">{expertCount + advancedCount}</span>
-              <span className="ms-lbl">Advanced+</span>
+              <span className="ms-lbl">Advanced or above</span>
             </div>
           </div>
         </div>
         {isAdmin && (
-          <button className="btn btn-gold" style={{ marginTop: 18 }} onClick={() => setShowAdd(true)}>＋ Add Member</button>
+          <button className="btn btn-gold" style={{ marginTop: 18 }} onClick={() => setShowAdd(true)}>Add member</button>
         )}
       </div>
 
@@ -106,41 +103,34 @@ export default function Profiles() {
             <button key={l} className={`chip ${level === l ? 'active' : ''}`} onClick={() => setLevel(l)}>{l}</button>
           ))}
         </div>
-        <input className="input" style={{ maxWidth: 220 }} placeholder="🔍 Search member…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input className="input" style={{ maxWidth: 220 }} placeholder="Search member…" value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
 
       <div ref={revealRef} className="pgrid" style={{ marginTop: 16, gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
         {filtered.map((p, i) => {
           const s = statById[p.id]
-          const lv = LEVELS[p.level]
           const memberNum = players.indexOf(p) + 1
           return (
             <button key={p.id} className="glass hoverable card-pad member-card reveal" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => setOpenId(p.id)}>
-              <div className="row spread" style={{ marginBottom: 10, alignItems: 'center' }}>
-                <span className="member-num">#{String(memberNum).padStart(2, '0')}</span>
-              </div>
               <div className="row" style={{ gap: 12, alignItems: 'flex-start' }}>
                 <Avatar player={p} size={52} />
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontWeight: 800, fontSize: 16, lineHeight: 1.2, color: '#ffffff' }}>{p.name}</div>
-                  <div className="row wrap" style={{ gap: 5, marginTop: 5 }}>
-                    <span className="level-badge" style={{ background: lv.glow, color: lv.color }}>{p.level}</span>
-                    <span className="member-badge">Club Member</span>
-                  </div>
+                  <div className="member-meta">{p.level} · No. {memberNum}</div>
                 </div>
               </div>
               <div className="row spread" style={{ marginTop: 14 }}>
                 <div>
                   <div className="num gold display" style={{ fontSize: 22 }}>{s?.winPct ?? 0}%</div>
-                  <div className="faint" style={{ fontSize: 10.5 }}>WIN RATE</div>
+                  <div className="member-stat-lbl">Win rate</div>
                 </div>
                 <div className="center">
                   <div className="num display" style={{ fontSize: 22 }}>{s?.played ?? 0}</div>
-                  <div className="faint" style={{ fontSize: 10.5 }}>PLAYED</div>
+                  <div className="member-stat-lbl">Played</div>
                 </div>
                 <div className="center">
                   <div className="num display" style={{ fontSize: 22 }}>{s?.partnerCount ?? 0}</div>
-                  <div className="faint" style={{ fontSize: 10.5 }}>PARTNERS</div>
+                  <div className="member-stat-lbl">Partners</div>
                 </div>
               </div>
               <div className="winpct-bar" style={{ marginTop: 12 }}><div className="winpct-fill" style={{ width: (s?.winPct ?? 0) + '%' }} /></div>

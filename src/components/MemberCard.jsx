@@ -15,7 +15,6 @@ export default function MemberCard({ player, stat, index = 0 }) {
       }
       transition={{ duration: 0.45, delay: (index % 8) * 0.03, ease: [0.22, 1, 0.36, 1] }}
     >
-      <span className="member-card-shuttle" aria-hidden="true">🏸</span>
       <Avatar player={player} size={52} />
       <div className="member-card-name">{player.name}</div>
       <div className="member-card-level">{player.level}</div>

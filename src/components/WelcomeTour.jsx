@@ -1,3 +1,4 @@
+import NavIcon from './Icons.jsx'
 import { useState } from 'react'
 
 // Three-step orientation shown once per device on a member's first login.
@@ -5,17 +6,17 @@ import { useState } from 'react'
 // viewport and can't break when the layout changes.
 const STEPS = [
   {
-    icon: '🔀',
+    icon: 'shuffle',
     title: 'Mark yourself in',
     text: 'Playing this week? Open the Sessions tab and tap "I\'m Playing" — everyone sees who\'s coming, and teams are drawn randomly on court.',
   },
   {
-    icon: '✅',
+    icon: 'calendar',
     title: 'Confirm results',
     text: 'Ijaz records the scores after each session. Any member can tap Confirm on a match to mark the result verified.',
   },
   {
-    icon: '🏆',
+    icon: 'trophy',
     title: 'Climb the board',
     text: 'Every match counts toward your personal ranking — wins, points and streaks. Partners change every session, so it\'s all you.',
   },
@@ -41,7 +42,7 @@ export default function WelcomeTour() {
   return (
     <div className="tour-overlay" role="dialog" aria-modal="true" aria-label="Welcome tour">
       <div className="glass tour-card">
-        <span className="tour-icon" aria-hidden="true">{s.icon}</span>
+        <span className="tour-icon" aria-hidden="true"><NavIcon name={s.icon} size={26} /></span>
         <div className="display tour-title">{s.title}</div>
         <p className="tour-text">{s.text}</p>
         <div className="tour-dots" aria-hidden="true">
@@ -50,7 +51,7 @@ export default function WelcomeTour() {
         <div className="row" style={{ gap: 10, justifyContent: 'center', marginTop: 14 }}>
           <button className="btn btn-ghost btn-sm" onClick={finish}>Skip</button>
           <button className="btn btn-gold btn-sm" onClick={next}>
-            {step < STEPS.length - 1 ? 'Next →' : "Let's go 🏸"}
+            {step < STEPS.length - 1 ? 'Next →' : "Let's go"}
           </button>
         </div>
       </div>

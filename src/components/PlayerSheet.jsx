@@ -94,7 +94,7 @@ export default function PlayerSheet({ playerId, onClose }) {
           </div>
 
           {/* Partners — emphasises random rotation */}
-          <h3 className="section-title" style={{ fontSize: 19, marginTop: 8 }}>🔀 Partners I've Played With <span className="accent">({partners.length})</span></h3>
+          <h3 className="section-title" style={{ fontSize: 19, marginTop: 8 }}>Partners played with <span className="accent">({partners.length})</span></h3>
           <p className="section-sub">Different partner almost every match — that's the Ceylon way.</p>
           <div className="glass card-pad">
             {partners.length ? partners.map((p) => (
@@ -107,7 +107,7 @@ export default function PlayerSheet({ playerId, onClose }) {
           </div>
 
           {/* Rivals */}
-          <h3 className="section-title" style={{ fontSize: 19 }}>⚔️ Most-Faced Rivals</h3>
+          <h3 className="section-title" style={{ fontSize: 19 }}>Most-faced rivals</h3>
           <div className="glass card-pad">
             {rivals.length ? rivals.map((r) => (
               <div className="partner-row" key={r.id}>
@@ -122,13 +122,13 @@ export default function PlayerSheet({ playerId, onClose }) {
           </div>
 
           {/* Monthly wins */}
-          <h3 className="section-title" style={{ fontSize: 19 }}>📊 Monthly Wins</h3>
+          <h3 className="section-title" style={{ fontSize: 19 }}>Monthly wins</h3>
           <div className="glass card-pad chart-card">
             <MonthlyWinsChart monthly={s.monthly} />
           </div>
 
           {/* Recent matches */}
-          <h3 className="section-title" style={{ fontSize: 19 }}>🏸 Recent Matches</h3>
+          <h3 className="section-title" style={{ fontSize: 19 }}>Recent matches</h3>
           <div style={{ display: 'grid', gap: 10 }}>
             {recent.length ? recent.map((m) => <MatchCard key={m.id} match={m} expandable={false} />)
               : <span className="dim">No matches yet.</span>}

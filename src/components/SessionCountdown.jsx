@@ -4,7 +4,7 @@ import useCountdown from '../hooks/useCountdown.js';
 export default function SessionCountdown({ dateIso, time = '20:00' }) {
     const cd = useCountdown(dateIso, time);
     if (cd.done) {
-        return <div className="cd-live">{'🏸 Session in progress'}</div>;
+        return <div className="cd-live">{'Session in progress'}</div>;
     }
     const cells = [
         { v: cd.d, l: 'days' },

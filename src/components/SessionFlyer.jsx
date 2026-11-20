@@ -128,7 +128,7 @@ export default function SessionFlyer({ session, pushToast }) {
         a.download = 'cbc-next-session.png'
         a.click()
         setTimeout(() => URL.revokeObjectURL(url), 4000)
-        pushToast?.('Flyer downloaded — share it to the WhatsApp group 📲', 'success')
+        pushToast?.('Flyer downloaded — share it to the WhatsApp group.', 'success')
       }
     } catch (e) {
       if (e?.name !== 'AbortError') pushToast?.('Could not create the flyer on this device.', 'error')
@@ -139,7 +139,7 @@ export default function SessionFlyer({ session, pushToast }) {
 
   return (
     <button className="btn btn-maroon" onClick={generate} disabled={busy}>
-      {busy ? 'Creating…' : '🖼 Session flyer'}
+      {busy ? 'Creating…' : 'Session flyer'}
     </button>
   )
 }
